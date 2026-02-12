@@ -1,608 +1,696 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventário — SILOKING BRASIL</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventário - SILOKING</title>
+
   <style>
     :root{
       --bg:#f6f7fb;
       --card:#ffffff;
-      --muted:#6b7280;
-      --text:#111827;
-      --line:#e5e7eb;
-      --primary:#2563eb;
-      --primary2:#1d4ed8;
-      --danger:#dc2626;
-      --danger2:#b91c1c;
+      --muted:#5b677a;
+      --text:#0f172a;
+      --accent:#2563eb;
+      --accent2:#1d4ed8;
       --ok:#16a34a;
-      --shadow: 0 10px 30px rgba(17,24,39,.08);
-      --radius: 18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1200px 600px at 20% 0%, #ffffff 0%, var(--bg) 50%, #eef2ff 100%);
-      color:var(--text);
-    }
-    .wrap{
-      max-width: 1180px;
-      margin: 24px auto;
-      padding: 0 16px 28px;
+      --bad:#dc2626;
+      --line:rgba(15,23,42,.10);
+      --shadow:0 12px 30px rgba(15,23,42,.08);
+      --radius:18px;
     }
 
-    /* Header */
-    header{
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,#ffffff, var(--bg));
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:18px;
+    }
+
+    /* ===== HEADER ===== */
+    .header{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px 16px;
+      box-shadow:var(--shadow);
+
       display:flex;
+      gap:14px;
       align-items:center;
       justify-content:space-between;
-      gap:16px;
-      padding: 16px 18px;
-      background: rgba(255,255,255,.75);
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
+      flex-wrap:wrap;
     }
+
     .brand{
       display:flex;
-      align-items:center;
       gap:14px;
-      min-width: 280px;
+      align-items:center;
+      min-width:260px;
     }
-    .brand svg{display:block}
-    .title{
+
+    .logo img{
+      height:56px;
+      width:auto;
+      display:block;
+    }
+
+    .headText{
       display:flex;
       flex-direction:column;
       gap:2px;
-      flex:1;
     }
-    .title h1{
-      margin:0;
-      font-size: 18px;
-      letter-spacing: .2px;
-      line-height: 1.15;
+
+    .headTitle{
+      font-weight:900;
+      font-size:16px;
+      letter-spacing:.2px;
+      line-height:1.1;
     }
-    .title p{
-      margin:0;
-      font-size: 13px;
-      color: var(--muted);
+
+    .headSub{
+      font-size:12px;
+      color:var(--muted);
     }
-    .pill{
+
+    .pills{
       display:flex;
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
       justify-content:flex-end;
     }
-    .tag{
-      font-size:12px;
-      color:#0f172a;
-      background:#eef2ff;
-      border:1px solid #dbeafe;
-      padding:7px 10px;
-      border-radius: 999px;
-      display:flex;
-      gap:8px;
+
+    .pill{
+      display:inline-flex;
       align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#f8fafc;
+      font-size:12px;
+      color:var(--muted);
       white-space:nowrap;
     }
-    .tag b{font-weight:700}
-    .tag .dot{
-      width:9px;height:9px;border-radius:99px;background:var(--ok);
-      box-shadow: 0 0 0 4px rgba(22,163,74,.12);
+
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#94a3b8;
+      display:inline-block;
     }
 
-    /* Layout */
+    .dot.ok{background:var(--ok)}
+    .dot.bad{background:var(--bad)}
+
+    /* ===== LAYOUT ===== */
     .grid{
-      margin-top: 16px;
+      margin-top:14px;
       display:grid;
-      grid-template-columns: 1.2fr .95fr;
-      gap: 16px;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
     }
-    @media (max-width: 980px){
+    @media (max-width:980px){
       .grid{grid-template-columns:1fr}
-      .brand{min-width:auto}
-      header{flex-direction:column; align-items:flex-start}
-      .pill{justify-content:flex-start}
     }
 
     .card{
-      background: rgba(255,255,255,.9);
+      background:var(--card);
       border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:var(--shadow);
     }
-    .card h2{
-      margin:0 0 2px 0;
-      font-size: 15px;
-    }
-    .card .sub{
-      margin:0 0 12px 0;
-      font-size: 13px;
-      color: var(--muted);
+
+    .cardTitle{
+      font-weight:900;
+      margin-bottom:10px;
+      font-size:14px;
     }
 
     label{
       display:block;
-      font-size: 13px;
-      color:#111827;
-      margin: 12px 0 6px;
-      font-weight:600;
-    }
-    input, button{
-      font-family: inherit;
-    }
-    input{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      background:#fff;
-      outline:none;
-      font-size: 16px;
-    }
-    input:focus{
-      border-color:#93c5fd;
-      box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
     }
 
-    .row{
+    input,select,button{
+      width:100%;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:#ffffff;
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      font-size:16px;
+    }
+
+    input:focus{
+      border-color:rgba(37,99,235,.45);
+      box-shadow:0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    .row2{
       display:grid;
       grid-template-columns: 1fr 140px;
-      gap: 12px;
-      align-items:end;
+      gap:10px;
     }
-    @media (max-width: 520px){
-      .row{grid-template-columns:1fr}
+    @media (max-width:520px){
+      .row2{grid-template-columns:1fr}
     }
+
+    .row1{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+
+    .btns{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    button{
+      cursor:pointer;
+      transition:.15s transform, .15s opacity;
+      font-weight:900;
+      border:0;
+    }
+
+    button:hover{transform:translateY(-1px)}
+    button:active{transform:translateY(0px); opacity:.9}
+
+    .primary{
+      background:linear-gradient(180deg, rgba(37,99,235,.95), rgba(29,78,216,.90));
+      color:#fff;
+    }
+
+    .ghost{
+      background:#f8fafc;
+      border:1px solid var(--line);
+      color:var(--text);
+    }
+
+    .danger{
+      background:#fff1f2;
+      border:1px solid rgba(220,38,38,.25);
+      color:var(--bad);
+    }
+
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .status.ok{color:var(--ok); font-weight:800}
+    .status.bad{color:var(--bad); font-weight:800}
 
     .hint{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 8px;
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
     }
 
-    .warn{
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid #fde68a;
-      background:#fffbeb;
-      color:#92400e;
-      font-size: 13px;
-      display:none;
-    }
-    .warn.show{display:block}
-
-    .btn{
-      width:100%;
-      border:0;
-      border-radius: 16px;
-      padding: 12px 12px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor:pointer;
-      transition: transform .06s ease, filter .15s ease;
-      margin-top: 10px;
-    }
-    .btn:active{transform: scale(.99)}
-    .btn.primary{background: linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff}
-    .btn.gray{background:#f3f4f6; border:1px solid var(--line); color:#111827}
-    .btn.danger{background: linear-gradient(180deg, var(--danger), var(--danger2)); color:#fff}
-
-    /* Table */
-    table{
-      width:100%;
-      border-collapse: collapse;
-      overflow:hidden;
-      border-radius: 16px;
-      border:1px solid var(--line);
-      background:#fff;
-    }
-    thead th{
-      text-align:left;
-      font-size: 12px;
-      color: #374151;
-      background:#f9fafb;
-      border-bottom:1px solid var(--line);
-      padding: 10px 10px;
-    }
-    tbody td{
-      padding: 10px 10px;
-      border-bottom:1px solid #f1f5f9;
-      font-size: 13px;
-      vertical-align:top;
-    }
-    tbody tr:last-child td{border-bottom:0}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    .small{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 10px;
-    }
-    .actions{
+    /* ===== TABLE ===== */
+    .tableTop{
       display:flex;
-      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
       flex-wrap:wrap;
     }
-    .mini{
+
+    .countPill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
       border:1px solid var(--line);
-      background:#fff;
-      border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 12px;
-      cursor:pointer;
+      background:#f8fafc;
+      font-size:12px;
+      color:var(--muted);
     }
-    .mini:hover{filter:brightness(.98)}
+
+    .tableWrap{
+      overflow:auto;
+      max-height:520px;
+      border-radius:16px;
+      border:1px solid var(--line);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+    }
+
+    th,td{
+      padding:12px 10px;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      font-size:13px;
+      vertical-align:top;
+    }
+
+    th{
+      text-align:left;
+      font-weight:900;
+      color:#334155;
+      background:#f8fafc;
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+
+    tr:last-child td{border-bottom:none}
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    .actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .btnMini{
+      width:auto;
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .miniPlus{background:#eff6ff; border:1px solid rgba(37,99,235,.25); color:#1d4ed8}
+    .miniMinus{background:#fff7ed; border:1px solid rgba(234,88,12,.25); color:#9a3412}
+    .miniDel{background:#fff1f2; border:1px solid rgba(220,38,38,.25); color:#dc2626}
+
+    .footerSmall{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <header>
+
+    <!-- HEADER -->
+    <div class="header">
       <div class="brand">
-        <!-- Logo SILOKING BRASIL (SVG) -->
-       <svg width="220" height="62" viewBox="0 0 660 186" xmlns="http://www.w3.org/2000/svg" aria-label="SILOKING BRASIL">
-  <!-- Top and bottom blue lines -->
-  <rect x="0" y="0" width="420" height="14" fill="#1d4ed8"/>
-  <rect x="0" y="172" width="420" height="14" fill="#1d4ed8"/>
-
-  <!-- SILOKING -->
-  <text x="12" y="118" font-size="92" font-family="Arial Black, Arial, sans-serif" fill="#dc2626" letter-spacing="3">
-    SILOKING
-  </text>
-
-  <!-- BRASIL -->
-  <text x="18" y="162" font-size="48" font-family="Arial Black, Arial, sans-serif" fill="#dc2626" letter-spacing="18">
-    BRASIL
-  </text>
-
-  <!-- Circle -->
-  <circle cx="560" cy="93" r="80" fill="#ffffff" stroke="#dc2626" stroke-width="16"/>
-
-  <!-- Crown (simples, sem folha e sem bandeira) -->
-  <g transform="translate(510,40)">
-    <!-- base -->
-    <rect x="0" y="72" width="100" height="18" rx="6" fill="#dc2626"/>
-    <!-- points -->
-    <polygon points="10,72 25,30 40,72" fill="#dc2626"/>
-    <polygon points="40,72 50,18 60,72" fill="#dc2626"/>
-    <polygon points="60,72 75,30 90,72" fill="#dc2626"/>
-    <!-- jewels -->
-    <circle cx="25" cy="28" r="6" fill="#ffffff"/>
-    <circle cx="50" cy="16" r="6" fill="#ffffff"/>
-    <circle cx="75" cy="28" r="6" fill="#ffffff"/>
-  </g>
-</svg>
+        <div class="logo">
+          <img src="logo.png" alt="SILOKING" />
+        </div>
+        <div class="headText">
+          <div class="headTitle">Inventário (Bipagem) — com base de produtos</div>
+          <div class="headSub">Bipe o código e exporte o relatório em CSV (Excel abre direto).</div>
+        </div>
       </div>
 
-      <div class="title">
-        <h1>Inventário (Bipagem) — com base de produtos</h1>
-        <p>Bipe o código e exporte o relatório em CSV (Excel abre direto).</p>
-      </div>
+      <div class="pills">
+        <span class="pill" id="dbPill">
+          <span class="dot" id="dbDot"></span>
+          Base: carregando...
+        </span>
 
-      <div class="pill">
-        <div class="tag"><span class="dot"></span><b id="baseCount">Base:</b> produtos</div>
-        <div class="tag"><b id="savedAt">Último salvamento:</b> —</div>
+        <span class="pill" id="lastSavedPill">
+          Último salvamento: —
+        </span>
       </div>
-    </header>
+    </div>
 
+    <!-- GRID -->
     <div class="grid">
-      <!-- Left -->
-      <section class="card">
-        <h2>Entrada</h2>
-        <p class="sub">Bipe o código, ajuste a quantidade e clique em <b>OK</b>.</p>
 
-        <div class="row">
-          <div>
-            <label for="codigo">1) Código (bipado)</label>
-            <input id="codigo" class="mono" type="text" autocomplete="off" placeholder="Bipe aqui..." />
-          </div>
-          <div>
-            <label for="qtd">Qtd</label>
-            <input id="qtd" class="mono" type="number" min="1" step="1" value="1" />
-          </div>
+      <!-- LEFT -->
+      <div class="card">
+        <div class="cardTitle">Iniciar inventário</div>
+
+        <label>Endereço do estoque (ex: CD HMDK1 / Rua / Setor)</label>
+        <input id="endereco" autocomplete="off" placeholder="Ex: CD HMDK1 - Rua X - Setor A" />
+
+        <div style="height:14px"></div>
+
+        <label>1) Código (bipado)</label>
+        <div class="row2">
+          <input id="codigo" class="mono" inputmode="text" autocomplete="off" placeholder="Bipe aqui..." />
+          <input id="qtd" inputmode="numeric" placeholder="Qtd" value="1" />
         </div>
 
-        <label for="nome">2) Produto encontrado</label>
-        <input id="nome" type="text" readonly placeholder="Vai aparecer o nome automaticamente..." />
+        <div style="height:10px"></div>
 
-        <div id="warn" class="warn">⚠️ Código não encontrado na base.</div>
+        <label>2) Produto encontrado</label>
+        <input id="nome" readonly placeholder="Vai aparecer o nome automaticamente..." />
 
-        <button id="btnAdd" class="btn primary">OK</button>
-        <button id="btnClear" class="btn gray">Limpar</button>
-        <button id="btnZero" class="btn danger">Zerar inventário</button>
-        <button id="btnExport" class="btn primary">Exportar CSV (Excel)</button>
+        <div class="status" id="status"></div>
+
+        <div class="btns">
+          <button class="primary" id="btnOk">OK</button>
+          <button class="ghost" id="btnLimpar">Limpar</button>
+          <button class="danger" id="btnZerar">Zerar inventário</button>
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="btnExport">Exportar CSV (Excel)</button>
+        </div>
 
         <div class="hint">
-          Dica: se seu leitor envia ENTER no final, é só bipar e apertar <b>OK</b>.
+          Dica: a maioria dos leitores Bluetooth envia <b>Enter</b> no final do bip.
         </div>
-      </section>
+      </div>
 
-      <!-- Right -->
-      <aside class="card">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="tableTop">
           <div>
-            <h2>Itens no inventário</h2>
-            <p class="sub">Agrupado por código.</p>
+            <div class="cardTitle" style="margin:0">Itens no inventário</div>
+            <div class="headSub">Agrupado por código.</div>
           </div>
-          <div class="tag"><b id="itemsCount">0</b> itens</div>
+          <div class="countPill" id="countPill">0 itens</div>
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 26%;">Código</th>
-              <th>Nome</th>
-              <th style="width: 12%;">Qtd</th>
-              <th style="width: 20%;">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:170px">Código</th>
+                <th>Nome</th>
+                <th style="width:90px">Qtd</th>
+                <th style="width:170px">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
 
-        <div class="small" id="saveInfo"></div>
-      </aside>
+        <div class="footerSmall" id="enderecoView"></div>
+      </div>
+
     </div>
   </div>
 
 <script>
-/** ===========================
- *  BASE DE PRODUTOS (JSON)
- *  =========================== */
-let baseProdutos = {};
-let baseCount = 0;
+  // ====== CONFIG ======
+  const PRODUTOS_JSON = "./produtos.json";
+  const LS_KEY_ITENS = "inventario_itens_v2";
+  const LS_KEY_END = "inventario_endereco_v2";
 
-async function carregarBase(){
-  try{
-    const res = await fetch("./produtos.json", { cache: "no-store" });
-    if(!res.ok) throw new Error("Não achou produtos.json");
-    baseProdutos = await res.json();
-    baseCount = Object.keys(baseProdutos).length;
-    document.getElementById("baseCount").innerHTML = "Base: <b>"+baseCount+"</b> produtos";
-  }catch(e){
-    baseProdutos = {};
-    baseCount = 0;
-    document.getElementById("baseCount").innerHTML = "Base: <b>0</b> produtos";
+  // ====== STATE ======
+  let base = {};  // { codigo: nome }
+  let itens = {}; // { codigo: {codigo, nome, qtd} }
+
+  // ====== HELPERS ======
+  const $ = (id) => document.getElementById(id);
+
+  function nowBR(){
+    return new Date().toLocaleString("pt-BR");
   }
-}
 
-/** ===========================
- *  INVENTÁRIO (LOCAL STORAGE)
- *  =========================== */
-const LS_KEY = "siloking_inventario_v1";
-let inventario = {}; // { codigo: {codigo, nome, qtd} }
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
 
-function nowBR(){
-  const d = new Date();
-  return d.toLocaleString("pt-BR");
-}
+  function setStatus(msg, type=""){
+    const el = $("status");
+    el.textContent = msg || "";
+    el.className = "status " + (type || "");
+  }
 
-function salvar(){
-  localStorage.setItem(LS_KEY, JSON.stringify(inventario));
-  const t = nowBR();
-  document.getElementById("savedAt").innerHTML = "Último salvamento: <b>"+t+"</b>";
-  document.getElementById("saveInfo").textContent = "Último salvamento: " + t;
-}
+  function normalizeCodigo(c){
+    return String(c || "").trim();
+  }
 
-function carregar(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(raw){
-      inventario = JSON.parse(raw) || {};
+  function normalizeQtd(q){
+    const n = parseInt(String(q||"").replace(/\D/g,""),10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+
+  function lookupNome(codigo){
+    if(!codigo) return "";
+    return base[codigo] || "";
+  }
+
+  function save(){
+    localStorage.setItem(LS_KEY_ITENS, JSON.stringify(itens));
+    localStorage.setItem(LS_KEY_END, $("endereco").value.trim());
+
+    $("lastSavedPill").textContent = "Último salvamento: " + nowBR();
+    updateEnderecoView();
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY_ITENS);
+      if(raw) itens = JSON.parse(raw) || {};
+    }catch(e){
+      itens = {};
     }
-  }catch(e){
-    inventario = {};
-  }
-}
 
-/** ===========================
- *  UI
- *  =========================== */
-const elCodigo = document.getElementById("codigo");
-const elQtd = document.getElementById("qtd");
-const elNome = document.getElementById("nome");
-const elWarn = document.getElementById("warn");
-const elTbody = document.getElementById("tbody");
-const elItemsCount = document.getElementById("itemsCount");
-
-function normalizarCodigo(v){
-  return (v || "").toString().trim();
-}
-
-function atualizarNome(){
-  const codigo = normalizarCodigo(elCodigo.value);
-  if(!codigo){
-    elNome.value = "";
-    elWarn.classList.remove("show");
-    return;
+    const end = localStorage.getItem(LS_KEY_END) || "";
+    $("endereco").value = end;
   }
 
-  const nome = baseProdutos[codigo];
-  if(nome){
-    elNome.value = nome;
-    elWarn.classList.remove("show");
-  }else{
-    elNome.value = "";
-    elWarn.classList.add("show");
+  function updateEnderecoView(){
+    const end = $("endereco").value.trim();
+    $("enderecoView").textContent = end ? ("📍 Estoque: " + end) : "";
   }
-}
 
-function render(){
-  const arr = Object.values(inventario);
+  function updateCount(){
+    const n = Object.keys(itens).length;
+    $("countPill").textContent = n + (n === 1 ? " item" : " itens");
+  }
 
-  elItemsCount.textContent = arr.length.toString();
+  function render(){
+    const tbody = $("tbody");
+    tbody.innerHTML = "";
 
-  if(arr.length === 0){
-    elTbody.innerHTML = `
-      <tr>
-        <td colspan="4" style="padding:14px; color:#6b7280; font-size:13px;">
-          Nenhum item ainda. Bipe um código e clique em <b>OK</b>.
+    const keys = Object.keys(itens);
+    keys.sort((a,b)=>a.localeCompare(b));
+
+    for(const codigo of keys){
+      const it = itens[codigo];
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td class="mono">${escapeHtml(it.codigo)}</td>
+        <td>${escapeHtml(it.nome || "(SEM NOME)")}</td>
+        <td class="mono">${it.qtd}</td>
+        <td>
+          <div class="actions">
+            <button class="btnMini miniPlus" data-act="plus" data-c="${escapeHtml(it.codigo)}">+</button>
+            <button class="btnMini miniMinus" data-act="minus" data-c="${escapeHtml(it.codigo)}">-</button>
+            <button class="btnMini miniDel" data-act="del" data-c="${escapeHtml(it.codigo)}">Excluir</button>
+          </div>
         </td>
-      </tr>
-    `;
-    return;
+      `;
+      tbody.appendChild(tr);
+    }
+
+    updateCount();
+    save();
   }
 
-  elTbody.innerHTML = arr.map(item => `
-    <tr>
-      <td class="mono">${escapeHtml(item.codigo)}</td>
-      <td>${escapeHtml(item.nome || "(não encontrado)")}</td>
-      <td class="mono">${item.qtd}</td>
-      <td>
-        <div class="actions">
-          <button class="mini" onclick="mais('${escapeAttr(item.codigo)}')">+1</button>
-          <button class="mini" onclick="menos('${escapeAttr(item.codigo)}')">-1</button>
-          <button class="mini" onclick="remover('${escapeAttr(item.codigo)}')">Remover</button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
-}
+  function addItem({codigo, qtd}){
+    codigo = normalizeCodigo(codigo);
+    qtd = normalizeQtd(qtd);
 
-function escapeHtml(s){
-  return (s || "").toString()
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-function escapeAttr(s){
-  return (s || "").toString().replaceAll("'","\\'");
-}
+    if(!$("endereco").value.trim()){
+      setStatus("⚠️ Preencha o endereço do estoque antes de iniciar.", "bad");
+      $("endereco").focus();
+      return;
+    }
 
-/** ===========================
- *  AÇÕES
- *  =========================== */
-function addItem(){
-  const codigo = normalizarCodigo(elCodigo.value);
-  let qtd = parseInt(elQtd.value || "1", 10);
-  if(!qtd || qtd < 1) qtd = 1;
+    if(!codigo){
+      setStatus("Digite/bipe um código.", "bad");
+      return;
+    }
 
-  if(!codigo){
-    elCodigo.focus();
-    return;
+    const nome = lookupNome(codigo);
+    $("nome").value = nome || "";
+
+    if(!nome){
+      setStatus("⚠️ Código não encontrado na base. Adicionado mesmo assim.", "bad");
+    }else{
+      setStatus("✅ Produto: " + nome, "ok");
+    }
+
+    if(!itens[codigo]){
+      itens[codigo] = { codigo, nome: nome || "", qtd: 0 };
+    }else{
+      if(!itens[codigo].nome && nome) itens[codigo].nome = nome;
+    }
+
+    itens[codigo].qtd += qtd;
+
+    $("codigo").value = "";
+    $("qtd").value = "1";
+    $("nome").value = "";
+    $("codigo").focus();
+
+    render();
   }
 
-  const nome = baseProdutos[codigo] || "";
+  function exportCSV(){
+    const keys = Object.keys(itens);
+    if(keys.length === 0){
+      alert("Sem itens para exportar.");
+      return;
+    }
 
-  if(!inventario[codigo]){
-    inventario[codigo] = { codigo, nome: nome || "(não encontrado)", qtd: 0 };
-  }else{
-    // se agora encontrou nome, atualiza
-    if(nome) inventario[codigo].nome = nome;
+    const endereco = $("endereco").value.trim();
+
+    const linhas = [];
+    linhas.push(["Endereço do Estoque", endereco].join(";"));
+    linhas.push(["Data Exportação", nowBR()].join(";"));
+    linhas.push("");
+    linhas.push(["Código","Nome do Produto","Quantidade"].join(";"));
+
+    keys.sort((a,b)=>a.localeCompare(b));
+    for(const codigo of keys){
+      const it = itens[codigo];
+      const row = [
+        it.codigo,
+        (it.nome || "").replaceAll(";", ","),
+        String(it.qtd)
+      ];
+      linhas.push(row.join(";"));
+    }
+
+    const csv = "\ufeff" + linhas.join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inventario_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
-  inventario[codigo].qtd += qtd;
+  async function loadBase(){
+    try{
+      const res = await fetch(PRODUTOS_JSON, {cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      base = await res.json();
 
-  salvar();
-  render();
-
-  // limpa e foca para próximo bip
-  elCodigo.value = "";
-  elQtd.value = "1";
-  elNome.value = "";
-  elWarn.classList.remove("show");
-  elCodigo.focus();
-}
-
-function mais(codigo){
-  if(!inventario[codigo]) return;
-  inventario[codigo].qtd += 1;
-  salvar();
-  render();
-}
-function menos(codigo){
-  if(!inventario[codigo]) return;
-  inventario[codigo].qtd -= 1;
-  if(inventario[codigo].qtd <= 0){
-    delete inventario[codigo];
-  }
-  salvar();
-  render();
-}
-function remover(codigo){
-  if(!inventario[codigo]) return;
-  delete inventario[codigo];
-  salvar();
-  render();
-}
-
-function limparCampos(){
-  elCodigo.value = "";
-  elQtd.value = "1";
-  elNome.value = "";
-  elWarn.classList.remove("show");
-  elCodigo.focus();
-}
-
-function zerarInventario(){
-  if(!confirm("Tem certeza que deseja ZERAR o inventário?")){
-    return;
-  }
-  inventario = {};
-  salvar();
-  render();
-}
-
-function exportarCSV(){
-  const itens = Object.values(inventario);
-  if(itens.length === 0){
-    alert("Inventário vazio. Bipe pelo menos 1 item.");
-    return;
+      const total = Object.keys(base).length;
+      $("dbPill").innerHTML = `<span class="dot ok"></span> Base: ${total} produtos`;
+    }catch(e){
+      base = {};
+      $("dbPill").innerHTML = `<span class="dot bad"></span> Base: NÃO carregou`;
+      setStatus("⚠️ Não consegui carregar o produtos.json. Verifique se ele está no GitHub junto do index.html.", "bad");
+    }
   }
 
-  // CSV padrão Excel BR (separador ;)
-  let csv = "Codigo;Nome;Quantidade\n";
-  for(const it of itens){
-    const c = (it.codigo || "").toString().replaceAll(";", " ");
-    const n = (it.nome || "").toString().replaceAll(";", " ");
-    const q = (it.qtd || 0).toString();
-    csv += `${c};${n};${q}\n`;
+  function wire(){
+    $("btnOk").addEventListener("click", ()=>addItem({
+      codigo:$("codigo").value,
+      qtd:$("qtd").value
+    }));
+
+    $("btnLimpar").addEventListener("click", ()=>{
+      $("codigo").value="";
+      $("qtd").value="1";
+      $("nome").value="";
+      $("codigo").focus();
+      setStatus("");
+    });
+
+    $("btnZerar").addEventListener("click", ()=>{
+      if(!confirm("Tem certeza que quer ZERAR todo o inventário?")) return;
+      itens = {};
+      render();
+      setStatus("Inventário zerado.", "ok");
+      $("codigo").focus();
+    });
+
+    $("btnExport").addEventListener("click", exportCSV);
+
+    // Enter no campo código = OK
+    $("codigo").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        addItem({codigo:$("codigo").value, qtd:$("qtd").value});
+      }
+    });
+
+    // enquanto digita/bipa, já tenta mostrar o nome
+    $("codigo").addEventListener("input", ()=>{
+      const c = normalizeCodigo($("codigo").value);
+      const nome = lookupNome(c);
+      $("nome").value = nome || "";
+
+      if(!c){
+        setStatus("");
+      }else if(nome){
+        setStatus("✅ Produto: " + nome, "ok");
+      }else{
+        setStatus("⚠️ Código não encontrado na base.", "bad");
+      }
+    });
+
+    $("endereco").addEventListener("input", ()=>{
+      save();
+    });
+
+    // clique nos botões + - excluir da tabela
+    $("tbody").addEventListener("click", (e)=>{
+      const btn = e.target.closest("button");
+      if(!btn) return;
+
+      const act = btn.dataset.act;
+      const c = btn.dataset.c;
+      if(!act || !c || !itens[c]) return;
+
+      if(act === "plus"){
+        itens[c].qtd += 1;
+      }
+
+      if(act === "minus"){
+        itens[c].qtd -= 1;
+        if(itens[c].qtd <= 0) delete itens[c];
+      }
+
+      if(act === "del"){
+        if(!confirm("Excluir esse item do inventário?")) return;
+        delete itens[c];
+      }
+
+      render();
+    });
   }
 
-  const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `inventario_siloking_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  URL.revokeObjectURL(url);
-}
-
-/** ===========================
- *  EVENTOS
- *  =========================== */
-document.getElementById("btnAdd").addEventListener("click", addItem);
-document.getElementById("btnClear").addEventListener("click", limparCampos);
-document.getElementById("btnZero").addEventListener("click", zerarInventario);
-document.getElementById("btnExport").addEventListener("click", exportarCSV);
-
-elCodigo.addEventListener("input", atualizarNome);
-
-// ENTER adiciona também
-elCodigo.addEventListener("keydown", (e)=>{
-  if(e.key === "Enter"){
-    e.preventDefault();
-    addItem();
-  }
-});
-
-(async function init(){
-  await carregarBase();
-  carregar();
-  salvar();
-  render();
-  elCodigo.focus();
-})();
+  (async function(){
+    load();
+    render();
+    wire();
+    await loadBase();
+    updateEnderecoView();
+    $("codigo").focus();
+  })();
 </script>
 </body>
 </html>
