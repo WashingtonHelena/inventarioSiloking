@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventário - Bipagem</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#111a2e;
+      --muted:#93a4c7;
+      --text:#e9eefc;
+      --accent:#4f7cff;
+      --ok:#2ecc71;
+      --bad:#ff5a6a;
+      --line:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,#070b14, var(--bg));
+      color:var(--text);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    .top{
+      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      margin-bottom:14px
+    }
+    .title{font-size:18px;font-weight:700;letter-spacing:.2px}
+    .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+    .card{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,button{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      font-size:16px;
+    }
+    input:focus{border-color:rgba(79,124,255,.6)}
+    .row{display:grid;grid-template-columns:1fr 170px;gap:10px}
+    @media (max-width:520px){.row{grid-template-columns:1fr}}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    button{
+      cursor:pointer;
+      transition:.15s transform, .15s opacity;
+      font-weight:700;
+    }
+    button:hover{transform:translateY(-1px)}
+    .primary{background:linear-gradient(180deg,rgba(79,124,255,.95),rgba(79,124,255,.65));border-color:rgba(79,124,255,.6)}
+    .ghost{background:rgba(255,255,255,.04)}
+    .danger{background:rgba(255,90,106,.15);border-color:rgba(255,90,106,.35)}
+    .ok{color:var(--ok);font-weight:700}
+    .bad{color:var(--bad);font-weight:700}
+    .status{font-size:13px;color:var(--muted);margin-top:8px}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      font-size:13px;
+      vertical-align:top;
+    }
+    th{color:var(--muted);text-align:left;font-weight:700}
+    tr:last-child td{border-bottom:none}
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      font-size:12px;color:var(--muted)
+    }
+    .right{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+    .small{font-size:12px;color:var(--muted)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">Inventário (Bipagem) — com base de produtos</div>
+        <div class="subtitle">Bipe o código, confirme, e exporte o relatório em CSV (Excel abre direto).</div>
+      </div>
+      <div class="right">
+        <span class="pill" id="dbPill">📦 Base: carregando...</span>
+        <span class="pill">💾 Salva no aparelho</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <label>1) Código (bipado)</label>
+        <div class="row">
+          <input id="codigo" class="mono" inputmode="text" autocomplete="off" placeholder="Bipe aqui..." />
+          <input id="qtd" inputmode="numeric" placeholder="Qtd" value="1" />
+        </div>
+
+        <div style="height:10px"></div>
+
+        <label>2) Produto encontrado</label>
+        <input id="nome" readonly placeholder="Vai aparecer o nome automaticamente..." />
+
+        <div class="status" id="status"></div>
+
+        <div style="height:12px"></div>
+
+        <div class="btns">
+          <button class="primary" id="btnAdd">Adicionar (com confirmação)</button>
+          <button class="ghost" id="btnAddSem">Adicionar (sem confirmação)</button>
+          <button class="ghost" id="btnLimpar">Limpar</button>
+          <button class="danger" id="btnZerar">Zerar inventário</button>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <div class="btns">
+          <button class="primary" id="btnExport">Exportar CSV (Excel)</button>
+          <button class="ghost" id="btnBackup">Backup (JSON)</button>
+          <button class="ghost" id="btnImport">Importar backup</button>
+          <input id="fileImport" type="file" accept="application/json" style="display:none" />
+        </div>
+
+        <div class="status small">
+          Dica: a maioria dos leitores Bluetooth envia <b>Enter</b> no final do bip.
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div>
+            <div style="font-weight:800">Itens no inventário</div>
+            <div class="small">Agrupado por código.</div>
+          </div>
+          <div class="pill" id="countPill">0 itens</div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div style="overflow:auto;max-height:520px">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:160px">Código</th>
+                <th>Nome</th>
+                <th style="width:90px">Qtd</th>
+                <th style="width:90px">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="status small" id="lastSaved"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== CONFIG ======
+  const PRODUTOS_JSON = "./produtos.json"; // arquivo no mesmo lugar do index.html
+  const LS_KEY = "inventario_itens_v1";
+
+  // ====== STATE ======
+  let base = {}; // { codigo: nome }
+  let itens = {}; // { codigo: {codigo, nome, qtd} }
+
+  // ====== HELPERS ======
+  const $ = (id) => document.getElementById(id);
+
+  function nowBR(){
+    const d = new Date();
+    return d.toLocaleString("pt-BR");
+  }
+
+  function setStatus(msg, type=""){
+    const el = $("status");
+    el.textContent = msg || "";
+    el.className = "status " + (type || "");
+  }
+
+  function save(){
+    localStorage.setItem(LS_KEY, JSON.stringify(itens));
+    $("lastSaved").textContent = "Último salvamento: " + nowBR();
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(raw) itens = JSON.parse(raw) || {};
+    }catch(e){
+      itens = {};
+    }
+  }
+
+  function updateCount(){
+    const n = Object.keys(itens).length;
+    $("countPill").textContent = n + (n === 1 ? " item" : " itens");
+  }
+
+  function render(){
+    const tbody = $("tbody");
+    tbody.innerHTML = "";
+
+    const keys = Object.keys(itens);
+    keys.sort((a,b)=>a.localeCompare(b));
+
+    for(const codigo of keys){
+      const it = itens[codigo];
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td class="mono">${escapeHtml(it.codigo)}</td>
+        <td>${escapeHtml(it.nome || "(SEM NOME)")}</td>
+        <td class="mono">${it.qtd}</td>
+        <td>
+          <button class="ghost" data-act="plus" data-c="${escapeHtml(it.codigo)}">+</button>
+          <button class="ghost" data-act="minus" data-c="${escapeHtml(it.codigo)}">-</button>
+          <button class="danger" data-act="del" data-c="${escapeHtml(it.codigo)}">x</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    updateCount();
+    save();
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function lookupNome(codigo){
+    if(!codigo) return "";
+    return base[codigo] || "";
+  }
+
+  function normalizeCodigo(c){
+    return String(c || "").trim();
+  }
+
+  function normalizeQtd(q){
+    const n = parseInt(String(q||"").replace(/\D/g,""),10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+
+  function addItem({codigo, qtd, confirm=true}){
+    codigo = normalizeCodigo(codigo);
+    qtd = normalizeQtd(qtd);
+
+    if(!codigo){
+      setStatus("Digite/bipe um código.", "bad");
+      return;
+    }
+
+    const nome = lookupNome(codigo);
+    $("nome").value = nome || "";
+
+    if(!nome){
+      setStatus("⚠️ Código não encontrado na base. Você pode adicionar mesmo assim.", "bad");
+    }else{
+      setStatus("✅ Produto encontrado: " + nome, "ok");
+    }
+
+    if(confirm){
+      const msg = nome
+        ? `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: ${nome}\nQtd: ${qtd}`
+        : `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: (não encontrado)\nQtd: ${qtd}`;
+      if(!window.confirm(msg)) return;
+    }
+
+    if(!itens[codigo]){
+      itens[codigo] = { codigo, nome: nome || "", qtd: 0 };
+    }else{
+      // se já tinha vazio e agora achou, atualiza
+      if(!itens[codigo].nome && nome) itens[codigo].nome = nome;
+    }
+
+    itens[codigo].qtd += qtd;
+
+    $("codigo").value = "";
+    $("qtd").value = "1";
+    $("nome").value = "";
+    $("codigo").focus();
+
+    render();
+  }
+
+  function exportCSV(){
+    const keys = Object.keys(itens);
+    if(keys.length === 0){
+      alert("Sem itens para exportar.");
+      return;
+    }
+
+    const linhas = [];
+    linhas.push(["Código","Nome do Produto","Quantidade"].join(";"));
+
+    keys.sort((a,b)=>a.localeCompare(b));
+    for(const codigo of keys){
+      const it = itens[codigo];
+      const row = [
+        it.codigo,
+        (it.nome || "").replaceAll(";", ","),
+        String(it.qtd)
+      ];
+      linhas.push(row.join(";"));
+    }
+
+    const csv = "\ufeff" + linhas.join("\n"); // BOM pra Excel (pt-BR)
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inventario_" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function backupJSON(){
+    const blob = new Blob([JSON.stringify(itens, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "backup_inventario.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJSON(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const obj = JSON.parse(reader.result);
+        if(typeof obj !== "object" || Array.isArray(obj)) throw new Error("Formato inválido");
+        itens = obj;
+        render();
+        alert("Backup importado com sucesso!");
+      }catch(e){
+        alert("Não consegui importar esse arquivo. Ele não parece um backup válido.");
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  }
+
+  // ====== INIT ======
+  async function loadBase(){
+    try{
+      const res = await fetch(PRODUTOS_JSON, {cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      base = await res.json();
+      const total = Object.keys(base).length;
+
+      $("dbPill").textContent = "📦 Base: " + total + " produtos";
+      $("dbPill").style.borderColor = "rgba(46,204,113,.35)";
+    }catch(e){
+      base = {};
+      $("dbPill").textContent = "📦 Base: NÃO carregou";
+      $("dbPill").style.borderColor = "rgba(255,90,106,.35)";
+      setStatus("⚠️ Não consegui carregar o produtos.json. Verifique se ele está no GitHub junto do index.html.", "bad");
+    }
+  }
+
+  function wire(){
+    $("btnAdd").addEventListener("click", ()=>addItem({
+      codigo:$("codigo").value,
+      qtd:$("qtd").value,
+      confirm:true
+    }));
+
+    $("btnAddSem").addEventListener("click", ()=>addItem({
+      codigo:$("codigo").value,
+      qtd:$("qtd").value,
+      confirm:false
+    }));
+
+    $("btnLimpar").addEventListener("click", ()=>{
+      $("codigo").value="";
+      $("qtd").value="1";
+      $("nome").value="";
+      $("codigo").focus();
+      setStatus("");
+    });
+
+    $("btnZerar").addEventListener("click", ()=>{
+      if(!confirm("Tem certeza que quer ZERAR todo o inventário?")) return;
+      itens = {};
+      render();
+      setStatus("Inventário zerado.", "ok");
+      $("codigo").focus();
+    });
+
+    $("btnExport").addEventListener("click", exportCSV);
+    $("btnBackup").addEventListener("click", backupJSON);
+
+    $("btnImport").addEventListener("click", ()=> $("fileImport").click());
+    $("fileImport").addEventListener("change", (e)=>{
+      const file = e.target.files?.[0];
+      if(file) importJSON(file);
+      e.target.value = "";
+    });
+
+    // Enter no campo código = adiciona (com confirmação)
+    $("codigo").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        addItem({codigo:$("codigo").value, qtd:$("qtd").value, confirm:true});
+      }
+    });
+
+    // enquanto digita/bipa, já tenta mostrar o nome
+    $("codigo").addEventListener("input", ()=>{
+      const c = normalizeCodigo($("codigo").value);
+      const nome = lookupNome(c);
+      $("nome").value = nome || "";
+      if(!c){
+        setStatus("");
+      }else if(nome){
+        setStatus("✅ Produto encontrado: " + nome, "ok");
+      }else{
+        setStatus("⚠️ Código não encontrado na base.", "bad");
+      }
+    });
+  }
+
+  (async function(){
+    load();
+    render();
+    wire();
+    await loadBase();
+    $("codigo").focus();
+  })();
+</script>
+</body>
+</html>
