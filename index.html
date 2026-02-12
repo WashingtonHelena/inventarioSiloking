@@ -1,464 +1,1199 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inventário - Bipagem</title>
-  <style>
-    :root{
-      --bg:#0b1220;
-      --card:#111a2e;
-      --muted:#93a4c7;
-      --text:#e9eefc;
-      --accent:#4f7cff;
-      --ok:#2ecc71;
-      --bad:#ff5a6a;
-      --line:rgba(255,255,255,.08);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:linear-gradient(180deg,#070b14, var(--bg));
-      color:var(--text);
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .top{
-      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
-      margin-bottom:14px
-    }
-    .title{font-size:18px;font-weight:700;letter-spacing:.2px}
-    .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
-    .card{
-      background:rgba(255,255,255,.03);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-    }
-    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input,select,button{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      padding:12px 12px;
-      outline:none;
-      font-size:16px;
-    }
-    input:focus{border-color:rgba(79,124,255,.6)}
-    .row{display:grid;grid-template-columns:1fr 170px;gap:10px}
-    @media (max-width:520px){.row{grid-template-columns:1fr}}
-    .btns{display:flex;gap:10px;flex-wrap:wrap}
-    button{
-      cursor:pointer;
-      transition:.15s transform, .15s opacity;
-      font-weight:700;
-    }
-    button:hover{transform:translateY(-1px)}
-    .primary{background:linear-gradient(180deg,rgba(79,124,255,.95),rgba(79,124,255,.65));border-color:rgba(79,124,255,.6)}
-    .ghost{background:rgba(255,255,255,.04)}
-    .danger{background:rgba(255,90,106,.15);border-color:rgba(255,90,106,.35)}
-    .ok{color:var(--ok);font-weight:700}
-    .bad{color:var(--bad);font-weight:700}
-    .status{font-size:13px;color:var(--muted);margin-top:8px}
-    table{
-      width:100%;
-      border-collapse:collapse;
-      overflow:hidden;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.02);
-    }
-    th,td{
-      padding:10px 10px;
-      border-bottom:1px solid var(--line);
-      font-size:13px;
-      vertical-align:top;
-    }
-    th{color:var(--muted);text-align:left;font-weight:700}
-    tr:last-child td{border-bottom:none}
-    .pill{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
-      font-size:12px;color:var(--muted)
-    }
-    .right{display:flex;gap:10px;align-items:center;justify-content:flex-end}
-    .small{font-size:12px;color:var(--muted)}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventário - CD HMDK</title>
+    <!-- Biblioteca para exportação em Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Biblioteca para leitura de código de barras -->
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.1/dist/quagga.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #1a73e8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .datetime-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .datetime-box {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .datetime-box:first-child {
+            margin-right: 10px;
+        }
+        
+        .datetime-label {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 5px;
+        }
+        
+        .datetime-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #3c4043;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+            text-transform: uppercase;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+        
+        .input-hint {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 5px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-finish-address {
+            background-color: #f25c05;
+            color: white;
+        }
+        
+        .btn-finish-address:hover {
+            background-color: #da5304;
+        }
+        
+        .btn-finish {
+            background-color: #34a853;
+            color: white;
+        }
+        
+        .btn-finish:hover {
+            background-color: #2e8b47;
+        }
+        
+        .btn-excel {
+            background-color: #0b8043;
+            color: white;
+        }
+        
+        .btn-excel:hover {
+            background-color: #096b38;
+        }
+        
+        .btn-restart {
+            background-color: #ea4335;
+            color: white;
+        }
+        
+        .btn-restart:hover {
+            background-color: #d33426;
+        }
+        
+        .btn-camera {
+            background-color: #9c27b0;
+            color: white;
+        }
+        
+        .btn-camera:hover {
+            background-color: #7b1fa2;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #e6f4ea;
+            color: #137333;
+            border: 1px solid #137333;
+            display: block;
+        }
+        
+        .status.error {
+            background-color: #fce8e6;
+            color: #c5221f;
+            border: 1px solid #c5221f;
+            display: block;
+        }
+        
+        .counter {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 18px;
+            color: #5f6368;
+        }
+        
+        .counter-number {
+            font-weight: bold;
+            color: #1a73e8;
+            font-size: 24px;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #5f6368;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal h2 {
+            margin-bottom: 15px;
+            color: #3c4043;
+        }
+        
+        .modal p {
+            margin-bottom: 20px;
+            color: #5f6368;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .modal-btn.confirm {
+            background-color: #ea4335;
+            color: white;
+        }
+        
+        .modal-btn.cancel {
+            background-color: #f1f3f4;
+            color: #3c4043;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .data-table th, .data-table td {
+            border: 1px solid #dadce0;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .valid {
+            border-color: #34a853 !important;
+        }
+        
+        .invalid {
+            border-color: #ea4335 !important;
+        }
+        
+        .table-container {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .table-container.visible {
+            display: block;
+        }
+        
+        .product-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .export-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background-color: #1a73e8;
+            color: white;
+        }
+        
+        .export-btn:hover {
+            background-color: #1557b0;
+        }
+        
+        .finalize-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .finalize-section.visible {
+            display: block;
+        }
+        
+        .camera-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            flex-direction: column;
+        }
+        
+        .camera-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        #camera-video {
+            width: 100%;
+            border-radius: 10px;
+            background-color: black;
+        }
+        
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border: 2px solid #1a73e8;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        
+        .camera-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .camera-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .camera-close {
+            background-color: #ea4335;
+            color: white;
+        }
+        
+        .camera-switch {
+            background-color: #5f6368;
+            color: white;
+        }
+        
+        .camera-flash {
+            background-color: #1a73e8;
+            color: white;
+        }
+        
+        .scanner-line {
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background-color: #1a73e8;
+            box-shadow: 0 0 10px rgba(26, 115, 232, 0.7);
+            animation: scan 2s infinite linear;
+        }
+        
+        @keyframes scan {
+            0% { top: 20%; }
+            50% { top: 80%; }
+            100% { top: 20%; }
+        }
+        
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .product-info {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .export-options {
+                flex-direction: column;
+            }
+            
+            .camera-container {
+                width: 95%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <div class="title">Inventário (Bipagem) — com base de produtos</div>
-        <div class="subtitle">Bipe o código, confirme, e exporte o relatório em CSV (Excel abre direto).</div>
-      </div>
-      <div class="right">
-        <span class="pill" id="dbPill">📦 Base: carregando...</span>
-        <span class="pill">💾 Salva no aparelho</span>
-      </div>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Inventário - CD HMDK</h1>
+            <p>Controle de endereços e produtos</p>
+        </div>
+        
+        <div class="content">
+            <div class="datetime-container">
+                <div class="datetime-box">
+                    <div class="datetime-label">Data</div>
+                    <div id="currentDate" class="datetime-value">01/01/2023</div>
+                </div>
+                <div class="datetime-box">
+                    <div class="datetime-label">Hora</div>
+                    <div id="currentTime" class="datetime-value">00:00:00</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Endereço:</label>
+                <input type="text" id="address" placeholder="Ex: 01-02-A2-21" maxlength="11">
+                <div class="input-hint">Formato: 01-02-A2-21 (Depósito-Rua-Prédio-Apartamento)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="product">Produto:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="product" placeholder="Bipe o código do produto" disabled style="flex: 1;">
+                    <button id="cameraBtn" class="btn-camera" disabled title="Ler código com a câmera">📷</button>
+                </div>
+                <div class="input-hint">O código será validado até o primeiro "*" (se houver)</div>
+            </div>
+            
+            <div class="counter">
+                Produtos registrados: <span id="productCount" class="counter-number">0</span>
+            </div>
+            
+            <div class="product-info">
+                <div>Endereço atual: <span id="currentAddressDisplay">Nenhum</span></div>
+                <div>Itens únicos: <span id="uniqueProducts" class="counter-number">0</span></div>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <div class="button-group">
+                <button id="finishAddressBtn" class="btn-finish-address" disabled>Finalizar Endereço</button>
+                <button id="finishBtn" class="btn-finish">Finalizar Contagem</button>
+                <button id="excelBtn" class="btn-excel">Exportar Excel</button>
+                <button id="restartBtn" class="btn-restart">Reiniciar</button>
+            </div>
+            
+            <div id="finalizeSection" class="finalize-section">
+                <h3>Contagem Finalizada</h3>
+                <p>Total de <span id="finalProductCount" class="counter-number">0</span> produtos registrados em <span id="finalAddressCount" class="counter-number">0</span> endereços.</p>
+                <div class="export-options">
+                    <button id="exportExcelBtn" class="export-btn">Exportar para Excel</button>
+                    <button id="newCountBtn" class="export-btn">Nova Contagem</button>
+                </div>
+            </div>
+            
+            <div id="tableContainer" class="table-container visible">
+                <table id="dataTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Endereço</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Data</th>
+                            <th>Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="instructions">
+                <h3>Instruções de uso:</h3>
+                <ul>
+                    <li>Bipe o código do endereço (formato: 01-02-A2-21)</li>
+                    <li>Bipe os códigos dos produtos no endereço (digite ou use a câmera)</li>
+                    <li>Produtos iguais no mesmo endereço serão agrupados automaticamente</li>
+                    <li>Clique em "Finalizar Endereço" quando terminar o endereço atual</li>
+                    <li>Clique em "Finalizar Contagem" para concluir todo o inventário</li>
+                    <li>Use "Exportar Excel" para salvar o inventário</li>
+                    <li>Use "Reiniciar" para limpar todos os dados (com confirmação)</li>
+                    <li>Este app funciona perfeitamente em celulares Android e iOS</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <label>1) Código (bipado)</label>
-        <div class="row">
-          <input id="codigo" class="mono" inputmode="text" autocomplete="off" placeholder="Bipe aqui..." />
-          <input id="qtd" inputmode="numeric" placeholder="Qtd" value="1" />
+    <!-- Modal de Confirmação -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar reinicialização</h2>
+            <p>Digite <strong>excluir</strong> no campo abaixo para apagar todas as informações:</p>
+            <input type="text" id="confirmInput" class="modal-input" placeholder="Digite excluir">
+            <div class="modal-buttons">
+                <button id="cancelBtn" class="modal-btn cancel">Cancelar</button>
+                <button id="confirmBtn" class="modal-btn confirm">Confirmar</button>
+            </div>
         </div>
-
-        <div style="height:10px"></div>
-
-        <label>2) Produto encontrado</label>
-        <input id="nome" readonly placeholder="Vai aparecer o nome automaticamente..." />
-
-        <div class="status" id="status"></div>
-
-        <div style="height:12px"></div>
-
-        <div class="btns">
-          <button class="primary" id="btnAdd">Adicionar (com confirmação)</button>
-          <button class="ghost" id="btnAddSem">Adicionar (sem confirmação)</button>
-          <button class="ghost" id="btnLimpar">Limpar</button>
-          <button class="danger" id="btnZerar">Zerar inventário</button>
-        </div>
-
-        <div style="height:14px"></div>
-
-        <div class="btns">
-          <button class="primary" id="btnExport">Exportar CSV (Excel)</button>
-          <button class="ghost" id="btnBackup">Backup (JSON)</button>
-          <button class="ghost" id="btnImport">Importar backup</button>
-          <input id="fileImport" type="file" accept="application/json" style="display:none" />
-        </div>
-
-        <div class="status small">
-          Dica: a maioria dos leitores Bluetooth envia <b>Enter</b> no final do bip.
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-          <div>
-            <div style="font-weight:800">Itens no inventário</div>
-            <div class="small">Agrupado por código.</div>
-          </div>
-          <div class="pill" id="countPill">0 itens</div>
-        </div>
-
-        <div style="height:10px"></div>
-
-        <div style="overflow:auto;max-height:520px">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:160px">Código</th>
-                <th>Nome</th>
-                <th style="width:90px">Qtd</th>
-                <th style="width:90px">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="status small" id="lastSaved"></div>
-      </div>
     </div>
-  </div>
 
-<script>
-  // ====== CONFIG ======
-  const PRODUTOS_JSON = "./produtos.json"; // arquivo no mesmo lugar do index.html
-  const LS_KEY = "inventario_itens_v1";
+    <!-- Modal da Câmera -->
+    <div id="cameraModal" class="camera-modal">
+        <div class="camera-container">
+            <video id="camera-video" playsinline></video>
+            <div class="camera-overlay">
+                <div class="scanner-line"></div>
+            </div>
+        </div>
+        <div class="camera-buttons">
+            <button id="switchCameraBtn" class="camera-btn camera-switch">Trocar Câmera</button>
+            <button id="toggleFlashBtn" class="camera-btn camera-flash">Flash</button>
+            <button id="closeCameraBtn" class="camera-btn camera-close">Fechar</button>
+        </div>
+    </div>
 
-  // ====== STATE ======
-  let base = {}; // { codigo: nome }
-  let itens = {}; // { codigo: {codigo, nome, qtd} }
-
-  // ====== HELPERS ======
-  const $ = (id) => document.getElementById(id);
-
-  function nowBR(){
-    const d = new Date();
-    return d.toLocaleString("pt-BR");
-  }
-
-  function setStatus(msg, type=""){
-    const el = $("status");
-    el.textContent = msg || "";
-    el.className = "status " + (type || "");
-  }
-
-  function save(){
-    localStorage.setItem(LS_KEY, JSON.stringify(itens));
-    $("lastSaved").textContent = "Último salvamento: " + nowBR();
-  }
-
-  function load(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(raw) itens = JSON.parse(raw) || {};
-    }catch(e){
-      itens = {};
-    }
-  }
-
-  function updateCount(){
-    const n = Object.keys(itens).length;
-    $("countPill").textContent = n + (n === 1 ? " item" : " itens");
-  }
-
-  function render(){
-    const tbody = $("tbody");
-    tbody.innerHTML = "";
-
-    const keys = Object.keys(itens);
-    keys.sort((a,b)=>a.localeCompare(b));
-
-    for(const codigo of keys){
-      const it = itens[codigo];
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td class="mono">${escapeHtml(it.codigo)}</td>
-        <td>${escapeHtml(it.nome || "(SEM NOME)")}</td>
-        <td class="mono">${it.qtd}</td>
-        <td>
-          <button class="ghost" data-act="plus" data-c="${escapeHtml(it.codigo)}">+</button>
-          <button class="ghost" data-act="minus" data-c="${escapeHtml(it.codigo)}">-</button>
-          <button class="danger" data-act="del" data-c="${escapeHtml(it.codigo)}">x</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    }
-
-    updateCount();
-    save();
-  }
-
-  function escapeHtml(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function lookupNome(codigo){
-    if(!codigo) return "";
-    return base[codigo] || "";
-  }
-
-  function normalizeCodigo(c){
-    return String(c || "").trim();
-  }
-
-  function normalizeQtd(q){
-    const n = parseInt(String(q||"").replace(/\D/g,""),10);
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  }
-
-  function addItem({codigo, qtd, confirm=true}){
-    codigo = normalizeCodigo(codigo);
-    qtd = normalizeQtd(qtd);
-
-    if(!codigo){
-      setStatus("Digite/bipe um código.", "bad");
-      return;
-    }
-
-    const nome = lookupNome(codigo);
-    $("nome").value = nome || "";
-
-    if(!nome){
-      setStatus("⚠️ Código não encontrado na base. Você pode adicionar mesmo assim.", "bad");
-    }else{
-      setStatus("✅ Produto encontrado: " + nome, "ok");
-    }
-
-    if(confirm){
-      const msg = nome
-        ? `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: ${nome}\nQtd: ${qtd}`
-        : `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: (não encontrado)\nQtd: ${qtd}`;
-      if(!window.confirm(msg)) return;
-    }
-
-    if(!itens[codigo]){
-      itens[codigo] = { codigo, nome: nome || "", qtd: 0 };
-    }else{
-      // se já tinha vazio e agora achou, atualiza
-      if(!itens[codigo].nome && nome) itens[codigo].nome = nome;
-    }
-
-    itens[codigo].qtd += qtd;
-
-    $("codigo").value = "";
-    $("qtd").value = "1";
-    $("nome").value = "";
-    $("codigo").focus();
-
-    render();
-  }
-
-  function exportCSV(){
-    const keys = Object.keys(itens);
-    if(keys.length === 0){
-      alert("Sem itens para exportar.");
-      return;
-    }
-
-    const linhas = [];
-    linhas.push(["Código","Nome do Produto","Quantidade"].join(";"));
-
-    keys.sort((a,b)=>a.localeCompare(b));
-    for(const codigo of keys){
-      const it = itens[codigo];
-      const row = [
-        it.codigo,
-        (it.nome || "").replaceAll(";", ","),
-        String(it.qtd)
-      ];
-      linhas.push(row.join(";"));
-    }
-
-    const csv = "\ufeff" + linhas.join("\n"); // BOM pra Excel (pt-BR)
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "inventario_" + new Date().toISOString().slice(0,10) + ".csv";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function backupJSON(){
-    const blob = new Blob([JSON.stringify(itens, null, 2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "backup_inventario.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function importJSON(file){
-    const reader = new FileReader();
-    reader.onload = () => {
-      try{
-        const obj = JSON.parse(reader.result);
-        if(typeof obj !== "object" || Array.isArray(obj)) throw new Error("Formato inválido");
-        itens = obj;
-        render();
-        alert("Backup importado com sucesso!");
-      }catch(e){
-        alert("Não consegui importar esse arquivo. Ele não parece um backup válido.");
-      }
-    };
-    reader.readAsText(file, "utf-8");
-  }
-
-  // ====== INIT ======
-  async function loadBase(){
-    try{
-      const res = await fetch(PRODUTOS_JSON, {cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      base = await res.json();
-      const total = Object.keys(base).length;
-
-      $("dbPill").textContent = "📦 Base: " + total + " produtos";
-      $("dbPill").style.borderColor = "rgba(46,204,113,.35)";
-    }catch(e){
-      base = {};
-      $("dbPill").textContent = "📦 Base: NÃO carregou";
-      $("dbPill").style.borderColor = "rgba(255,90,106,.35)";
-      setStatus("⚠️ Não consegui carregar o produtos.json. Verifique se ele está no GitHub junto do index.html.", "bad");
-    }
-  }
-
-  function wire(){
-    $("btnAdd").addEventListener("click", ()=>addItem({
-      codigo:$("codigo").value,
-      qtd:$("qtd").value,
-      confirm:true
-    }));
-
-    $("btnAddSem").addEventListener("click", ()=>addItem({
-      codigo:$("codigo").value,
-      qtd:$("qtd").value,
-      confirm:false
-    }));
-
-    $("btnLimpar").addEventListener("click", ()=>{
-      $("codigo").value="";
-      $("qtd").value="1";
-      $("nome").value="";
-      $("codigo").focus();
-      setStatus("");
-    });
-
-    $("btnZerar").addEventListener("click", ()=>{
-      if(!confirm("Tem certeza que quer ZERAR todo o inventário?")) return;
-      itens = {};
-      render();
-      setStatus("Inventário zerado.", "ok");
-      $("codigo").focus();
-    });
-
-    $("btnExport").addEventListener("click", exportCSV);
-    $("btnBackup").addEventListener("click", backupJSON);
-
-    $("btnImport").addEventListener("click", ()=> $("fileImport").click());
-    $("fileImport").addEventListener("change", (e)=>{
-      const file = e.target.files?.[0];
-      if(file) importJSON(file);
-      e.target.value = "";
-    });
-
-    // Enter no campo código = adiciona (com confirmação)
-    $("codigo").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        e.preventDefault();
-        addItem({codigo:$("codigo").value, qtd:$("qtd").value, confirm:true});
-      }
-    });
-
-    // enquanto digita/bipa, já tenta mostrar o nome
-    $("codigo").addEventListener("input", ()=>{
-      const c = normalizeCodigo($("codigo").value);
-      const nome = lookupNome(c);
-      $("nome").value = nome || "";
-      if(!c){
-        setStatus("");
-      }else if(nome){
-        setStatus("✅ Produto encontrado: " + nome, "ok");
-      }else{
-        setStatus("⚠️ Código não encontrado na base.", "bad");
-      }
-    });
-  }
-
-  (async function(){
-    load();
-    render();
-    wire();
-    await loadBase();
-    $("codigo").focus();
-  })();
-</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da interface
+            const currentDateElem = document.getElementById('currentDate');
+            const currentTimeElem = document.getElementById('currentTime');
+            const addressInput = document.getElementById('address');
+            const productInput = document.getElementById('product');
+            const productCountElem = document.getElementById('productCount');
+            const uniqueProductsElem = document.getElementById('uniqueProducts');
+            const currentAddressDisplay = document.getElementById('currentAddressDisplay');
+            const finishAddressBtn = document.getElementById('finishAddressBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            const excelBtn = document.getElementById('excelBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            const statusElem = document.getElementById('status');
+            const confirmModal = document.getElementById('confirmModal');
+            const confirmInput = document.getElementById('confirmInput');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const dataTable = document.getElementById('dataTable');
+            const tableBody = document.getElementById('tableBody');
+            const tableContainer = document.getElementById('tableContainer');
+            const finalizeSection = document.getElementById('finalizeSection');
+            const finalProductCount = document.getElementById('finalProductCount');
+            const finalAddressCount = document.getElementById('finalAddressCount');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const newCountBtn = document.getElementById('newCountBtn');
+            const cameraBtn = document.getElementById('cameraBtn');
+            const cameraModal = document.getElementById('cameraModal');
+            const cameraVideo = document.getElementById('camera-video');
+            const switchCameraBtn = document.getElementById('switchCameraBtn');
+            const toggleFlashBtn = document.getElementById('toggleFlashBtn');
+            const closeCameraBtn = document.getElementById('closeCameraBtn');
+            
+            // Estado da aplicação
+            let inventoryData = [];
+            let currentAddress = '';
+            let productCount = 0;
+            let uniqueProducts = 0;
+            let addressCount = 0;
+            let isFinalized = false;
+            let stream = null;
+            let isCameraActive = false;
+            let facingMode = 'environment'; // 'environment' (traseira) ou 'user' (frontal)
+            let isFlashOn = false;
+            let quaggaInitialized = false;
+            
+            // Focar no campo endereço
+            function focusAddressField() {
+                setTimeout(() => {
+                    addressInput.focus();
+                }, 100);
+            }
+            
+            // Atualizar data e hora
+            function updateDateTime() {
+                const now = new Date();
+                
+                // Formatar data
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                currentDateElem.textContent = `${day}/${month}/${year}`;
+                
+                // Formatar hora
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                currentTimeElem.textContent = `${hours}:${minutes}:${seconds}`;
+            }
+            
+            // Atualizar a cada segundo
+            setInterval(updateDateTime, 1000);
+            updateDateTime(); // Chamar imediatamente
+            
+            // Validar formato do endereço
+            function isValidAddress(address) {
+                const pattern = /^\d{2}-\d{2}-[A-Za-z]\d-\d{2}$/;
+                return pattern.test(address);
+            }
+            
+            // Formatar endereço automaticamente
+            function formatAddress(input) {
+                // Remove qualquer caractere que não seja número, letra ou hífen
+                let value = input.value.replace(/[^\dA-Za-z-]/g, '').toUpperCase();
+                
+                // Limita o comprimento
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
+                }
+                
+                // Adiciona hífens automaticamente
+                if (value.length > 2 && value.charAt(2) !== '-') {
+                    value = value.substring(0, 2) + '-' + value.substring(2);
+                }
+                if (value.length > 5 && value.charAt(5) !== '-') {
+                    value = value.substring(0, 5) + '-' + value.substring(5);
+                }
+                if (value.length > 8 && value.charAt(8) !== '-') {
+                    value = value.substring(0, 8) + '-' + value.substring(8);
+                }
+                
+                input.value = value;
+                return value;
+            }
+            
+            // Validar e formatar código de barras (pegar apenas até o primeiro *)
+            function formatBarcode(barcode) {
+                // Encontrar a posição do primeiro *
+                const asteriskIndex = barcode.indexOf('*');
+                
+                // Se encontrar *, pegar apenas a parte antes dele
+                if (asteriskIndex !== -1) {
+                    return barcode.substring(0, asteriskIndex).trim();
+                }
+                
+                // Se não encontrar *, retornar o código completo
+                return barcode.trim();
+            }
+            
+            // Mostrar status
+            function showStatus(message, isSuccess) {
+                statusElem.textContent = message;
+                statusElem.className = isSuccess ? 'status success' : 'status error';
+                
+                // Ocultar após 5 segundos
+                setTimeout(() => {
+                    statusElem.className = 'status';
+                }, 5000);
+            }
+            
+            // Limpar todos os dados
+            function clearAllData() {
+                inventoryData = [];
+                currentAddress = '';
+                productCount = 0;
+                uniqueProducts = 0;
+                addressCount = 0;
+                isFinalized = false;
+                
+                // Reiniciar interface
+                addressInput.value = '';
+                addressInput.disabled = false;
+                addressInput.classList.remove('valid', 'invalid');
+                productInput.value = '';
+                productInput.disabled = true;
+                cameraBtn.disabled = true;
+                productCountElem.textContent = '0';
+                uniqueProductsElem.textContent = '0';
+                currentAddressDisplay.textContent = 'Nenhum';
+                tableBody.innerHTML = '';
+                tableContainer.classList.add('visible');
+                finalizeSection.classList.remove('visible');
+                finishAddressBtn.disabled = true;
+                finishBtn.disabled = false;
+                
+                // Focar no campo endereço
+                focusAddressField();
+            }
+            
+            // Atualizar a tabela de visualização
+            function updateTableView() {
+                // Limpar tabela
+                tableBody.innerHTML = '';
+                
+                // Agrupar produtos por endereço e código
+                const groupedData = {};
+                inventoryData.forEach(item => {
+                    const key = `${item.address}-${item.product}`;
+                    if (!groupedData[key]) {
+                        groupedData[key] = {
+                            address: item.address,
+                            product: item.product,
+                            quantity: 0,
+                            date: item.date,
+                            time: item.time
+                        };
+                    }
+                    groupedData[key].quantity++;
+                });
+                
+                // Adicionar itens agrupados à tabela
+                Object.values(groupedData).forEach(item => {
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>${item.address}</td>
+                        <td>${item.product}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.date}</td>
+                        <td>${item.time}</td>
+                    `;
+                    tableBody.appendChild(newRow);
+                });
+                
+                // Mostrar tabela se houver dados
+                if (inventoryData.length > 0) {
+                    tableContainer.classList.add('visible');
+                } else {
+                    tableContainer.classList.remove('visible');
+                }
+                
+                // Atualizar contador de produtos únicos
+                uniqueProducts = Object.keys(groupedData).length;
+                uniqueProductsElem.textContent = uniqueProducts;
+            }
+            
+            // Exportar para Excel
+            function exportToExcel() {
+                if (inventoryData.length === 0) {
+                    showStatus('Nenhum dado para exportar.', false);
+                    return;
+                }
+                
+                try {
+                    // Agrupar produtos por endereço e código
+                    const groupedData = {};
+                    inventoryData.forEach(item => {
+                        const key = `${item.address}-${item.product}`;
+                        if (!groupedData[key]) {
+                            groupedData[key] = {
+                                Endereço: item.address,
+                                Produto: item.product,
+                                Quantidade: 0,
+                                Data: item.date,
+                                Hora: item.time
+                            };
+                        }
+                        groupedData[key].Quantidade++;
+                    });
+                    
+                    // Converter para array
+                    const excelData = Object.values(groupedData);
+                    
+                    // Criar workbook e worksheet
+                    const ws = XLSX.utils.json_to_sheet(excelData);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Inventário");
+                    
+                    // Formatar data para o nome do arquivo
+                    const now = new Date();
+                    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+                    
+                    // Exportar para arquivo XLSX
+                    XLSX.writeFile(wb, `inventario_${dateStr}.xlsx`);
+                    
+                    showStatus(`Excel exportado com ${uniqueProducts} itens únicos.`, true);
+                } catch (error) {
+                    console.error("Erro ao exportar para Excel:", error);
+                    showStatus('Erro ao exportar para Excel. Tente novamente.', false);
+                }
+            }
+            
+            // Finalizar contagem completa
+            function finalizeCount() {
+                if (inventoryData.length === 0) {
+                    showStatus('Nenhum dado para finalizar.', false);
+                    return;
+                }
+                
+                // Calcular número de endereços únicos
+                const uniqueAddresses = new Set(inventoryData.map(item => item.address)).size;
+                
+                // Atualizar seção de finalização
+                finalProductCount.textContent = inventoryData.length;
+                finalAddressCount.textContent = uniqueAddresses;
+                
+                // Ocultar elementos de entrada e mostrar seção de finalização
+                document.querySelectorAll('.form-group, .button-group, .counter, .product-info').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                finalizeSection.classList.add('visible');
+                isFinalized = true;
+                
+                showStatus('Contagem finalizada com sucesso!', true);
+            }
+            
+            // Iniciar a câmera
+            async function startCamera() {
+                try {
+                    cameraModal.style.display = 'flex';
+                    
+                    // Parâmetros para a câmera
+                    const constraints = {
+                        video: {
+                            facingMode: facingMode,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    };
+                    
+                    // Solicitar acesso à câmera
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    cameraVideo.srcObject = stream;
+                    
+                    // Iniciar a reprodução do vídeo
+                    await cameraVideo.play();
+                    
+                    // Inicializar o Quagga para leitura de código de barras
+                    if (!quaggaInitialized) {
+                        Quagga.init({
+                            inputStream: {
+                                name: "Live",
+                                type: "LiveStream",
+                                target: cameraVideo,
+                                constraints: constraints
+                            },
+                            decoder: {
+                                readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "upc_reader"]
+                            }
+                        }, function(err) {
+                            if (err) {
+                                console.error("Erro ao inicializar Quagga:", err);
+                                showStatus('Erro ao iniciar leitor de código de barras.', false);
+                                return;
+                            }
+                            
+                            Quagga.start();
+                            quaggaInitialized = true;
+                            
+                            // Detectar códigos de barras
+                            Quagga.onDetected(function(result) {
+                                const code = result.codeResult.code;
+                                if (code) {
+                                    // Preencher o campo de produto com o código lido
+                                    productInput.value = code;
+                                    // Simular pressionar Enter para processar o código
+                                    const event = new KeyboardEvent('keydown', { key: 'Enter' });
+                                    productInput.dispatchEvent(event);
+                                    
+                                    // Parar temporariamente o scanner para evitar leituras múltiplas
+                                    Quagga.stop();
+                                    setTimeout(() => {
+                                        Quagga.start();
+                                    }, 1000);
+                                }
+                            });
+                        });
+                    } else {
+                        Quagga.start();
+                    }
+                    
+                    isCameraActive = true;
+                    
+                } catch (error) {
+                    console.error("Erro ao acessar a câmera:", error);
+                    showStatus('Não foi possível acessar a câmera. Verifique as permissões.', false);
+                    stopCamera();
+                }
+            }
+            
+            // Parar a câmera
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                if (quaggaInitialized) {
+                    Quagga.stop();
+                }
+                
+                cameraModal.style.display = 'none';
+                isCameraActive = false;
+                
+                // Voltar o foco para o campo de produto
+                if (!isFinalized) {
+                    productInput.focus();
+                }
+            }
+            
+            // Alternar entre câmeras (frontal/traseira)
+            async function switchCamera() {
+                // Parar a câmera atual
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                if (quaggaInitialized) {
+                    Quagga.stop();
+                }
+                
+                // Alternar entre câmeras
+                facingMode = facingMode === 'environment' ? 'user' : 'environment';
+                
+                // Reiniciar a câmera
+                await startCamera();
+            }
+            
+            // Alternar flash (se disponível)
+            async function toggleFlash() {
+                if (!stream) return;
+                
+                const videoTrack = stream.getVideoTracks()[0];
+                if (!videoTrack) return;
+                
+                try {
+                    // Tentar acessar recursos de flash/torch
+                    const capabilities = videoTrack.getCapabilities();
+                    if (capabilities.torch) {
+                        await videoTrack.applyConstraints({
+                            advanced: [{ torch: !isFlashOn }]
+                        });
+                        isFlashOn = !isFlashOn;
+                        toggleFlashBtn.textContent = isFlashOn ? 'Desligar Flash' : 'Flash';
+                    } else {
+                        showStatus('Flash não disponível neste dispositivo.', false);
+                    }
+                } catch (error) {
+                    console.error("Erro ao alternar flash:", error);
+                    showStatus('Não foi possível alternar o flash.', false);
+                }
+            }
+            
+            // Processar endereço
+            addressInput.addEventListener('input', function() {
+                const value = formatAddress(addressInput);
+                
+                // Validar formato
+                if (isValidAddress(value)) {
+                    addressInput.classList.remove('invalid');
+                    addressInput.classList.add('valid');
+                    finishAddressBtn.disabled = false;
+                } else {
+                    addressInput.classList.remove('valid');
+                    if (value.length > 0 && value.length >= 2) {
+                        addressInput.classList.add('invalid');
+                    } else {
+                        addressInput.classList.remove('invalid');
+                    }
+                    finishAddressBtn.disabled = true;
+                }
+            });
+            
+            // Quando o endereço for preenchido corretamente
+            addressInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && isValidAddress(addressInput.value)) {
+                    currentAddress = addressInput.value;
+                    currentAddressDisplay.textContent = currentAddress;
+                    productInput.disabled = false;
+                    cameraBtn.disabled = false;
+                    productInput.focus();
+                    addressInput.disabled = true;
+                    showStatus('Endereço registrado. Agora biphe os produtos.', true);
+                }
+            });
+            
+            // Processar produto
+            productInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && productInput.value.trim() !== '') {
+                    const rawBarcode = productInput.value.trim();
+                    const productCode = formatBarcode(rawBarcode);
+                    
+                    if (!productCode) {
+                        showStatus('Código de barras inválido.', false);
+                        productInput.value = '';
+                        return;
+                    }
+                    
+                    const now = new Date();
+                    const date = now.toLocaleDateString('pt-BR');
+                    const time = now.toLocaleTimeString('pt-BR');
+                    
+                    // Adicionar aos dados
+                    inventoryData.push({
+                        address: currentAddress,
+                        product: productCode,
+                        date: date,
+                        time: time
+                    });
+                    
+                    // Atualizar contador
+                    productCount++;
+                    productCountElem.textContent = productCount;
+                    
+                    // Atualizar visualização da tabela
+                    updateTableView();
+                    
+                    // Limpar campo e focar novamente
+                    productInput.value = '';
+                    showStatus(`Produto ${productCode} registrado no endereço ${currentAddress}`, true);
+                }
+            });
+            
+            // Finalizar endereço
+            finishAddressBtn.addEventListener('click', function() {
+                if (productCount === 0) {
+                    showStatus('Nenhum produto foi registrado para este endereço.', false);
+                    return;
+                }
+                
+                // Reiniciar para novo endereço
+                addressInput.value = '';
+                addressInput.disabled = false;
+                addressInput.classList.remove('valid', 'invalid');
+                productInput.value = '';
+                productInput.disabled = true;
+                cameraBtn.disabled = true;
+                focusAddressField();
+                finishAddressBtn.disabled = true;
+                
+                addressCount++;
+                showStatus(`Endereço ${currentAddress} finalizado com ${productCount} produtos.`, true);
+                productCount = 0;
+                productCountElem.textContent = '0';
+                currentAddress = '';
+                currentAddressDisplay.textContent = 'Nenhum';
+            });
+            
+            // Finalizar contagem completa
+            finishBtn.addEventListener('click', finalizeCount);
+            
+            // Exportar para Excel
+            excelBtn.addEventListener('click', exportToExcel);
+            
+            // Exportar para Excel da tela final
+            exportExcelBtn.addEventListener('click', exportToExcel);
+            
+            // Nova contagem
+            newCountBtn.addEventListener('click', function() {
+                clearAllData();
+                document.querySelectorAll('.form-group, .button-group, .counter, .product-info').forEach(el => {
+                    el.style.display = 'block';
+                });
+                showStatus('Nova contagem iniciada. Informe o primeiro endereço.', true);
+            });
+            
+            // Abrir câmera
+            cameraBtn.addEventListener('click', startCamera);
+            
+            // Fechar câmera
+            closeCameraBtn.addEventListener('click', stopCamera);
+            
+            // Trocar câmera
+            switchCameraBtn.addEventListener('click', switchCamera);
+            
+            // Alternar flash
+            toggleFlashBtn.addEventListener('click', toggleFlash);
+            
+            // Abrir modal de confirmação para reiniciar
+            restartBtn.addEventListener('click', function() {
+                if (inventoryData.length === 0) {
+                    showStatus('Nenhum dado para limpar.', false);
+                    return;
+                }
+                
+                confirmInput.value = '';
+                confirmModal.style.display = 'flex';
+                confirmInput.focus();
+            });
+            
+            // Fechar modal
+            cancelBtn.addEventListener('click', function() {
+                confirmModal.style.display = 'none';
+                if (!isFinalized) {
+                    focusAddressField();
+                }
+            });
+            
+            // Confirmar reinicialização
+            confirmBtn.addEventListener('click', function() {
+                if (confirmInput.value.toLowerCase() === 'excluir') {
+                    // Limpar todos os dados
+                    clearAllData();
+                    
+                    confirmModal.style.display = 'none';
+                    
+                    showStatus('Todos os dados foram apagados. Sistema reiniciado.', true);
+                } else {
+                    alert('Texto incorreto. Digite "excluir" para confirmar.');
+                    confirmInput.focus();
+                }
+            });
+            
+            // Tecla Enter no modal de confirmação
+            confirmInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    confirmBtn.click();
+                }
+            });
+            
+            // Focar no campo endereço ao carregar a página
+            focusAddressField();
+        });
+    </script>
 </body>
 </html>
