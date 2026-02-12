@@ -1,733 +1,607 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SILOKING — Inventário</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventário — SILOKING BRASIL</title>
   <style>
     :root{
-      --bg:#f5f7fb;
+      --bg:#f6f7fb;
       --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
+      --muted:#6b7280;
+      --text:#111827;
       --line:#e5e7eb;
-      --accent:#2563eb;
-      --accent2:#1d4ed8;
+      --primary:#2563eb;
+      --primary2:#1d4ed8;
+      --danger:#dc2626;
+      --danger2:#b91c1c;
       --ok:#16a34a;
-      --bad:#dc2626;
-      --shadow:0 10px 25px rgba(15, 23, 42, .08);
-      --radius:18px;
+      --shadow: 0 10px 30px rgba(17,24,39,.08);
+      --radius: 18px;
     }
-
     *{box-sizing:border-box}
-
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 600px at 20% 0%, #ffffff 0%, var(--bg) 50%, #eef2ff 100%);
       color:var(--text);
     }
-
     .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:18px;
+      max-width: 1180px;
+      margin: 24px auto;
+      padding: 0 16px 28px;
     }
 
-    /* ===== TOPO ===== */
-    .topbar{
-      background:linear-gradient(90deg, #0b1220, #0f1c38);
-      color:#fff;
-      border-radius:22px;
-      padding:18px 18px;
-      box-shadow:0 18px 35px rgba(0,0,0,.18);
+    /* Header */
+    header{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-      margin-bottom:16px;
+      gap:16px;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.75);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
     }
-
     .brand{
       display:flex;
+      align-items:center;
+      gap:14px;
+      min-width: 280px;
+    }
+    .brand svg{display:block}
+    .title{
+      display:flex;
       flex-direction:column;
-      gap:4px;
-      min-width:260px;
+      gap:2px;
+      flex:1;
     }
-
-    .brand .logo{
-      font-weight:900;
-      letter-spacing:.8px;
-      font-size:22px;
-      line-height:1;
+    .title h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing: .2px;
+      line-height: 1.15;
     }
-
-    .brand .desc{
-      font-size:12px;
-      opacity:.85;
+    .title p{
+      margin:0;
+      font-size: 13px;
+      color: var(--muted);
     }
-
-    .topRight{
+    .pill{
       display:flex;
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
       justify-content:flex-end;
     }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
+    .tag{
+      font-size:12px;
+      color:#0f172a;
+      background:#eef2ff;
+      border:1px solid #dbeafe;
+      padding:7px 10px;
+      border-radius: 999px;
+      display:flex;
       gap:8px;
-      padding:9px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      font-size:13px;
+      align-items:center;
       white-space:nowrap;
     }
-
-    /* ===== GRID ===== */
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
+    .tag b{font-weight:700}
+    .tag .dot{
+      width:9px;height:9px;border-radius:99px;background:var(--ok);
+      box-shadow: 0 0 0 4px rgba(22,163,74,.12);
     }
 
+    /* Layout */
+    .grid{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1.2fr .95fr;
+      gap: 16px;
+    }
     @media (max-width: 980px){
       .grid{grid-template-columns:1fr}
+      .brand{min-width:auto}
+      header{flex-direction:column; align-items:flex-start}
+      .pill{justify-content:flex-start}
     }
 
-    /* ===== CARDS ===== */
     .card{
-      background:var(--card);
+      background: rgba(255,255,255,.9);
       border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:16px;
-      box-shadow:var(--shadow);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
     }
-
-    .cardTitle{
-      font-size:16px;
-      font-weight:900;
+    .card h2{
+      margin:0 0 2px 0;
+      font-size: 15px;
+    }
+    .card .sub{
       margin:0 0 12px 0;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .small{
-      font-size:12px;
-      color:var(--muted);
+      font-size: 13px;
+      color: var(--muted);
     }
 
     label{
       display:block;
-      font-size:12px;
-      font-weight:700;
-      color:var(--muted);
-      margin-bottom:6px;
+      font-size: 13px;
+      color:#111827;
+      margin: 12px 0 6px;
+      font-weight:600;
     }
-
     input, button{
+      font-family: inherit;
+    }
+    input{
       width:100%;
-      border-radius:16px;
+      padding: 12px 12px;
+      border-radius: 14px;
       border:1px solid var(--line);
-      padding:13px 12px;
-      font-size:16px;
-      outline:none;
       background:#fff;
-      color:var(--text);
+      outline:none;
+      font-size: 16px;
     }
-
     input:focus{
-      border-color:rgba(37,99,235,.45);
-      box-shadow:0 0 0 4px rgba(37,99,235,.12);
+      border-color:#93c5fd;
+      box-shadow: 0 0 0 4px rgba(59,130,246,.12);
     }
-
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
 
     .row{
       display:grid;
       grid-template-columns: 1fr 140px;
-      gap:10px;
+      gap: 12px;
+      align-items:end;
     }
-
     @media (max-width: 520px){
       .row{grid-template-columns:1fr}
     }
 
-    .btnRow{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
     }
 
-    @media (max-width:520px){
-      .btnRow{grid-template-columns:1fr}
+    .warn{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid #fde68a;
+      background:#fffbeb;
+      color:#92400e;
+      font-size: 13px;
+      display:none;
     }
+    .warn.show{display:block}
 
-    button{
+    .btn{
+      width:100%;
+      border:0;
+      border-radius: 16px;
+      padding: 12px 12px;
+      font-size: 15px;
+      font-weight: 700;
       cursor:pointer;
-      font-weight:900;
-      transition:.12s transform, .12s opacity;
+      transition: transform .06s ease, filter .15s ease;
+      margin-top: 10px;
     }
-    button:hover{transform:translateY(-1px)}
-    button:active{transform:translateY(0px); opacity:.9}
+    .btn:active{transform: scale(.99)}
+    .btn.primary{background: linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff}
+    .btn.gray{background:#f3f4f6; border:1px solid var(--line); color:#111827}
+    .btn.danger{background: linear-gradient(180deg, var(--danger), var(--danger2)); color:#fff}
 
-    .primary{
-      background:linear-gradient(180deg, var(--accent), var(--accent2));
-      border-color:rgba(37,99,235,.35);
-      color:#fff;
-    }
-
-    .ghost{
-      background:#f8fafc;
-    }
-
-    .danger{
-      background:#fff1f2;
-      border-color:#fecdd3;
-      color:#9f1239;
-    }
-
-    .status{
-      margin-top:10px;
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    .ok{color:var(--ok); font-weight:800}
-    .bad{color:var(--bad); font-weight:800}
-
-    /* ===== TABELA ===== */
-    .tableWrap{
-      overflow:auto;
-      max-height:540px;
-      border-radius:18px;
-      border:1px solid var(--line);
-    }
-
+    /* Table */
     table{
       width:100%;
-      border-collapse:collapse;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 16px;
+      border:1px solid var(--line);
       background:#fff;
     }
-
-    th,td{
-      padding:11px 10px;
-      border-bottom:1px solid var(--line);
-      font-size:13px;
-      vertical-align:middle;
-    }
-
-    th{
+    thead th{
       text-align:left;
-      color:var(--muted);
-      font-weight:900;
-      background:#f8fafc;
-      position:sticky;
-      top:0;
-      z-index:1;
+      font-size: 12px;
+      color: #374151;
+      background:#f9fafb;
+      border-bottom:1px solid var(--line);
+      padding: 10px 10px;
     }
-
-    tr:last-child td{border-bottom:none}
-
+    tbody td{
+      padding: 10px 10px;
+      border-bottom:1px solid #f1f5f9;
+      font-size: 13px;
+      vertical-align:top;
+    }
+    tbody tr:last-child td{border-bottom:0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
     .actions{
       display:flex;
       gap:8px;
-      justify-content:flex-end;
-    }
-
-    .mini{
-      width:auto;
-      padding:8px 10px;
-      border-radius:12px;
-      font-weight:900;
-      font-size:13px;
-    }
-
-    .mini.danger{
-      padding:8px 11px;
-    }
-
-    .footerLine{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-      margin-top:12px;
       flex-wrap:wrap;
     }
+    .mini{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      cursor:pointer;
+    }
+    .mini:hover{filter:brightness(.98)}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-
-    <!-- TOPO -->
-    <div class="topbar">
+    <header>
       <div class="brand">
-        <div class="logo">SILOKING</div>
-        <div class="desc">Inventário por bipagem — salva no aparelho e exporta para Excel.</div>
+        <!-- Logo SILOKING BRASIL (SVG) -->
+        <svg width="220" height="62" viewBox="0 0 660 186" xmlns="http://www.w3.org/2000/svg" aria-label="SILOKING BRASIL">
+          <!-- Top and bottom blue lines -->
+          <rect x="0" y="0" width="420" height="14" fill="#1d4ed8"/>
+          <rect x="0" y="172" width="420" height="14" fill="#1d4ed8"/>
+
+          <!-- SILOKING -->
+          <text x="12" y="118" font-size="92" font-family="Arial Black, Arial, sans-serif" fill="#dc2626" letter-spacing="3">SILOKING</text>
+
+          <!-- BRASIL -->
+          <text x="18" y="162" font-size="48" font-family="Arial Black, Arial, sans-serif" fill="#dc2626" letter-spacing="18">BRASIL</text>
+
+          <!-- Circle -->
+          <circle cx="560" cy="93" r="80" fill="#ffffff" stroke="#dc2626" stroke-width="16"/>
+
+          <!-- Brazil flag inside circle -->
+          <g transform="translate(480,13)">
+            <!-- green -->
+            <rect x="0" y="0" width="160" height="160" rx="10" ry="10" fill="#0b8f3a"/>
+            <!-- yellow diamond -->
+            <polygon points="80,16 144,80 80,144 16,80" fill="#f7d117"/>
+            <!-- blue globe -->
+            <circle cx="80" cy="80" r="34" fill="#1f4bd6"/>
+            <!-- white band -->
+            <path d="M44 78 C68 62, 92 60, 116 70" stroke="#ffffff" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <!-- tiny stars -->
+            <circle cx="70" cy="70" r="2.5" fill="#ffffff"/>
+            <circle cx="88" cy="86" r="2.2" fill="#ffffff"/>
+            <circle cx="95" cy="72" r="2.0" fill="#ffffff"/>
+            <circle cx="64" cy="92" r="1.8" fill="#ffffff"/>
+          </g>
+        </svg>
       </div>
 
-      <div class="topRight">
-        <span class="pill" id="dbPill">📦 Base: carregando...</span>
-        <span class="pill">💾 Salvo automaticamente</span>
+      <div class="title">
+        <h1>Inventário (Bipagem) — com base de produtos</h1>
+        <p>Bipe o código e exporte o relatório em CSV (Excel abre direto).</p>
       </div>
-    </div>
+
+      <div class="pill">
+        <div class="tag"><span class="dot"></span><b id="baseCount">Base:</b> produtos</div>
+        <div class="tag"><b id="savedAt">Último salvamento:</b> —</div>
+      </div>
+    </header>
 
     <div class="grid">
+      <!-- Left -->
+      <section class="card">
+        <h2>Entrada</h2>
+        <p class="sub">Bipe o código, ajuste a quantidade e clique em <b>OK</b>.</p>
 
-      <!-- ESQUERDA: BIPAGEM -->
-      <div class="card">
-        <div class="cardTitle">
-          <span>📥 Bipagem</span>
-          <span class="small">Enter do leitor adiciona</span>
-        </div>
-
-        <!-- ENDEREÇO DO ESTOQUE -->
-        <label>Endereço do estoque (Rua / Corredor / Nível / Posição)</label>
-        <input id="endereco" autocomplete="off" placeholder="Ex: Rua A / Corredor 3 / Porta 12" />
-
-        <div style="height:12px"></div>
-
-        <label>Código (bipado)</label>
         <div class="row">
-          <input id="codigo" class="mono" inputmode="text" autocomplete="off" placeholder="Bipe aqui..." />
-          <input id="qtd" inputmode="numeric" placeholder="Qtd" value="1" />
+          <div>
+            <label for="codigo">1) Código (bipado)</label>
+            <input id="codigo" class="mono" type="text" autocomplete="off" placeholder="Bipe aqui..." />
+          </div>
+          <div>
+            <label for="qtd">Qtd</label>
+            <input id="qtd" class="mono" type="number" min="1" step="1" value="1" />
+          </div>
         </div>
 
-        <div style="height:12px"></div>
+        <label for="nome">2) Produto encontrado</label>
+        <input id="nome" type="text" readonly placeholder="Vai aparecer o nome automaticamente..." />
 
-        <label>Nome do produto</label>
-        <input id="nome" readonly placeholder="O nome aparece automaticamente..." />
+        <div id="warn" class="warn">⚠️ Código não encontrado na base.</div>
 
-        <div class="status" id="status"></div>
+        <button id="btnAdd" class="btn primary">OK</button>
+        <button id="btnClear" class="btn gray">Limpar</button>
+        <button id="btnZero" class="btn danger">Zerar inventário</button>
+        <button id="btnExport" class="btn primary">Exportar CSV (Excel)</button>
 
-        <div style="height:14px"></div>
+        <div class="hint">
+          Dica: se seu leitor envia ENTER no final, é só bipar e apertar <b>OK</b>.
+        </div>
+      </section>
 
-        <div class="btnRow">
-          <button class="primary" id="btnAdd">Adicionar (com confirmação)</button>
-          <button class="ghost" id="btnAddSem">Adicionar (sem confirmação)</button>
+      <!-- Right -->
+      <aside class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div>
+            <h2>Itens no inventário</h2>
+            <p class="sub">Agrupado por código.</p>
+          </div>
+          <div class="tag"><b id="itemsCount">0</b> itens</div>
         </div>
 
-        <div style="height:10px"></div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 26%;">Código</th>
+              <th>Nome</th>
+              <th style="width: 12%;">Qtd</th>
+              <th style="width: 20%;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
 
-        <div class="btnRow">
-          <button class="ghost" id="btnLimpar">Limpar</button>
-          <button class="danger" id="btnZerar">Zerar inventário</button>
-        </div>
-
-        <div style="height:14px"></div>
-
-        <div class="btnRow">
-          <button class="primary" id="btnExport">Exportar CSV (Excel)</button>
-          <button class="ghost" id="btnBackup">Backup (JSON)</button>
-        </div>
-
-        <div style="height:10px"></div>
-
-        <button class="ghost" id="btnImport">Importar backup</button>
-        <input id="fileImport" type="file" accept="application/json" style="display:none" />
-
-        <div class="status small">
-          Dica: você pode mudar o endereço do estoque a qualquer momento.
-        </div>
-      </div>
-
-      <!-- DIREITA: LISTA -->
-      <div class="card">
-        <div class="cardTitle">
-          <span>📋 Itens bipados</span>
-          <span class="pill" id="countPill">0 itens</span>
-        </div>
-
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:170px">Código</th>
-                <th>Nome</th>
-                <th style="width:90px">Qtd</th>
-                <th style="width:190px">Endereço</th>
-                <th style="width:150px;text-align:right">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="footerLine">
-          <div class="small" id="lastSaved"></div>
-          <div class="small">Agrupado por código + endereço</div>
-        </div>
-      </div>
-
+        <div class="small" id="saveInfo"></div>
+      </aside>
     </div>
   </div>
 
 <script>
-  // ====== CONFIG ======
-  const PRODUTOS_JSON = "./produtos.json";
-  const LS_KEY = "inventario_itens_v3_siloking";
-  const LS_END = "inventario_endereco_v1_siloking";
+/** ===========================
+ *  BASE DE PRODUTOS (JSON)
+ *  =========================== */
+let baseProdutos = {};
+let baseCount = 0;
 
-  // ====== STATE ======
-  let base = {};   // { codigo: nome }
-  let itens = {};  // { chave: {codigo, nome, qtd, endereco} }
-
-  // ====== HELPERS ======
-  const $ = (id) => document.getElementById(id);
-
-  function nowBR(){
-    return new Date().toLocaleString("pt-BR");
+async function carregarBase(){
+  try{
+    const res = await fetch("./produtos.json", { cache: "no-store" });
+    if(!res.ok) throw new Error("Não achou produtos.json");
+    baseProdutos = await res.json();
+    baseCount = Object.keys(baseProdutos).length;
+    document.getElementById("baseCount").innerHTML = "Base: <b>"+baseCount+"</b> produtos";
+  }catch(e){
+    baseProdutos = {};
+    baseCount = 0;
+    document.getElementById("baseCount").innerHTML = "Base: <b>0</b> produtos";
   }
+}
 
-  function setStatus(msg, type=""){
-    const el = $("status");
-    el.textContent = msg || "";
-    el.className = "status " + (type || "");
-  }
+/** ===========================
+ *  INVENTÁRIO (LOCAL STORAGE)
+ *  =========================== */
+const LS_KEY = "siloking_inventario_v1";
+let inventario = {}; // { codigo: {codigo, nome, qtd} }
 
-  function save(){
-    localStorage.setItem(LS_KEY, JSON.stringify(itens));
-    localStorage.setItem(LS_END, String($("endereco").value || "").trim());
-    $("lastSaved").textContent = "Último salvamento: " + nowBR();
-  }
+function nowBR(){
+  const d = new Date();
+  return d.toLocaleString("pt-BR");
+}
 
-  function load(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(raw) itens = JSON.parse(raw) || {};
-    }catch(e){
-      itens = {};
+function salvar(){
+  localStorage.setItem(LS_KEY, JSON.stringify(inventario));
+  const t = nowBR();
+  document.getElementById("savedAt").innerHTML = "Último salvamento: <b>"+t+"</b>";
+  document.getElementById("saveInfo").textContent = "Último salvamento: " + t;
+}
+
+function carregar(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      inventario = JSON.parse(raw) || {};
     }
+  }catch(e){
+    inventario = {};
+  }
+}
 
-    try{
-      const end = localStorage.getItem(LS_END);
-      if(end) $("endereco").value = end;
-    }catch(e){}
+/** ===========================
+ *  UI
+ *  =========================== */
+const elCodigo = document.getElementById("codigo");
+const elQtd = document.getElementById("qtd");
+const elNome = document.getElementById("nome");
+const elWarn = document.getElementById("warn");
+const elTbody = document.getElementById("tbody");
+const elItemsCount = document.getElementById("itemsCount");
+
+function normalizarCodigo(v){
+  return (v || "").toString().trim();
+}
+
+function atualizarNome(){
+  const codigo = normalizarCodigo(elCodigo.value);
+  if(!codigo){
+    elNome.value = "";
+    elWarn.classList.remove("show");
+    return;
   }
 
-  function updateCount(){
-    const n = Object.keys(itens).length;
-    $("countPill").textContent = n + (n === 1 ? " item" : " itens");
+  const nome = baseProdutos[codigo];
+  if(nome){
+    elNome.value = nome;
+    elWarn.classList.remove("show");
+  }else{
+    elNome.value = "";
+    elWarn.classList.add("show");
   }
+}
 
-  function escapeHtml(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"'," &quot;")
-      .replaceAll("'","&#039;");
-  }
+function render(){
+  const arr = Object.values(inventario);
 
-  function normalizeCodigo(c){
-    return String(c || "").trim();
-  }
+  elItemsCount.textContent = arr.length.toString();
 
-  function normalizeEndereco(e){
-    return String(e || "").trim();
-  }
-
-  function normalizeQtd(q){
-    const n = parseInt(String(q||"").replace(/\D/g,""),10);
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  }
-
-  function lookupNome(codigo){
-    if(!codigo) return "";
-    return base[codigo] || "";
-  }
-
-  // chave única: codigo + endereco
-  function makeKey(codigo, endereco){
-    return `${codigo}__${endereco || ""}`;
-  }
-
-  function render(){
-    const tbody = $("tbody");
-    tbody.innerHTML = "";
-
-    const keys = Object.keys(itens);
-    keys.sort((a,b)=>a.localeCompare(b));
-
-    for(const k of keys){
-      const it = itens[k];
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="mono">${escapeHtml(it.codigo)}</td>
-        <td>${escapeHtml(it.nome || "(SEM NOME)")}</td>
-        <td class="mono">${it.qtd}</td>
-        <td>${escapeHtml(it.endereco || "-")}</td>
-        <td>
-          <div class="actions">
-            <button class="mini ghost" data-act="plus" data-k="${escapeHtml(k)}">+</button>
-            <button class="mini ghost" data-act="minus" data-k="${escapeHtml(k)}">-</button>
-            <button class="mini danger" data-act="del" data-k="${escapeHtml(k)}">x</button>
-          </div>
+  if(arr.length === 0){
+    elTbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="padding:14px; color:#6b7280; font-size:13px;">
+          Nenhum item ainda. Bipe um código e clique em <b>OK</b>.
         </td>
-      `;
-      tbody.appendChild(tr);
-    }
-
-    updateCount();
-    save();
+      </tr>
+    `;
+    return;
   }
 
-  function addItem({codigo, qtd, confirm=true}){
-    codigo = normalizeCodigo(codigo);
-    qtd = normalizeQtd(qtd);
-    const endereco = normalizeEndereco($("endereco").value);
+  elTbody.innerHTML = arr.map(item => `
+    <tr>
+      <td class="mono">${escapeHtml(item.codigo)}</td>
+      <td>${escapeHtml(item.nome || "(não encontrado)")}</td>
+      <td class="mono">${item.qtd}</td>
+      <td>
+        <div class="actions">
+          <button class="mini" onclick="mais('${escapeAttr(item.codigo)}')">+1</button>
+          <button class="mini" onclick="menos('${escapeAttr(item.codigo)}')">-1</button>
+          <button class="mini" onclick="remover('${escapeAttr(item.codigo)}')">Remover</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
 
-    if(!endereco){
-      setStatus("Preencha o endereço do estoque antes de começar.", "bad");
-      $("endereco").focus();
-      return;
-    }
+function escapeHtml(s){
+  return (s || "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function escapeAttr(s){
+  return (s || "").toString().replaceAll("'","\\'");
+}
 
-    if(!codigo){
-      setStatus("Digite/bipe um código.", "bad");
-      return;
-    }
+/** ===========================
+ *  AÇÕES
+ *  =========================== */
+function addItem(){
+  const codigo = normalizarCodigo(elCodigo.value);
+  let qtd = parseInt(elQtd.value || "1", 10);
+  if(!qtd || qtd < 1) qtd = 1;
 
-    const nome = lookupNome(codigo);
-    $("nome").value = nome || "";
-
-    if(!nome){
-      setStatus("⚠️ Código não encontrado na base. Você pode adicionar mesmo assim.", "bad");
-    }else{
-      setStatus("✅ Produto: " + nome, "ok");
-    }
-
-    if(confirm){
-      const msg = nome
-        ? `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: ${nome}\nQtd: ${qtd}\nEndereço: ${endereco}`
-        : `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: (não encontrado)\nQtd: ${qtd}\nEndereço: ${endereco}`;
-      if(!window.confirm(msg)) return;
-    }
-
-    const key = makeKey(codigo, endereco);
-
-    if(!itens[key]){
-      itens[key] = { codigo, nome: nome || "", qtd: 0, endereco };
-    }else{
-      if(!itens[key].nome && nome) itens[key].nome = nome;
-    }
-
-    itens[key].qtd += qtd;
-
-    $("codigo").value = "";
-    $("qtd").value = "1";
-    $("nome").value = "";
-    $("codigo").focus();
-
-    render();
+  if(!codigo){
+    elCodigo.focus();
+    return;
   }
 
-  function exportCSV(){
-    const keys = Object.keys(itens);
-    if(keys.length === 0){
-      alert("Sem itens para exportar.");
-      return;
-    }
+  const nome = baseProdutos[codigo] || "";
 
-    const linhas = [];
-    linhas.push(["Código","Nome do Produto","Quantidade","Endereço"].join(";"));
-
-    keys.sort((a,b)=>a.localeCompare(b));
-    for(const k of keys){
-      const it = itens[k];
-      const row = [
-        it.codigo,
-        (it.nome || "").replaceAll(";", ","),
-        String(it.qtd),
-        (it.endereco || "").replaceAll(";", ",")
-      ];
-      linhas.push(row.join(";"));
-    }
-
-    const csv = "\ufeff" + linhas.join("\n");
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "inventario_" + new Date().toISOString().slice(0,10) + ".csv";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  if(!inventario[codigo]){
+    inventario[codigo] = { codigo, nome: nome || "(não encontrado)", qtd: 0 };
+  }else{
+    // se agora encontrou nome, atualiza
+    if(nome) inventario[codigo].nome = nome;
   }
 
-  function backupJSON(){
-    const payload = {
-      enderecoAtual: normalizeEndereco($("endereco").value),
-      itens
-    };
+  inventario[codigo].qtd += qtd;
 
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
+  salvar();
+  render();
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "backup_inventario.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  // limpa e foca para próximo bip
+  elCodigo.value = "";
+  elQtd.value = "1";
+  elNome.value = "";
+  elWarn.classList.remove("show");
+  elCodigo.focus();
+}
+
+function mais(codigo){
+  if(!inventario[codigo]) return;
+  inventario[codigo].qtd += 1;
+  salvar();
+  render();
+}
+function menos(codigo){
+  if(!inventario[codigo]) return;
+  inventario[codigo].qtd -= 1;
+  if(inventario[codigo].qtd <= 0){
+    delete inventario[codigo];
+  }
+  salvar();
+  render();
+}
+function remover(codigo){
+  if(!inventario[codigo]) return;
+  delete inventario[codigo];
+  salvar();
+  render();
+}
+
+function limparCampos(){
+  elCodigo.value = "";
+  elQtd.value = "1";
+  elNome.value = "";
+  elWarn.classList.remove("show");
+  elCodigo.focus();
+}
+
+function zerarInventario(){
+  if(!confirm("Tem certeza que deseja ZERAR o inventário?")){
+    return;
+  }
+  inventario = {};
+  salvar();
+  render();
+}
+
+function exportarCSV(){
+  const itens = Object.values(inventario);
+  if(itens.length === 0){
+    alert("Inventário vazio. Bipe pelo menos 1 item.");
+    return;
   }
 
-  function importJSON(file){
-    const reader = new FileReader();
-    reader.onload = () => {
-      try{
-        const obj = JSON.parse(reader.result);
-
-        // compatibilidade: se for backup antigo (só itens)
-        if(obj && obj.itens && typeof obj.itens === "object"){
-          itens = obj.itens;
-          if(obj.enderecoAtual) $("endereco").value = obj.enderecoAtual;
-        }else if(typeof obj === "object" && !Array.isArray(obj)){
-          itens = obj;
-        }else{
-          throw new Error("Formato inválido");
-        }
-
-        render();
-        alert("Backup importado com sucesso!");
-      }catch(e){
-        alert("Não consegui importar esse arquivo. Ele não parece um backup válido.");
-      }
-    };
-    reader.readAsText(file, "utf-8");
+  // CSV padrão Excel BR (separador ;)
+  let csv = "Codigo;Nome;Quantidade\n";
+  for(const it of itens){
+    const c = (it.codigo || "").toString().replaceAll(";", " ");
+    const n = (it.nome || "").toString().replaceAll(";", " ");
+    const q = (it.qtd || 0).toString();
+    csv += `${c};${n};${q}\n`;
   }
 
-  async function loadBase(){
-    try{
-      const res = await fetch(PRODUTOS_JSON, {cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP " + res.status);
+  const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
 
-      base = await res.json();
-      const total = Object.keys(base).length;
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `inventario_siloking_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 
-      $("dbPill").textContent = "📦 Base: " + total + " produtos";
-      $("dbPill").style.borderColor = "rgba(22,163,74,.35)";
-    }catch(e){
-      base = {};
-      $("dbPill").textContent = "📦 Base: NÃO carregou";
-      $("dbPill").style.borderColor = "rgba(220,38,38,.35)";
-      setStatus("⚠️ Não consegui carregar o produtos.json. Confirme se ele está no GitHub junto do index.html.", "bad");
-    }
+  URL.revokeObjectURL(url);
+}
+
+/** ===========================
+ *  EVENTOS
+ *  =========================== */
+document.getElementById("btnAdd").addEventListener("click", addItem);
+document.getElementById("btnClear").addEventListener("click", limparCampos);
+document.getElementById("btnZero").addEventListener("click", zerarInventario);
+document.getElementById("btnExport").addEventListener("click", exportarCSV);
+
+elCodigo.addEventListener("input", atualizarNome);
+
+// ENTER adiciona também
+elCodigo.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){
+    e.preventDefault();
+    addItem();
   }
+});
 
-  function wire(){
-    $("btnAdd").addEventListener("click", ()=>addItem({
-      codigo:$("codigo").value,
-      qtd:$("qtd").value,
-      confirm:true
-    }));
-
-    $("btnAddSem").addEventListener("click", ()=>addItem({
-      codigo:$("codigo").value,
-      qtd:$("qtd").value,
-      confirm:false
-    }));
-
-    $("btnLimpar").addEventListener("click", ()=>{
-      $("codigo").value="";
-      $("qtd").value="1";
-      $("nome").value="";
-      $("codigo").focus();
-      setStatus("");
-    });
-
-    $("btnZerar").addEventListener("click", ()=>{
-      if(!confirm("Tem certeza que quer ZERAR todo o inventário?")) return;
-      itens = {};
-      render();
-      setStatus("Inventário zerado.", "ok");
-      $("codigo").focus();
-    });
-
-    $("btnExport").addEventListener("click", exportCSV);
-    $("btnBackup").addEventListener("click", backupJSON);
-
-    $("btnImport").addEventListener("click", ()=> $("fileImport").click());
-    $("fileImport").addEventListener("change", (e)=>{
-      const file = e.target.files?.[0];
-      if(file) importJSON(file);
-      e.target.value = "";
-    });
-
-    // salva endereço ao digitar
-    $("endereco").addEventListener("input", ()=>{
-      save();
-    });
-
-    // Enter no campo código = adiciona (com confirmação)
-    $("codigo").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        e.preventDefault();
-        addItem({codigo:$("codigo").value, qtd:$("qtd").value, confirm:true});
-      }
-    });
-
-    // enquanto digita/bipa, já tenta mostrar o nome
-    $("codigo").addEventListener("input", ()=>{
-      const c = normalizeCodigo($("codigo").value);
-      const nome = lookupNome(c);
-      $("nome").value = nome || "";
-
-      if(!c){
-        setStatus("");
-      }else if(nome){
-        setStatus("✅ Produto: " + nome, "ok");
-      }else{
-        setStatus("⚠️ Código não encontrado na base.", "bad");
-      }
-    });
-
-    // ações da tabela
-    $("tbody").addEventListener("click", (e)=>{
-      const btn = e.target.closest("button");
-      if(!btn) return;
-
-      const act = btn.getAttribute("data-act");
-      const k = btn.getAttribute("data-k");
-      if(!act || !k) return;
-
-      if(!itens[k]) return;
-
-      if(act === "plus"){
-        itens[k].qtd += 1;
-      }
-      if(act === "minus"){
-        itens[k].qtd -= 1;
-        if(itens[k].qtd <= 0) delete itens[k];
-      }
-      if(act === "del"){
-        delete itens[k];
-      }
-
-      render();
-    });
-  }
-
-  (async function(){
-    load();
-    render();
-    wire();
-    await loadBase();
-    $("endereco").focus();
-  })();
+(async function init(){
+  await carregarBase();
+  carregar();
+  salvar();
+  render();
+  elCodigo.focus();
+})();
 </script>
 </body>
 </html>
