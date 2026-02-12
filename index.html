@@ -290,6 +290,12 @@
           <span class="small">Enter do leitor adiciona</span>
         </div>
 
+        <!-- ENDEREÇO DO ESTOQUE -->
+        <label>Endereço do estoque (Rua / Corredor / Nível / Posição)</label>
+        <input id="endereco" autocomplete="off" placeholder="Ex: Rua A / Corredor 3 / Porta 12" />
+
+        <div style="height:12px"></div>
+
         <label>Código (bipado)</label>
         <div class="row">
           <input id="codigo" class="mono" inputmode="text" autocomplete="off" placeholder="Bipe aqui..." />
@@ -330,7 +336,7 @@
         <input id="fileImport" type="file" accept="application/json" style="display:none" />
 
         <div class="status small">
-          Dica: se o seu leitor mandar Enter automaticamente, você nem precisa clicar no botão.
+          Dica: você pode mudar o endereço do estoque a qualquer momento.
         </div>
       </div>
 
@@ -348,6 +354,7 @@
                 <th style="width:170px">Código</th>
                 <th>Nome</th>
                 <th style="width:90px">Qtd</th>
+                <th style="width:190px">Endereço</th>
                 <th style="width:150px;text-align:right">Ações</th>
               </tr>
             </thead>
@@ -357,7 +364,7 @@
 
         <div class="footerLine">
           <div class="small" id="lastSaved"></div>
-          <div class="small">Agrupado por código</div>
+          <div class="small">Agrupado por código + endereço</div>
         </div>
       </div>
 
@@ -367,11 +374,12 @@
 <script>
   // ====== CONFIG ======
   const PRODUTOS_JSON = "./produtos.json";
-  const LS_KEY = "inventario_itens_v2_siloking";
+  const LS_KEY = "inventario_itens_v3_siloking";
+  const LS_END = "inventario_endereco_v1_siloking";
 
   // ====== STATE ======
   let base = {};   // { codigo: nome }
-  let itens = {};  // { codigo: {codigo, nome, qtd} }
+  let itens = {};  // { chave: {codigo, nome, qtd, endereco} }
 
   // ====== HELPERS ======
   const $ = (id) => document.getElementById(id);
@@ -388,6 +396,7 @@
 
   function save(){
     localStorage.setItem(LS_KEY, JSON.stringify(itens));
+    localStorage.setItem(LS_END, String($("endereco").value || "").trim());
     $("lastSaved").textContent = "Último salvamento: " + nowBR();
   }
 
@@ -398,6 +407,11 @@
     }catch(e){
       itens = {};
     }
+
+    try{
+      const end = localStorage.getItem(LS_END);
+      if(end) $("endereco").value = end;
+    }catch(e){}
   }
 
   function updateCount(){
@@ -418,6 +432,10 @@
     return String(c || "").trim();
   }
 
+  function normalizeEndereco(e){
+    return String(e || "").trim();
+  }
+
   function normalizeQtd(q){
     const n = parseInt(String(q||"").replace(/\D/g,""),10);
     return Number.isFinite(n) && n > 0 ? n : 1;
@@ -428,6 +446,11 @@
     return base[codigo] || "";
   }
 
+  // chave única: codigo + endereco
+  function makeKey(codigo, endereco){
+    return `${codigo}__${endereco || ""}`;
+  }
+
   function render(){
     const tbody = $("tbody");
     tbody.innerHTML = "";
@@ -435,19 +458,20 @@
     const keys = Object.keys(itens);
     keys.sort((a,b)=>a.localeCompare(b));
 
-    for(const codigo of keys){
-      const it = itens[codigo];
+    for(const k of keys){
+      const it = itens[k];
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="mono">${escapeHtml(it.codigo)}</td>
         <td>${escapeHtml(it.nome || "(SEM NOME)")}</td>
         <td class="mono">${it.qtd}</td>
+        <td>${escapeHtml(it.endereco || "-")}</td>
         <td>
           <div class="actions">
-            <button class="mini ghost" data-act="plus" data-c="${escapeHtml(it.codigo)}">+</button>
-            <button class="mini ghost" data-act="minus" data-c="${escapeHtml(it.codigo)}">-</button>
-            <button class="mini danger" data-act="del" data-c="${escapeHtml(it.codigo)}">x</button>
+            <button class="mini ghost" data-act="plus" data-k="${escapeHtml(k)}">+</button>
+            <button class="mini ghost" data-act="minus" data-k="${escapeHtml(k)}">-</button>
+            <button class="mini danger" data-act="del" data-k="${escapeHtml(k)}">x</button>
           </div>
         </td>
       `;
@@ -461,6 +485,13 @@
   function addItem({codigo, qtd, confirm=true}){
     codigo = normalizeCodigo(codigo);
     qtd = normalizeQtd(qtd);
+    const endereco = normalizeEndereco($("endereco").value);
+
+    if(!endereco){
+      setStatus("Preencha o endereço do estoque antes de começar.", "bad");
+      $("endereco").focus();
+      return;
+    }
 
     if(!codigo){
       setStatus("Digite/bipe um código.", "bad");
@@ -478,18 +509,20 @@
 
     if(confirm){
       const msg = nome
-        ? `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: ${nome}\nQtd: ${qtd}`
-        : `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: (não encontrado)\nQtd: ${qtd}`;
+        ? `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: ${nome}\nQtd: ${qtd}\nEndereço: ${endereco}`
+        : `Confirmar adicionar?\n\nCódigo: ${codigo}\nProduto: (não encontrado)\nQtd: ${qtd}\nEndereço: ${endereco}`;
       if(!window.confirm(msg)) return;
     }
 
-    if(!itens[codigo]){
-      itens[codigo] = { codigo, nome: nome || "", qtd: 0 };
+    const key = makeKey(codigo, endereco);
+
+    if(!itens[key]){
+      itens[key] = { codigo, nome: nome || "", qtd: 0, endereco };
     }else{
-      if(!itens[codigo].nome && nome) itens[codigo].nome = nome;
+      if(!itens[key].nome && nome) itens[key].nome = nome;
     }
 
-    itens[codigo].qtd += qtd;
+    itens[key].qtd += qtd;
 
     $("codigo").value = "";
     $("qtd").value = "1";
@@ -507,15 +540,16 @@
     }
 
     const linhas = [];
-    linhas.push(["Código","Nome do Produto","Quantidade"].join(";"));
+    linhas.push(["Código","Nome do Produto","Quantidade","Endereço"].join(";"));
 
     keys.sort((a,b)=>a.localeCompare(b));
-    for(const codigo of keys){
-      const it = itens[codigo];
+    for(const k of keys){
+      const it = itens[k];
       const row = [
         it.codigo,
         (it.nome || "").replaceAll(";", ","),
-        String(it.qtd)
+        String(it.qtd),
+        (it.endereco || "").replaceAll(";", ",")
       ];
       linhas.push(row.join(";"));
     }
@@ -534,7 +568,12 @@
   }
 
   function backupJSON(){
-    const blob = new Blob([JSON.stringify(itens, null, 2)], {type:"application/json"});
+    const payload = {
+      enderecoAtual: normalizeEndereco($("endereco").value),
+      itens
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -551,8 +590,17 @@
     reader.onload = () => {
       try{
         const obj = JSON.parse(reader.result);
-        if(typeof obj !== "object" || Array.isArray(obj)) throw new Error("Formato inválido");
-        itens = obj;
+
+        // compatibilidade: se for backup antigo (só itens)
+        if(obj && obj.itens && typeof obj.itens === "object"){
+          itens = obj.itens;
+          if(obj.enderecoAtual) $("endereco").value = obj.enderecoAtual;
+        }else if(typeof obj === "object" && !Array.isArray(obj)){
+          itens = obj;
+        }else{
+          throw new Error("Formato inválido");
+        }
+
         render();
         alert("Backup importado com sucesso!");
       }catch(e){
@@ -619,6 +667,11 @@
       e.target.value = "";
     });
 
+    // salva endereço ao digitar
+    $("endereco").addEventListener("input", ()=>{
+      save();
+    });
+
     // Enter no campo código = adiciona (com confirmação)
     $("codigo").addEventListener("keydown", (e)=>{
       if(e.key === "Enter"){
@@ -648,20 +701,20 @@
       if(!btn) return;
 
       const act = btn.getAttribute("data-act");
-      const c = btn.getAttribute("data-c");
-      if(!act || !c) return;
+      const k = btn.getAttribute("data-k");
+      if(!act || !k) return;
 
-      if(!itens[c]) return;
+      if(!itens[k]) return;
 
       if(act === "plus"){
-        itens[c].qtd += 1;
+        itens[k].qtd += 1;
       }
       if(act === "minus"){
-        itens[c].qtd -= 1;
-        if(itens[c].qtd <= 0) delete itens[c];
+        itens[k].qtd -= 1;
+        if(itens[k].qtd <= 0) delete itens[k];
       }
       if(act === "del"){
-        delete itens[c];
+        delete itens[k];
       }
 
       render();
@@ -673,7 +726,7 @@
     render();
     wire();
     await loadBase();
-    $("codigo").focus();
+    $("endereco").focus();
   })();
 </script>
 </body>
