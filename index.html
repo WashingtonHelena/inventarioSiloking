@@ -7,62 +7,98 @@
 
 <style>
 
+:root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --primary: #2563eb;
+}
+
+.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f1f5f9;
+    --primary: #3b82f6;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #f4f6f9;
+    background: var(--bg);
+    color: var(--text);
 }
 
-/* HEADER */
 header {
-    background: #1e293b;
+    background: var(--primary);
     color: white;
     padding: 15px;
-    text-align: center;
-    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header img {
+    height: 40px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-base {
+    background: #16a34a;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.btn-modo {
+    background: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
     font-weight: bold;
 }
 
-/* RESUMO */
-.resumo-topo {
+.resumo {
+    padding: 10px 15px;
+    background: var(--card);
     display: flex;
     justify-content: space-between;
-    padding: 15px;
-    background: white;
-    border-bottom: 1px solid #ddd;
-    font-weight: bold;
+    border-bottom: 1px solid #ccc;
 }
 
-/* POSIÇÃO */
 .posicao-box {
     padding: 15px;
-    background: #ffffff;
+    background: var(--card);
     display: flex;
     gap: 10px;
-    align-items: center;
     flex-wrap: wrap;
 }
 
-.posicao-box input {
-    padding: 10px;
-    font-size: 16px;
+input {
+    padding: 12px;
     border-radius: 8px;
     border: 1px solid #ccc;
+    font-size: 16px;
 }
 
-.btn {
-    padding: 10px 20px;
+button {
+    padding: 12px 18px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
     font-weight: bold;
 }
 
-.btn-azul { background: #2563eb; color: white; }
+.btn-azul { background: var(--primary); color: white; }
 .btn-verde { background: #16a34a; color: white; }
 .btn-vermelho { background: #dc2626; color: white; }
 
-/* TABELA */
 .container {
     padding: 15px;
     padding-bottom: 120px;
@@ -71,102 +107,80 @@ header {
 table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: var(--card);
 }
 
 th, td {
     padding: 10px;
     border-bottom: 1px solid #ddd;
-    text-align: left;
     font-size: 14px;
 }
 
 tr.zero {
-    background-color: #ffe5e5;
+    background: #ffe5e5;
     color: #b91c1c;
 }
 
 tr.contado {
-    background-color: #e6ffe6;
+    background: #e6ffe6;
     color: #166534;
 }
 
-/* BIPAGEM FIXA */
-.bipagem-fixa {
+.bipagem {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--card);
     padding: 15px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     display: flex;
     gap: 10px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
 }
 
-.bipagem-fixa input {
+.bipagem input {
     flex: 1;
-    padding: 15px;
-    font-size: 18px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
 }
 
 .btn-app {
-    background: #2563eb;
+    background: var(--primary);
     color: white;
-    border: none;
-    border-radius: 12px;
     font-size: 18px;
-    font-weight: bold;
-    padding: 15px;
-    width: 100%;
-    cursor: pointer;
+    border-radius: 12px;
 }
 
-/* RESPONSIVO */
 @media (max-width: 768px) {
-
-    body {
-        background: white;
-    }
-
-    .resumo-topo {
-        flex-direction: column;
-        gap: 5px;
-        text-align: center;
-    }
-
     .posicao-box {
         flex-direction: column;
-        align-items: stretch;
     }
-
-    .bipagem-fixa {
+    .bipagem {
         flex-direction: column;
     }
-
 }
 
 </style>
 </head>
-
 <body>
 
 <header>
-Inventário por Posição
+    <div class="logo-area">
+        <!-- COLOQUE AQUI O NOME DO SEU PNG -->
+        <img src="logo.png" alt="Logo Empresa">
+        <span class="status-base" id="statusBase">Carregando...</span>
+    </div>
+    <button class="btn-modo" onclick="alternarModo()">🌙 / ☀</button>
 </header>
 
-<div class="resumo-topo">
-    <div>Base de Produtos: <span id="totalBase">0</span></div>
+<div class="resumo">
+    <div>Total Base: <span id="totalBase">0</span></div>
     <div>Posição Atual: <span id="posicaoAtual">Nenhuma</span></div>
 </div>
 
 <div class="posicao-box">
     <input type="text" id="posicaoInput" placeholder="Digite a posição (Ex: A11)">
-    <button class="btn btn-azul" onclick="carregarPosicao()">Carregar</button>
-    <button class="btn btn-vermelho" onclick="trocarPosicao()">Trocar Posição</button>
-    <button class="btn btn-verde" onclick="exportarCSV()">Exportar CSV</button>
+    <button class="btn-azul" onclick="carregarPosicao()">Carregar</button>
+    <button class="btn-vermelho" onclick="trocarPosicao()">Trocar</button>
+    <button class="btn-verde" onclick="exportarCSV()">Exportar CSV</button>
 </div>
 
 <div class="container">
@@ -175,7 +189,6 @@ Inventário por Posição
             <tr>
                 <th>Código</th>
                 <th>Produto</th>
-                <th>Base</th>
                 <th>Contado</th>
             </tr>
         </thead>
@@ -183,10 +196,9 @@ Inventário por Posição
     </table>
 </div>
 
-<!-- BIPAGEM FIXA -->
-<div class="bipagem-fixa">
+<div class="bipagem">
     <input type="text" id="codigoInput" placeholder="Bipar código">
-    <input type="number" id="quantidadeInput" placeholder="Qtd" value="1" min="1">
+    <input type="number" id="quantidadeInput" value="1" min="1">
     <button class="btn-app" onclick="adicionarProduto()">Adicionar</button>
 </div>
 
@@ -196,8 +208,8 @@ let produtos = [];
 let contagem = {};
 let posicaoAtual = "";
 
-function normalizarPosicao(pos) {
-    return pos.toUpperCase().replace("-", "").trim();
+function normalizar(pos) {
+    return pos?.toUpperCase().replace("-", "").trim();
 }
 
 fetch('produtos_base_completa.json')
@@ -205,51 +217,50 @@ fetch('produtos_base_completa.json')
 .then(data => {
     produtos = data;
     document.getElementById("totalBase").innerText = produtos.length;
+    document.getElementById("statusBase").innerText = "Base Carregada";
+})
+.catch(() => {
+    document.getElementById("statusBase").innerText = "Erro ao carregar base";
+    document.getElementById("statusBase").style.background = "#dc2626";
 });
 
 function carregarPosicao() {
-    const pos = normalizarPosicao(document.getElementById("posicaoInput").value);
-    posicaoAtual = pos;
-    document.getElementById("posicaoAtual").innerText = pos;
-    renderizarTabela();
+    posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
+    document.getElementById("posicaoAtual").innerText = posicaoAtual;
+    renderizar();
 }
 
 function trocarPosicao() {
     posicaoAtual = "";
-    document.getElementById("posicaoAtual").innerText = "Nenhuma";
+    contagem = {};
     document.getElementById("tabelaProdutos").innerHTML = "";
+    document.getElementById("posicaoAtual").innerText = "Nenhuma";
 }
 
-function renderizarTabela() {
-
+function renderizar() {
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
     produtos.forEach(prod => {
+        if(normalizar(prod.posicao) === posicaoAtual) {
 
-        if(normalizarPosicao(prod.posicao) === posicaoAtual) {
-
-            const contado = contagem[prod.codigo] || 0;
-
+            const qtd = contagem[prod.codigo] || 0;
             const tr = document.createElement("tr");
-            if(contado === 0) tr.classList.add("zero");
-            if(contado > 0) tr.classList.add("contado");
+
+            if(qtd === 0) tr.classList.add("zero");
+            if(qtd > 0) tr.classList.add("contado");
 
             tr.innerHTML = `
                 <td>${prod.codigo}</td>
                 <td>${prod.nome}</td>
-                <td>1</td>
-                <td>${contado}</td>
+                <td>${qtd}</td>
             `;
-
             tbody.appendChild(tr);
         }
-
     });
 }
 
 function adicionarProduto() {
-
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
 
@@ -260,26 +271,29 @@ function adicionarProduto() {
     document.getElementById("codigoInput").value = "";
     document.getElementById("quantidadeInput").value = 1;
 
-    renderizarTabela();
+    renderizar();
 }
 
 function exportarCSV() {
-
     let linhas = [["Posicao","Codigo","Quantidade"]];
 
-    for(let codigo in contagem) {
-        linhas.push([posicaoAtual, codigo, contagem[codigo]]);
+    for(let cod in contagem) {
+        linhas.push([posicaoAtual, cod, contagem[cod]]);
     }
 
     const csv = linhas.map(l => l.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], {type: "text/csv"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `inventario_${posicaoAtual}.csv`;
     link.click();
 
     contagem = {};
-    renderizarTabela();
+    renderizar();
+}
+
+function alternarModo() {
+    document.body.classList.toggle("dark");
 }
 
 </script>
