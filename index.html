@@ -28,12 +28,13 @@ body {
     color: var(--text);
 }
 
-/* HEADER NOVO */
+/* HEADER */
 header {
     background: var(--primary);
     color: white;
-    padding: 25px 15px;
+    padding: 20px;
     text-align: center;
+    position: relative;
 }
 
 .logo-container {
@@ -44,31 +45,32 @@ header {
 }
 
 .logo-container img {
-    height: 70px;
+    height: 80px;
+    object-fit: contain;
 }
 
 .logo-container h1 {
     margin: 0;
-    font-size: 28px;
+    font-size: 32px;
     letter-spacing: 2px;
 }
 
 .status-base {
     background: #16a34a;
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 13px;
     margin-top: 5px;
 }
 
-/* BOTÃO DARK */
+/* Dark Button */
 .btn-modo {
     position: absolute;
-    top: 15px;
     right: 15px;
+    top: 15px;
     background: white;
     border: none;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     cursor: pointer;
 }
@@ -101,7 +103,7 @@ input {
 }
 
 button {
-    padding: 12px 20px;
+    padding: 12px 18px;
     border-radius: 8px;
     border: none;
     font-weight: bold;
@@ -109,8 +111,8 @@ button {
 }
 
 .btn-azul { background: var(--primary); color: white; }
-.btn-verde { background: #16a34a; color: white; }
 .btn-vermelho { background: #dc2626; color: white; }
+.btn-verde { background: #16a34a; color: white; }
 
 /* TABELA */
 .container {
@@ -140,7 +142,7 @@ tr.contado {
     color: #166534;
 }
 
-/* BIPAGEM FIXA */
+/* BIPAGEM */
 .bipagem {
     position: fixed;
     bottom: 0;
@@ -169,7 +171,6 @@ tr.contado {
 
     .posicao-box {
         flex-direction: column;
-        align-items: stretch;
     }
 
     .bipagem {
@@ -210,6 +211,7 @@ tr.contado {
             <tr>
                 <th>Código</th>
                 <th>Produto</th>
+                <th>Base JSON</th>
                 <th>Contado</th>
             </tr>
         </thead>
@@ -230,7 +232,7 @@ let contagem = {};
 let posicaoAtual = "";
 
 function normalizar(pos) {
-    return pos?.toUpperCase().replace("-", "").trim();
+    return pos ? pos.toUpperCase().replace("-", "").trim() : "";
 }
 
 /* CARREGAR BASE */
@@ -241,7 +243,7 @@ fetch('./produtos_base_completa.json')
     document.getElementById("totalBase").innerText = produtos.length;
     document.getElementById("statusBase").innerText = "Base Carregada ✔";
 })
-.catch(err => {
+.catch(() => {
     document.getElementById("statusBase").innerText = "Erro ao carregar base ❌";
 });
 
@@ -252,7 +254,6 @@ function carregarPosicao() {
     renderizar();
 }
 
-/* TROCAR */
 function trocarPosicao() {
     posicaoAtual = "";
     contagem = {};
@@ -260,8 +261,8 @@ function trocarPosicao() {
     document.getElementById("posicaoAtual").innerText = "Nenhuma";
 }
 
-/* RENDERIZAR */
 function renderizar() {
+
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
@@ -278,15 +279,18 @@ function renderizar() {
             tr.innerHTML = `
                 <td>${prod.codigo}</td>
                 <td>${prod.nome}</td>
+                <td>${prod.posicao}</td>
                 <td>${qtd}</td>
             `;
             tbody.appendChild(tr);
         }
+
     });
 }
 
-/* ADICIONAR */
+/* ADICIONAR PRODUTO */
 function adicionarProduto() {
+
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
 
@@ -300,17 +304,29 @@ function adicionarProduto() {
     renderizar();
 }
 
-/* EXPORTAR */
+/* EXPORTAR CSV CORRIGIDO */
 function exportarCSV() {
-    let linhas = [["Posicao","Codigo","Quantidade"]];
+
+    let linhas = [["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade"]];
 
     for(let cod in contagem) {
-        linhas.push([posicaoAtual, cod, contagem[cod]]);
+
+        let produtoBase = produtos.find(p => p.codigo === cod);
+
+        linhas.push([
+            posicaoAtual,
+            cod,
+            produtoBase ? produtoBase.nome : "Produto não encontrado",
+            produtoBase ? produtoBase.posicao : "Sem posição",
+            contagem[cod]
+        ]);
     }
 
-    const csv = linhas.map(l => l.join(",")).join("\n");
-    const blob = new Blob([csv], {type: "text/csv"});
-    const link = document.createElement("a");
+    let csv = linhas.map(l => l.join(";")).join("\n");
+
+    let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    let link = document.createElement("a");
+
     link.href = URL.createObjectURL(blob);
     link.download = `inventario_${posicaoAtual}.csv`;
     link.click();
