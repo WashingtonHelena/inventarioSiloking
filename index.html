@@ -1,80 +1,22 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Inventário - SILOKING</title>
 
 <style>
-/* ======= SEU CSS ORIGINAL (INALTERADO) ======= */
-:root{
-  --bg:#f6f7fb;
-  --card:#ffffff;
-  --muted:#5b677a;
-  --text:#0f172a;
-  --accent:#2563eb;
-  --accent2:#1d4ed8;
-  --ok:#16a34a;
-  --bad:#dc2626;
-  --line:rgba(15,23,42,.10);
-  --shadow:0 12px 30px rgba(15,23,42,.08);
-  --radius:18px;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:linear-gradient(180deg,#ffffff, var(--bg));
-  color:var(--text);
-}
-.wrap{max-width:1200px;margin:0 auto;padding:18px;}
-.header{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:14px 16px;
-  box-shadow:var(--shadow);
-  display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-}
-.brand{display:flex;gap:14px;align-items:center;min-width:260px;}
-.logo img{height:56px;width:auto;display:block;}
-.headText{display:flex;flex-direction:column;gap:2px;}
-.headTitle{font-weight:900;font-size:16px;letter-spacing:.2px;line-height:1.1;}
-.headSub{font-size:12px;color:var(--muted);}
-.pills{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
-.pill{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:10px 12px;border-radius:999px;border:1px solid var(--line);
-  background:#f8fafc;font-size:12px;color:var(--muted);white-space:nowrap;
-}
-.dot{width:10px;height:10px;border-radius:50%;background:#94a3b8;display:inline-block;}
-.dot.ok{background:var(--ok)}
-.dot.bad{background:var(--bad)}
-.grid{margin-top:14px;display:grid;grid-template-columns: 1.15fr .85fr;gap:14px;}
-@media (max-width:980px){.grid{grid-template-columns:1fr}}
-.card{
-  background:var(--card);border:1px solid var(--line);
-  border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);
-}
-.cardTitle{font-weight:900;margin-bottom:10px;font-size:14px;}
-label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
-input,select,button{
-  width:100%;border-radius:16px;border:1px solid var(--line);
-  background:#ffffff;color:var(--text);
-  padding:12px 12px;outline:none;font-size:16px;
-}
-.row2{display:grid;grid-template-columns: 1fr 140px;gap:10px;}
-@media (max-width:520px){.row2{grid-template-columns:1fr}}
-.btns{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px;}
-button{cursor:pointer;font-weight:900;border:0}
-.primary{background:linear-gradient(180deg, rgba(37,99,235,.95), rgba(29,78,216,.90));color:#fff;}
-.ghost{background:#f8fafc;border:1px solid var(--line);}
-.danger{background:#fff1f2;border:1px solid rgba(220,38,38,.25);color:var(--bad);}
-.tableWrap{overflow:auto;max-height:520px;border-radius:16px;border:1px solid var(--line);}
-table{width:100%;border-collapse:collapse;background:#fff;}
-th,td{padding:12px 10px;border-bottom:1px solid rgba(15,23,42,.06);font-size:13px;}
-th{background:#f8fafc;font-weight:900;}
-.mono{font-family:monospace;}
+body{margin:0;font-family:Arial;background:#f5f6fa}
+.wrap{max-width:1200px;margin:auto;padding:20px}
+.header{background:#fff;padding:15px;border-radius:15px;display:flex;justify-content:space-between;align-items:center}
+.card{background:#fff;padding:15px;border-radius:15px;margin-top:15px}
+input,button{padding:10px;border-radius:10px;border:1px solid #ccc;font-size:16px}
+button{cursor:pointer;font-weight:bold}
+.primary{background:#2563eb;color:#fff;border:none}
+.danger{background:#dc2626;color:#fff;border:none}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border-bottom:1px solid #eee;padding:8px;font-size:14px}
+th{background:#f3f4f6}
 </style>
 </head>
 
@@ -82,166 +24,142 @@ th{background:#f8fafc;font-weight:900;}
 <div class="wrap">
 
 <div class="header">
-<div class="brand">
-<div class="logo"><img src="logo.png" alt="SILOKING" /></div>
-<div class="headText">
-<div class="headTitle">Inventário (Bipagem por Posição)</div>
-<div class="headSub">Controle por endereço separado</div>
-</div>
-</div>
-
-<div class="pills">
-<span class="pill" id="posicaoPill">Posição: —</span>
-<span class="pill" id="lastSavedPill">Último salvamento: —</span>
-</div>
-</div>
-
-<div class="grid">
-
-<div class="card">
-<div class="cardTitle">Selecionar posição</div>
-
-<input id="inputPosicao" placeholder="Digite A11 ou A-11" />
-<div class="btns">
-<button class="primary" id="btnBuscarPos">Buscar posição</button>
-<button class="ghost" id="btnSalvar">Salvar contagem</button>
-<button class="primary" id="btnExportPos">Exportar CSV da posição</button>
-</div>
-
-<hr style="margin:20px 0">
-
-<label>Bipar código</label>
-<div class="row2">
-<input id="codigo" class="mono" placeholder="Bipe aqui..." />
-<input id="qtd" value="1" />
-</div>
-
-<div class="btns">
-<button class="primary" id="btnOk">Adicionar</button>
-<button class="danger" id="btnZerar">Zerar posição</button>
-</div>
+<h2>Inventário por Posição</h2>
+<div id="posicaoAtual">Posição: —</div>
 </div>
 
 <div class="card">
-<div class="cardTitle">Itens da posição</div>
-<div class="tableWrap">
+<input id="inputPosicao" placeholder="Digite B42 ou B-42"/>
+<button class="primary" onclick="buscarPosicao()">Buscar posição</button>
+<button onclick="salvar()">Salvar</button>
+<button onclick="exportar()">Exportar CSV</button>
+<button class="danger" onclick="zerar()">Zerar</button>
+</div>
+
+<div class="card">
+<input id="codigo" placeholder="Bipar código aqui"/>
+<button class="primary" onclick="bipar()">Adicionar</button>
+
 <table>
 <thead>
 <tr>
 <th>Código</th>
 <th>Nome</th>
-<th>Qtd</th>
+<th>Quantidade</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
-</div>
 
-</div>
 </div>
 
 <script>
-const PRODUTOS_JSON = "./produtos.json";
-let baseLista = [];
-let base = {};
-let itens = {};
+const URL_JSON = "./produtos.json";
+let base = [];
+let inventario = {};
 let posicaoAtual = "";
 
-const $ = id => document.getElementById(id);
-
-function normalizarPosicao(p){
+function normalizar(p){
 return String(p||"").toUpperCase().replace(/-/g,"").trim();
 }
 
 function chaveStorage(p){
-return "inventario_"+normalizarPosicao(p);
+return "inv_"+normalizar(p);
 }
 
-function salvar(){
-if(!posicaoAtual) return;
-localStorage.setItem(chaveStorage(posicaoAtual), JSON.stringify(itens));
-$("lastSavedPill").textContent = "Salvo em "+new Date().toLocaleTimeString();
+async function carregarBase(){
+const res = await fetch(URL_JSON);
+base = await res.json();
 }
 
-function carregar(p){
-const salvo = localStorage.getItem(chaveStorage(p));
-itens = salvo ? JSON.parse(salvo) : {};
+function buscarPosicao(){
+const pos = normalizar(document.getElementById("inputPosicao").value);
+if(!pos){alert("Digite uma posição");return;}
+
+posicaoAtual = pos;
+document.getElementById("posicaoAtual").innerText = "Posição: "+pos;
+
+inventario = {};
+
+base.forEach(p=>{
+if(normalizar(p.posicao) === pos){
+inventario[p.codigo] = {
+codigo:p.codigo,
+nome:p.nome,
+qtd:0
+};
+}
+});
+
+const salvo = localStorage.getItem(chaveStorage(pos));
+if(salvo){
+inventario = JSON.parse(salvo);
+}
+
+render();
+}
+
+function bipar(){
+const cod = document.getElementById("codigo").value.trim();
+if(!cod) return;
+
+if(inventario[cod]){
+inventario[cod].qtd += 1;
+}else{
+alert("Produto não pertence a essa posição!");
+}
+
+document.getElementById("codigo").value="";
+render();
 }
 
 function render(){
-const tbody = $("tbody");
+const tbody = document.getElementById("tbody");
 tbody.innerHTML="";
-Object.keys(itens).sort().forEach(c=>{
-const it = itens[c];
+
+Object.values(inventario).forEach(item=>{
 const tr = document.createElement("tr");
-tr.style.backgroundColor = it.qtd==0?"#ffe2e2":"#e2ffe9";
-tr.innerHTML = `
-<td>${it.codigo}</td>
-<td>${it.nome}</td>
-<td><input type="number" value="${it.qtd}" onchange="alterar('${it.codigo}',this.value)" style="width:80px"></td>
+tr.innerHTML=`
+<td>${item.codigo}</td>
+<td>${item.nome}</td>
+<td>${item.qtd}</td>
 `;
 tbody.appendChild(tr);
 });
 }
 
-function alterar(c,v){
-itens[c].qtd=parseInt(v)||0;
-render();
+function salvar(){
+if(!posicaoAtual){alert("Selecione uma posição");return;}
+localStorage.setItem(chaveStorage(posicaoAtual), JSON.stringify(inventario));
+alert("Salvo com sucesso!");
 }
 
-function buscarPosicao(p){
-const pos = normalizarPosicao(p);
-posicaoAtual = pos;
-$("posicaoPill").textContent="Posição: "+pos;
-carregar(pos);
-render();
+function zerar(){
+if(!posicaoAtual) return;
+if(confirm("Deseja zerar essa posição?")){
+localStorage.removeItem(chaveStorage(posicaoAtual));
+buscarPosicao();
+}
 }
 
-function addItem(codigo){
-codigo = codigo.trim();
-if(!codigo) return;
-const nome = base[codigo]||"(SEM NOME)";
-if(!itens[codigo]){
-itens[codigo]={codigo,nome,qtd:1};
-}else{
-itens[codigo].qtd+=1;
-}
-render();
-}
+function exportar(){
+if(!posicaoAtual) return;
 
-function exportCSV(){
-if(!posicaoAtual){alert("Selecione uma posição.");return;}
-let linhas=["Código;Nome;Quantidade"];
-Object.values(itens).forEach(it=>{
-linhas.push(`${it.codigo};${it.nome};${it.qtd}`);
+let linhas=["Codigo;Nome;Quantidade"];
+Object.values(inventario).forEach(i=>{
+linhas.push(`${i.codigo};${i.nome};${i.qtd}`);
 });
-const blob=new Blob(["\ufeff"+linhas.join("\n")],{type:"text/csv"});
-const a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="Inventario_"+posicaoAtual+".csv";
+
+const blob = new Blob(["\ufeff"+linhas.join("\n")],{type:"text/csv"});
+const a = document.createElement("a");
+a.href = URL.createObjectURL(blob);
+a.download = "Inventario_"+posicaoAtual+".csv";
 a.click();
 }
 
-async function loadBase(){
-const res=await fetch(PRODUTOS_JSON);
-baseLista=await res.json();
-baseLista.forEach(p=>base[p.codigo]=p.nome);
-}
-
-$("btnBuscarPos").onclick=()=>buscarPosicao($("inputPosicao").value);
-$("btnSalvar").onclick=salvar;
-$("btnExportPos").onclick=exportCSV;
-$("btnOk").onclick=()=>addItem($("codigo").value);
-$("btnZerar").onclick=()=>{
-if(confirm("Zerar contagem desta posição?")){
-localStorage.removeItem(chaveStorage(posicaoAtual));
-itens={};
-render();
-}
-};
-
-loadBase();
+carregarBase();
 </script>
+
 </body>
 </html>
