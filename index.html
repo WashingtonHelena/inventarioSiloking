@@ -12,6 +12,7 @@
     --card: #ffffff;
     --text: #1e293b;
     --primary: #1e40af;
+    --header-gradient: linear-gradient(135deg,#1e3a8a,#1e40af);
 }
 
 .dark {
@@ -19,6 +20,7 @@
     --card: #1e293b;
     --text: #f1f5f9;
     --primary: #3b82f6;
+    --header-gradient: linear-gradient(135deg,#0f172a,#1e293b);
 }
 
 body {
@@ -28,51 +30,59 @@ body {
     color: var(--text);
 }
 
-/* HEADER */
+/* HEADER PROFISSIONAL */
 header {
-    background: var(--primary);
-    color: white;
-    padding: 20px;
+    background: var(--header-gradient);
+    padding: 30px 20px;
     text-align: center;
+    color: white;
     position: relative;
 }
 
-.logo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+.logo-box {
+    background: white;
+    padding: 12px;
+    border-radius: 20px;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-.logo-container img {
-    height: 80px;
-    object-fit: contain;
+.logo-box img {
+    height: 70px;
+    display: block;
 }
 
-.logo-container h1 {
-    margin: 0;
-    font-size: 32px;
-    letter-spacing: 2px;
+header h1 {
+    margin: 15px 0 5px;
+    font-size: 34px;
+    letter-spacing: 3px;
+}
+
+.subtitulo {
+    font-size: 14px;
+    opacity: 0.9;
 }
 
 .status-base {
+    margin-top: 12px;
+    display: inline-block;
     background: #16a34a;
-    padding: 6px 14px;
-    border-radius: 20px;
+    padding: 6px 16px;
+    border-radius: 30px;
     font-size: 13px;
-    margin-top: 5px;
 }
 
-/* Dark Button */
-.btn-modo {
+/* DARK BUTTON */
+.btn-dark {
     position: absolute;
-    right: 15px;
-    top: 15px;
+    top: 20px;
+    right: 20px;
     background: white;
     border: none;
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 8px 14px;
+    border-radius: 25px;
     cursor: pointer;
+    font-weight: bold;
 }
 
 /* RESUMO */
@@ -98,13 +108,13 @@ header {
 input {
     padding: 12px;
     font-size: 16px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #ccc;
 }
 
 button {
     padding: 12px 18px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
     font-weight: bold;
     cursor: pointer;
@@ -152,7 +162,7 @@ tr.contado {
     padding: 15px;
     display: flex;
     gap: 10px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
 }
 
 .bipagem input {
@@ -168,29 +178,28 @@ tr.contado {
 
 /* RESPONSIVO */
 @media (max-width: 768px) {
-
     .posicao-box {
         flex-direction: column;
     }
-
     .bipagem {
         flex-direction: column;
     }
-
 }
 
 </style>
 </head>
 <body>
 
-<button class="btn-modo" onclick="alternarModo()">🌙</button>
-
 <header>
-    <div class="logo-container">
+    <button class="btn-dark" onclick="alternarModo()">🌙 Modo</button>
+
+    <div class="logo-box">
         <img src="logo.png" alt="Logo Siloking">
-        <h1>SILOKING INVENTÁRIO</h1>
-        <div class="status-base" id="statusBase">Carregando base...</div>
     </div>
+
+    <h1>SILOKING INVENTÁRIO</h1>
+    <div class="subtitulo">Sistema Inteligente de Contagem de Estoque</div>
+    <div class="status-base" id="statusBase">Carregando base...</div>
 </header>
 
 <div class="resumo">
@@ -211,7 +220,7 @@ tr.contado {
             <tr>
                 <th>Código</th>
                 <th>Produto</th>
-                <th>Base JSON</th>
+                <th>Base</th>
                 <th>Contado</th>
             </tr>
         </thead>
@@ -235,19 +244,14 @@ function normalizar(pos) {
     return pos ? pos.toUpperCase().replace("-", "").trim() : "";
 }
 
-/* CARREGAR BASE */
 fetch('./produtos_base_completa.json')
 .then(res => res.json())
 .then(data => {
     produtos = data;
     document.getElementById("totalBase").innerText = produtos.length;
     document.getElementById("statusBase").innerText = "Base Carregada ✔";
-})
-.catch(() => {
-    document.getElementById("statusBase").innerText = "Erro ao carregar base ❌";
 });
 
-/* CARREGAR POSIÇÃO */
 function carregarPosicao() {
     posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
     document.getElementById("posicaoAtual").innerText = posicaoAtual;
@@ -262,12 +266,10 @@ function trocarPosicao() {
 }
 
 function renderizar() {
-
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
     produtos.forEach(prod => {
-
         if(normalizar(prod.posicao) === posicaoAtual) {
 
             const qtd = contagem[prod.codigo] || 0;
@@ -284,13 +286,10 @@ function renderizar() {
             `;
             tbody.appendChild(tr);
         }
-
     });
 }
 
-/* ADICIONAR PRODUTO */
 function adicionarProduto() {
-
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
 
@@ -304,29 +303,27 @@ function adicionarProduto() {
     renderizar();
 }
 
-/* EXPORTAR CSV CORRIGIDO */
+/* EXPORTAR TODOS (inclusive zerados) */
 function exportarCSV() {
 
     let linhas = [["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade"]];
 
-    for(let cod in contagem) {
-
-        let produtoBase = produtos.find(p => p.codigo === cod);
-
-        linhas.push([
-            posicaoAtual,
-            cod,
-            produtoBase ? produtoBase.nome : "Produto não encontrado",
-            produtoBase ? produtoBase.posicao : "Sem posição",
-            contagem[cod]
-        ]);
-    }
+    produtos.forEach(prod => {
+        if(normalizar(prod.posicao) === posicaoAtual) {
+            linhas.push([
+                posicaoAtual,
+                prod.codigo,
+                prod.nome,
+                prod.posicao,
+                contagem[prod.codigo] || 0
+            ]);
+        }
+    });
 
     let csv = linhas.map(l => l.join(";")).join("\n");
 
     let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     let link = document.createElement("a");
-
     link.href = URL.createObjectURL(blob);
     link.download = `inventario_${posicaoAtual}.csv`;
     link.click();
@@ -335,7 +332,6 @@ function exportarCSV() {
     renderizar();
 }
 
-/* DARK MODE */
 function alternarModo() {
     document.body.classList.toggle("dark");
 }
