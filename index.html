@@ -406,16 +406,15 @@
   </div>
 
 <script>
-  // ====== CONFIG ======
   const PRODUTOS_JSON = "./produtos.json";
-  const LS_KEY_ITENS = "inventario_itens_v2";
-  const LS_KEY_END = "inventario_endereco_v2";
 
-  // ====== STATE ======
-  let base = {};  // { codigo: nome }
-  let itens = {}; // { codigo: {codigo, nome, qtd} }
+  const LS_KEY_ITENS = "inventario_itens_v3";
+  const LS_KEY_END = "inventario_endereco_v3";
 
-  // ====== HELPERS ======
+  let baseLista = [];
+  let base = {}; 
+  let itens = {}; 
+
   const $ = (id) => document.getElementById(id);
 
   function nowBR(){
@@ -431,32 +430,18 @@
       .replaceAll("'","&#039;");
   }
 
-  function setStatus(msg, type=""){
-    const el = $("status");
-    el.textContent = msg || "";
-    el.className = "status " + (type || "");
-  }
-
   function normalizeCodigo(c){
     return String(c || "").trim();
   }
 
-  function normalizeQtd(q){
-    const n = parseInt(String(q||"").replace(/\D/g,""),10);
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  }
-
   function lookupNome(codigo){
-    if(!codigo) return "";
     return base[codigo] || "";
   }
 
   function save(){
     localStorage.setItem(LS_KEY_ITENS, JSON.stringify(itens));
     localStorage.setItem(LS_KEY_END, $("endereco").value.trim());
-
     $("lastSavedPill").textContent = "Último salvamento: " + nowBR();
-    updateEnderecoView();
   }
 
   function load(){
@@ -467,13 +452,7 @@
       itens = {};
     }
 
-    const end = localStorage.getItem(LS_KEY_END) || "";
-    $("endereco").value = end;
-  }
-
-  function updateEnderecoView(){
-    const end = $("endereco").value.trim();
-    $("enderecoView").textContent = end ? ("📍 Estoque: " + end) : "";
+    $("endereco").value = localStorage.getItem(LS_KEY_END) || "";
   }
 
   function updateCount(){
@@ -490,20 +469,28 @@
 
     for(const codigo of keys){
       const it = itens[codigo];
+
       const tr = document.createElement("tr");
+
+      if(it.qtd == 0){
+        tr.style.backgroundColor = "#ffe2e2";
+      } else {
+        tr.style.backgroundColor = "#e2ffe9";
+      }
 
       tr.innerHTML = `
         <td class="mono">${escapeHtml(it.codigo)}</td>
         <td>${escapeHtml(it.nome || "(SEM NOME)")}</td>
-        <td class="mono">${it.qtd}</td>
         <td>
-          <div class="actions">
-            <button class="btnMini miniPlus" data-act="plus" data-c="${escapeHtml(it.codigo)}">+</button>
-            <button class="btnMini miniMinus" data-act="minus" data-c="${escapeHtml(it.codigo)}">-</button>
-            <button class="btnMini miniDel" data-act="del" data-c="${escapeHtml(it.codigo)}">Excluir</button>
-          </div>
+          <input type="number" min="0" value="${it.qtd}"
+          onchange="alterarQtd('${escapeHtml(it.codigo)}', this.value)"
+          style="width:80px">
+        </td>
+        <td>
+          <button onclick="removerItem('${escapeHtml(it.codigo)}')">Excluir</button>
         </td>
       `;
+
       tbody.appendChild(tr);
     }
 
@@ -511,185 +498,123 @@
     save();
   }
 
-  function addItem({codigo, qtd}){
+  function alterarQtd(codigo, valor){
+    itens[codigo].qtd = parseInt(valor) || 0;
+    render();
+  }
+
+  function removerItem(codigo){
+    delete itens[codigo];
+    render();
+  }
+
+  function addItem({codigo}){
     codigo = normalizeCodigo(codigo);
-    qtd = normalizeQtd(qtd);
 
-    if(!$("endereco").value.trim()){
-      setStatus("⚠️ Preencha o endereço do estoque antes de iniciar.", "bad");
-      $("endereco").focus();
-      return;
-    }
-
-    if(!codigo){
-      setStatus("Digite/bipe um código.", "bad");
-      return;
-    }
+    if(!codigo) return;
 
     const nome = lookupNome(codigo);
-    $("nome").value = nome || "";
-
-    if(!nome){
-      setStatus("⚠️ Código não encontrado na base. Adicionado mesmo assim.", "bad");
-    }else{
-      setStatus("✅ Produto: " + nome, "ok");
-    }
 
     if(!itens[codigo]){
       itens[codigo] = { codigo, nome: nome || "", qtd: 0 };
-    }else{
-      if(!itens[codigo].nome && nome) itens[codigo].nome = nome;
     }
 
-    itens[codigo].qtd += qtd;
-
     $("codigo").value = "";
-    $("qtd").value = "1";
-    $("nome").value = "";
     $("codigo").focus();
 
     render();
+  }
+
+  async function loadBase(){
+    try{
+      const res = await fetch(PRODUTOS_JSON);
+      baseLista = await res.json();
+
+      base = {};
+      baseLista.forEach(p=>{
+        base[p.codigo] = p.nome;
+      });
+
+      $("dbPill").innerHTML = `<span class="dot ok"></span> Base carregada`;
+    }catch(e){
+      $("dbPill").innerHTML = `<span class="dot bad"></span> Base não carregou`;
+    }
+  }
+
+  function buscarPorPosicao(posicao){
+    itens = {};
+
+    const filtrados = baseLista.filter(p=>p.posicao === posicao);
+
+    filtrados.forEach(p=>{
+      itens[p.codigo] = {
+        codigo: p.codigo,
+        nome: p.nome,
+        qtd: 0
+      };
+    });
+
+    render();
+  }
+
+  function wire(){
+
+    $("btnOk").addEventListener("click", ()=>{
+      addItem({codigo:$("codigo").value});
+    });
+
+    $("codigo").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        addItem({codigo:$("codigo").value});
+      }
+    });
+
+    $("btnZerar").addEventListener("click", ()=>{
+      if(!confirm("Zerar inventário atual?")) return;
+      itens = {};
+      render();
+    });
+
+    $("btnExport").addEventListener("click", exportCSV);
   }
 
   function exportCSV(){
     const keys = Object.keys(itens);
     if(keys.length === 0){
-      alert("Sem itens para exportar.");
+      alert("Sem itens.");
       return;
     }
 
-    const endereco = $("endereco").value.trim();
-
     const linhas = [];
-    linhas.push(["Endereço do Estoque", endereco].join(";"));
-    linhas.push(["Data Exportação", nowBR()].join(";"));
-    linhas.push("");
-    linhas.push(["Código","Nome do Produto","Quantidade"].join(";"));
+    linhas.push(["Código","Nome","Quantidade"].join(";"));
 
-    keys.sort((a,b)=>a.localeCompare(b));
-    for(const codigo of keys){
-      const it = itens[codigo];
-      const row = [
-        it.codigo,
-        (it.nome || "").replaceAll(";", ","),
-        String(it.qtd)
-      ];
-      linhas.push(row.join(";"));
-    }
+    keys.forEach(c=>{
+      const it = itens[c];
+      linhas.push([it.codigo,it.nome,it.qtd].join(";"));
+    });
 
     const csv = "\ufeff" + linhas.join("\n");
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const blob = new Blob([csv], {type:"text/csv"});
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "inventario_" + new Date().toISOString().slice(0,10) + ".csv";
-    document.body.appendChild(a);
+    a.download = "inventario.csv";
     a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  async function loadBase(){
-    try{
-      const res = await fetch(PRODUTOS_JSON, {cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      base = await res.json();
-
-      const total = Object.keys(base).length;
-      $("dbPill").innerHTML = `<span class="dot ok"></span> Base: ${total} produtos`;
-    }catch(e){
-      base = {};
-      $("dbPill").innerHTML = `<span class="dot bad"></span> Base: NÃO carregou`;
-      setStatus("⚠️ Não consegui carregar o produtos.json. Verifique se ele está no GitHub junto do index.html.", "bad");
-    }
-  }
-
-  function wire(){
-    $("btnOk").addEventListener("click", ()=>addItem({
-      codigo:$("codigo").value,
-      qtd:$("qtd").value
-    }));
-
-    $("btnLimpar").addEventListener("click", ()=>{
-      $("codigo").value="";
-      $("qtd").value="1";
-      $("nome").value="";
-      $("codigo").focus();
-      setStatus("");
-    });
-
-    $("btnZerar").addEventListener("click", ()=>{
-      if(!confirm("Tem certeza que quer ZERAR todo o inventário?")) return;
-      itens = {};
-      render();
-      setStatus("Inventário zerado.", "ok");
-      $("codigo").focus();
-    });
-
-    $("btnExport").addEventListener("click", exportCSV);
-
-    // Enter no campo código = OK
-    $("codigo").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        e.preventDefault();
-        addItem({codigo:$("codigo").value, qtd:$("qtd").value});
-      }
-    });
-
-    // enquanto digita/bipa, já tenta mostrar o nome
-    $("codigo").addEventListener("input", ()=>{
-      const c = normalizeCodigo($("codigo").value);
-      const nome = lookupNome(c);
-      $("nome").value = nome || "";
-
-      if(!c){
-        setStatus("");
-      }else if(nome){
-        setStatus("✅ Produto: " + nome, "ok");
-      }else{
-        setStatus("⚠️ Código não encontrado na base.", "bad");
-      }
-    });
-
-    $("endereco").addEventListener("input", ()=>{
-      save();
-    });
-
-    // clique nos botões + - excluir da tabela
-    $("tbody").addEventListener("click", (e)=>{
-      const btn = e.target.closest("button");
-      if(!btn) return;
-
-      const act = btn.dataset.act;
-      const c = btn.dataset.c;
-      if(!act || !c || !itens[c]) return;
-
-      if(act === "plus"){
-        itens[c].qtd += 1;
-      }
-
-      if(act === "minus"){
-        itens[c].qtd -= 1;
-        if(itens[c].qtd <= 0) delete itens[c];
-      }
-
-      if(act === "del"){
-        if(!confirm("Excluir esse item do inventário?")) return;
-        delete itens[c];
-      }
-
-      render();
-    });
   }
 
   (async function(){
     load();
-    render();
     wire();
     await loadBase();
-    updateEnderecoView();
-    $("codigo").focus();
+    render();
+
+    // PROMPT PARA POSIÇÃO
+    const pos = prompt("Digite a posição para iniciar (ex: A11):");
+    if(pos){
+      buscarPorPosicao(pos.trim().toUpperCase());
+    }
   })();
 </script>
 </body>
