@@ -32,8 +32,21 @@ body{
   border-radius:22px;
   padding:14px 16px;
   box-shadow:var(--shadow);
-  display:flex;justify-content:space-between;align-items:center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
+.brand{display:flex;align-items:center;gap:15px;}
+.logo img{height:55px;}
+.status{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);}
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#94a3b8;
+}
+.dot.ok{background:var(--ok)}
+.dot.bad{background:var(--bad)}
 .grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .card{
   background:var(--card);
@@ -65,8 +78,20 @@ th{background:#f8fafc;}
 <div class="wrap">
 
 <div class="header">
-<h2>Inventário por Posição</h2>
-<div id="posicaoInfo">Posição: —</div>
+<div class="brand">
+<div class="logo">
+<img src="logo.png" alt="Logo"/>
+</div>
+<div>
+<h2 style="margin:0">Inventário por Posição</h2>
+<div id="posicaoInfo" style="font-size:13px;color:gray">Posição: —</div>
+</div>
+</div>
+
+<div class="status">
+<div id="dotBase" class="dot bad"></div>
+<span>Base de Produtos</span>
+</div>
 </div>
 
 <div class="grid">
@@ -130,8 +155,15 @@ return "inv_"+normalizar(p);
 }
 
 async function carregarBase(){
+try{
 const res = await fetch(URL_JSON);
 base = await res.json();
+document.getElementById("dotBase").classList.remove("bad");
+document.getElementById("dotBase").classList.add("ok");
+}catch(e){
+document.getElementById("dotBase").classList.remove("ok");
+document.getElementById("dotBase").classList.add("bad");
+}
 }
 
 function buscarPosicao(){
