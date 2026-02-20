@@ -18,59 +18,49 @@
   --shadow:0 12px 30px rgba(15,23,42,.08);
   --radius:18px;
 }
-*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:linear-gradient(180deg,#ffffff, var(--bg));
-  color:var(--text);
+  font-family:system-ui;
+  background:linear-gradient(180deg,#fff,var(--bg));
 }
-.wrap{max-width:1200px;margin:0 auto;padding:18px;}
+.wrap{max-width:1200px;margin:auto;padding:18px}
 .header{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:14px 16px;
-  box-shadow:var(--shadow);
+  background:#fff;
+  border-radius:20px;
+  padding:15px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-}
-.brand{display:flex;align-items:center;gap:15px;}
-.logo img{height:55px;}
-.status{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);}
-.dot{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:#94a3b8;
-}
-.dot.ok{background:var(--ok)}
-.dot.bad{background:var(--bad)}
-.grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:14px;
   box-shadow:var(--shadow);
 }
-.cardTitle{font-weight:900;margin-bottom:10px;font-size:14px;}
+.brand{display:flex;align-items:center;gap:15px}
+.logo img{height:55px}
+.status{display:flex;align-items:center;gap:8px;color:gray}
+.dot{width:12px;height:12px;border-radius:50%;background:#ccc}
+.dot.ok{background:var(--ok)}
+.grid{margin-top:15px;display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.card{
+  background:#fff;
+  border-radius:20px;
+  padding:15px;
+  box-shadow:var(--shadow);
+}
 input,button{
   width:100%;
-  border-radius:16px;
-  border:1px solid var(--line);
-  padding:12px;
-  font-size:16px;
+  padding:10px;
+  border-radius:15px;
+  border:1px solid #ddd;
+  font-size:15px;
 }
-button{cursor:pointer;font-weight:900;border:0}
-.primary{background:var(--accent);color:#fff;}
-.danger{background:#fff1f2;color:var(--bad);border:1px solid #fecaca;}
-.tableWrap{overflow:auto;max-height:500px;border-radius:16px;border:1px solid var(--line);}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:10px;border-bottom:1px solid #eee;font-size:13px;}
-th{background:#f8fafc;}
-.row2{display:grid;grid-template-columns:1fr 120px;gap:10px;}
+button{cursor:pointer;font-weight:bold;border:0}
+.primary{background:var(--accent);color:#fff}
+.danger{background:#fff1f2;color:var(--bad)}
+.row2{display:grid;grid-template-columns:1fr 120px;gap:10px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:8px;border-bottom:1px solid #eee;font-size:13px}
+th{background:#f3f4f6}
+.zero{background:#ffe5e5}
+.okrow{background:#e5ffe8}
 </style>
 </head>
 
@@ -79,9 +69,7 @@ th{background:#f8fafc;}
 
 <div class="header">
 <div class="brand">
-<div class="logo">
-<img src="logo.png" alt="Logo"/>
-</div>
+<div class="logo"><img src="logo.png"/></div>
 <div>
 <h2 style="margin:0">Inventário por Posição</h2>
 <div id="posicaoInfo" style="font-size:13px;color:gray">Posição: —</div>
@@ -89,15 +77,14 @@ th{background:#f8fafc;}
 </div>
 
 <div class="status">
-<div id="dotBase" class="dot bad"></div>
-<span>Base de Produtos</span>
+<div id="dotBase" class="dot"></div>
+<span id="totalBase">Base: 0 itens</span>
 </div>
 </div>
 
 <div class="grid">
 
 <div class="card">
-<div class="cardTitle">Selecionar posição</div>
 
 <input id="inputPosicao" placeholder="Digite B42 ou B-42"/>
 <br><br>
@@ -113,7 +100,7 @@ th{background:#f8fafc;}
 
 <label>Bipar código</label>
 <div class="row2">
-<input id="codigo" placeholder="Bipe aqui..."/>
+<input id="codigo"/>
 <input id="quantidade" type="number" value="1"/>
 </div>
 <br>
@@ -122,87 +109,83 @@ th{background:#f8fafc;}
 </div>
 
 <div class="card">
-<div class="cardTitle">Itens da posição</div>
-<div class="tableWrap">
 <table>
 <thead>
 <tr>
 <th>Código</th>
 <th>Nome</th>
-<th>Quantidade</th>
+<th>Qtd</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
-</div>
 </div>
 
 </div>
 </div>
 
 <script>
-const URL_JSON = "./produtos.json";
-let base = [];
-let inventario = {};
-let posicaoAtual = "";
+const URL_JSON="./produtos.json";
+let base=[];
+let baseMap={};
+let inventario={};
+let posicaoAtual="";
 
 function normalizar(p){
 return String(p||"").toUpperCase().replace(/-/g,"").trim();
 }
 
-function chave(p){
-return "inv_"+normalizar(p);
-}
+function chave(p){return "inv_"+normalizar(p)}
 
 async function carregarBase(){
-try{
-const res = await fetch(URL_JSON);
-base = await res.json();
-document.getElementById("dotBase").classList.remove("bad");
+const res=await fetch(URL_JSON);
+base=await res.json();
+
+base.forEach(p=>{
+baseMap[p.codigo]=p;
+});
+
 document.getElementById("dotBase").classList.add("ok");
-}catch(e){
-document.getElementById("dotBase").classList.remove("ok");
-document.getElementById("dotBase").classList.add("bad");
-}
+document.getElementById("totalBase").innerText="Base: "+base.length+" itens";
 }
 
 function buscarPosicao(){
-const pos = normalizar(document.getElementById("inputPosicao").value);
-if(!pos){alert("Digite uma posição");return;}
+const pos=normalizar(document.getElementById("inputPosicao").value);
+if(!pos)return;
 
-posicaoAtual = pos;
-document.getElementById("posicaoInfo").innerText = "Posição: "+pos;
+posicaoAtual=pos;
+document.getElementById("posicaoInfo").innerText="Posição: "+pos;
 
-inventario = {};
+inventario={};
 
 base.forEach(p=>{
-if(normalizar(p.posicao) === pos){
-inventario[p.codigo] = {
-codigo:p.codigo,
-nome:p.nome,
-qtd:0
-};
+if(normalizar(p.posicao)===pos){
+inventario[p.codigo]={codigo:p.codigo,nome:p.nome,qtd:0,posOriginal:p.posicao};
 }
 });
 
-const salvo = localStorage.getItem(chave(pos));
-if(salvo){
-inventario = JSON.parse(salvo);
-}
+const salvo=localStorage.getItem(chave(pos));
+if(salvo)inventario=JSON.parse(salvo);
 
 render();
 }
 
 function bipar(){
-const cod = document.getElementById("codigo").value.trim();
-const qtd = parseInt(document.getElementById("quantidade").value) || 1;
+const cod=document.getElementById("codigo").value.trim();
+const qtd=parseInt(document.getElementById("quantidade").value)||1;
+if(!cod)return;
 
 if(!inventario[cod]){
-alert("Produto não pertence a essa posição!");
-return;
+let baseInfo=baseMap[cod];
+inventario[cod]={
+codigo:cod,
+nome:baseInfo?baseInfo.nome:"(SEM CADASTRO)",
+qtd:0,
+posOriginal:baseInfo?baseInfo.posicao:"SEM POSIÇÃO"
+};
 }
 
-inventario[cod].qtd += qtd;
+inventario[cod].qtd+=qtd;
 
 document.getElementById("codigo").value="";
 document.getElementById("quantidade").value=1;
@@ -211,11 +194,15 @@ render();
 }
 
 function render(){
-const tbody = document.getElementById("tbody");
+const tbody=document.getElementById("tbody");
 tbody.innerHTML="";
 
 Object.values(inventario).forEach(item=>{
-const tr = document.createElement("tr");
+const tr=document.createElement("tr");
+
+if(item.qtd==0)tr.className="zero";
+else tr.className="okrow";
+
 tr.innerHTML=`
 <td>${item.codigo}</td>
 <td>${item.nome}</td>
@@ -227,31 +214,32 @@ tbody.appendChild(tr);
 
 function salvar(){
 if(!posicaoAtual)return;
-localStorage.setItem(chave(posicaoAtual), JSON.stringify(inventario));
-alert("Salvo com sucesso!");
+localStorage.setItem(chave(posicaoAtual),JSON.stringify(inventario));
+alert("Salvo!");
 }
 
 function zerar(){
 if(!posicaoAtual)return;
-if(confirm("Deseja zerar essa posição?")){
 localStorage.removeItem(chave(posicaoAtual));
 buscarPosicao();
-}
 }
 
 function exportar(){
 if(!posicaoAtual)return;
 
-let linhas=["Codigo;Nome;Quantidade"];
+let linhas=["Codigo;Nome;Quantidade;Posicao_Contada;Posicao_Original"];
+
 Object.values(inventario).forEach(i=>{
-linhas.push(`${i.codigo};${i.nome};${i.qtd}`);
+linhas.push(`${i.codigo};${i.nome};${i.qtd};${posicaoAtual};${i.posOriginal}`);
 });
 
-const blob = new Blob(["\ufeff"+linhas.join("\n")],{type:"text/csv"});
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = "Inventario_"+posicaoAtual+".csv";
+const blob=new Blob(["\ufeff"+linhas.join("\n")],{type:"text/csv"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="Inventario_"+posicaoAtual+".csv";
 a.click();
+
+zerar(); // zera automaticamente após exportar
 }
 
 carregarBase();
