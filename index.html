@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventário por Posição</title>
+<title>Inventário Siloking</title>
 
 <style>
 
@@ -11,7 +11,7 @@
     --bg: #f4f6f9;
     --card: #ffffff;
     --text: #1e293b;
-    --primary: #2563eb;
+    --primary: #1e40af;
 }
 
 .dark {
@@ -28,77 +28,91 @@ body {
     color: var(--text);
 }
 
+/* HEADER NOVO */
 header {
     background: var(--primary);
     color: white;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 25px 15px;
+    text-align: center;
 }
 
-header img {
-    height: 40px;
-}
-
-.logo-area {
+.logo-container {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 10px;
 }
 
+.logo-container img {
+    height: 70px;
+}
+
+.logo-container h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 2px;
+}
+
 .status-base {
     background: #16a34a;
-    color: white;
-    padding: 4px 8px;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
+    margin-top: 5px;
 }
 
+/* BOTÃO DARK */
 .btn-modo {
+    position: absolute;
+    top: 15px;
+    right: 15px;
     background: white;
     border: none;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: 20px;
     cursor: pointer;
-    font-weight: bold;
 }
 
+/* RESUMO */
 .resumo {
-    padding: 10px 15px;
     background: var(--card);
+    padding: 12px;
     display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #ccc;
+    justify-content: space-around;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
 }
 
+/* POSIÇÃO */
 .posicao-box {
     padding: 15px;
     background: var(--card);
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 input {
     padding: 12px;
+    font-size: 16px;
     border-radius: 8px;
     border: 1px solid #ccc;
-    font-size: 16px;
 }
 
 button {
-    padding: 12px 18px;
+    padding: 12px 20px;
     border-radius: 8px;
     border: none;
-    cursor: pointer;
     font-weight: bold;
+    cursor: pointer;
 }
 
 .btn-azul { background: var(--primary); color: white; }
 .btn-verde { background: #16a34a; color: white; }
 .btn-vermelho { background: #dc2626; color: white; }
 
+/* TABELA */
 .container {
     padding: 15px;
     padding-bottom: 120px;
@@ -126,6 +140,7 @@ tr.contado {
     color: #166534;
 }
 
+/* BIPAGEM FIXA */
 .bipagem {
     position: fixed;
     bottom: 0;
@@ -149,26 +164,32 @@ tr.contado {
     border-radius: 12px;
 }
 
+/* RESPONSIVO */
 @media (max-width: 768px) {
+
     .posicao-box {
         flex-direction: column;
+        align-items: stretch;
     }
+
     .bipagem {
         flex-direction: column;
     }
+
 }
 
 </style>
 </head>
 <body>
 
+<button class="btn-modo" onclick="alternarModo()">🌙</button>
+
 <header>
-    <div class="logo-area">
-        <!-- COLOQUE AQUI O NOME DO SEU PNG -->
-        <img src="logo.png" alt="Logo Empresa">
-        <span class="status-base" id="statusBase">Carregando...</span>
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo Siloking">
+        <h1>SILOKING INVENTÁRIO</h1>
+        <div class="status-base" id="statusBase">Carregando base...</div>
     </div>
-    <button class="btn-modo" onclick="alternarModo()">🌙 / ☀</button>
 </header>
 
 <div class="resumo">
@@ -212,24 +233,26 @@ function normalizar(pos) {
     return pos?.toUpperCase().replace("-", "").trim();
 }
 
-fetch('produtos_base_completa.json')
+/* CARREGAR BASE */
+fetch('./produtos_base_completa.json')
 .then(res => res.json())
 .then(data => {
     produtos = data;
     document.getElementById("totalBase").innerText = produtos.length;
-    document.getElementById("statusBase").innerText = "Base Carregada";
+    document.getElementById("statusBase").innerText = "Base Carregada ✔";
 })
-.catch(() => {
-    document.getElementById("statusBase").innerText = "Erro ao carregar base";
-    document.getElementById("statusBase").style.background = "#dc2626";
+.catch(err => {
+    document.getElementById("statusBase").innerText = "Erro ao carregar base ❌";
 });
 
+/* CARREGAR POSIÇÃO */
 function carregarPosicao() {
     posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
     document.getElementById("posicaoAtual").innerText = posicaoAtual;
     renderizar();
 }
 
+/* TROCAR */
 function trocarPosicao() {
     posicaoAtual = "";
     contagem = {};
@@ -237,11 +260,13 @@ function trocarPosicao() {
     document.getElementById("posicaoAtual").innerText = "Nenhuma";
 }
 
+/* RENDERIZAR */
 function renderizar() {
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
     produtos.forEach(prod => {
+
         if(normalizar(prod.posicao) === posicaoAtual) {
 
             const qtd = contagem[prod.codigo] || 0;
@@ -260,6 +285,7 @@ function renderizar() {
     });
 }
 
+/* ADICIONAR */
 function adicionarProduto() {
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
@@ -274,6 +300,7 @@ function adicionarProduto() {
     renderizar();
 }
 
+/* EXPORTAR */
 function exportarCSV() {
     let linhas = [["Posicao","Codigo","Quantidade"]];
 
@@ -292,6 +319,7 @@ function exportarCSV() {
     renderizar();
 }
 
+/* DARK MODE */
 function alternarModo() {
     document.body.classList.toggle("dark");
 }
