@@ -6,17 +6,58 @@
 <title>Inventário - SILOKING</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f6fa}
-.wrap{max-width:1200px;margin:auto;padding:20px}
-.header{background:#fff;padding:15px;border-radius:15px;display:flex;justify-content:space-between;align-items:center}
-.card{background:#fff;padding:15px;border-radius:15px;margin-top:15px}
-input,button{padding:10px;border-radius:10px;border:1px solid #ccc;font-size:16px}
-button{cursor:pointer;font-weight:bold}
-.primary{background:#2563eb;color:#fff;border:none}
-.danger{background:#dc2626;color:#fff;border:none}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border-bottom:1px solid #eee;padding:8px;font-size:14px}
-th{background:#f3f4f6}
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --muted:#5b677a;
+  --text:#0f172a;
+  --accent:#2563eb;
+  --ok:#16a34a;
+  --bad:#dc2626;
+  --line:rgba(15,23,42,.10);
+  --shadow:0 12px 30px rgba(15,23,42,.08);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(180deg,#ffffff, var(--bg));
+  color:var(--text);
+}
+.wrap{max-width:1200px;margin:0 auto;padding:18px;}
+.header{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:14px 16px;
+  box-shadow:var(--shadow);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:14px;
+  box-shadow:var(--shadow);
+}
+.cardTitle{font-weight:900;margin-bottom:10px;font-size:14px;}
+input,button{
+  width:100%;
+  border-radius:16px;
+  border:1px solid var(--line);
+  padding:12px;
+  font-size:16px;
+}
+button{cursor:pointer;font-weight:900;border:0}
+.primary{background:var(--accent);color:#fff;}
+.danger{background:#fff1f2;color:var(--bad);border:1px solid #fecaca;}
+.tableWrap{overflow:auto;max-height:500px;border-radius:16px;border:1px solid var(--line);}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:10px;border-bottom:1px solid #eee;font-size:13px;}
+th{background:#f8fafc;}
+.row2{display:grid;grid-template-columns:1fr 120px;gap:10px;}
 </style>
 </head>
 
@@ -25,21 +66,39 @@ th{background:#f3f4f6}
 
 <div class="header">
 <h2>Inventário por Posição</h2>
-<div id="posicaoAtual">Posição: —</div>
+<div id="posicaoInfo">Posição: —</div>
 </div>
 
+<div class="grid">
+
 <div class="card">
+<div class="cardTitle">Selecionar posição</div>
+
 <input id="inputPosicao" placeholder="Digite B42 ou B-42"/>
+<br><br>
 <button class="primary" onclick="buscarPosicao()">Buscar posição</button>
-<button onclick="salvar()">Salvar</button>
+<br><br>
+<button onclick="salvar()">Salvar contagem</button>
+<br><br>
 <button onclick="exportar()">Exportar CSV</button>
-<button class="danger" onclick="zerar()">Zerar</button>
-</div>
+<br><br>
+<button class="danger" onclick="zerar()">Zerar posição</button>
 
-<div class="card">
-<input id="codigo" placeholder="Bipar código aqui"/>
+<hr style="margin:20px 0">
+
+<label>Bipar código</label>
+<div class="row2">
+<input id="codigo" placeholder="Bipe aqui..."/>
+<input id="quantidade" type="number" value="1"/>
+</div>
+<br>
 <button class="primary" onclick="bipar()">Adicionar</button>
 
+</div>
+
+<div class="card">
+<div class="cardTitle">Itens da posição</div>
+<div class="tableWrap">
 <table>
 <thead>
 <tr>
@@ -51,7 +110,9 @@ th{background:#f3f4f6}
 <tbody id="tbody"></tbody>
 </table>
 </div>
+</div>
 
+</div>
 </div>
 
 <script>
@@ -64,7 +125,7 @@ function normalizar(p){
 return String(p||"").toUpperCase().replace(/-/g,"").trim();
 }
 
-function chaveStorage(p){
+function chave(p){
 return "inv_"+normalizar(p);
 }
 
@@ -78,7 +139,7 @@ const pos = normalizar(document.getElementById("inputPosicao").value);
 if(!pos){alert("Digite uma posição");return;}
 
 posicaoAtual = pos;
-document.getElementById("posicaoAtual").innerText = "Posição: "+pos;
+document.getElementById("posicaoInfo").innerText = "Posição: "+pos;
 
 inventario = {};
 
@@ -92,7 +153,7 @@ qtd:0
 }
 });
 
-const salvo = localStorage.getItem(chaveStorage(pos));
+const salvo = localStorage.getItem(chave(pos));
 if(salvo){
 inventario = JSON.parse(salvo);
 }
@@ -102,15 +163,18 @@ render();
 
 function bipar(){
 const cod = document.getElementById("codigo").value.trim();
-if(!cod) return;
+const qtd = parseInt(document.getElementById("quantidade").value) || 1;
 
-if(inventario[cod]){
-inventario[cod].qtd += 1;
-}else{
+if(!inventario[cod]){
 alert("Produto não pertence a essa posição!");
+return;
 }
 
+inventario[cod].qtd += qtd;
+
 document.getElementById("codigo").value="";
+document.getElementById("quantidade").value=1;
+
 render();
 }
 
@@ -130,21 +194,21 @@ tbody.appendChild(tr);
 }
 
 function salvar(){
-if(!posicaoAtual){alert("Selecione uma posição");return;}
-localStorage.setItem(chaveStorage(posicaoAtual), JSON.stringify(inventario));
+if(!posicaoAtual)return;
+localStorage.setItem(chave(posicaoAtual), JSON.stringify(inventario));
 alert("Salvo com sucesso!");
 }
 
 function zerar(){
-if(!posicaoAtual) return;
+if(!posicaoAtual)return;
 if(confirm("Deseja zerar essa posição?")){
-localStorage.removeItem(chaveStorage(posicaoAtual));
+localStorage.removeItem(chave(posicaoAtual));
 buscarPosicao();
 }
 }
 
 function exportar(){
-if(!posicaoAtual) return;
+if(!posicaoAtual)return;
 
 let linhas=["Codigo;Nome;Quantidade"];
 Object.values(inventario).forEach(i=>{
