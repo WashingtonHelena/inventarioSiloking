@@ -47,7 +47,6 @@ header {
 
 .logo-box img {
     height: 70px;
-    display: block;
 }
 
 header h1 {
@@ -56,10 +55,7 @@ header h1 {
     letter-spacing: 3px;
 }
 
-.subtitulo {
-    font-size: 14px;
-    opacity: 0.9;
-}
+.subtitulo { font-size: 14px; opacity: 0.9; }
 
 .status-base {
     margin-top: 12px;
@@ -118,6 +114,7 @@ button {
 .btn-azul { background: var(--primary); color: white; }
 .btn-vermelho { background: #dc2626; color: white; }
 .btn-verde { background: #16a34a; color: white; }
+.btn-laranja { background: #f97316; color: white; }
 
 .container {
     padding: 15px;
@@ -128,12 +125,18 @@ table {
     width: 100%;
     border-collapse: collapse;
     background: var(--card);
+    table-layout: fixed;
 }
 
 th, td {
     padding: 10px;
     border-bottom: 1px solid #ddd;
     font-size: 14px;
+    text-align: center;
+}
+
+td:nth-child(2) {
+    text-align: left;
 }
 
 tr.zero {
@@ -164,9 +167,7 @@ tr.fora {
     box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
 }
 
-.bipagem input {
-    flex: 1;
-}
+.bipagem input { flex: 1; }
 
 .btn-app {
     background: var(--primary);
@@ -206,6 +207,7 @@ tr.fora {
 <button class="btn-azul" onclick="carregarPosicao()">Carregar</button>
 <button class="btn-azul" onclick="mostrarSemPosicao()">Sem Posição</button>
 <button class="btn-vermelho" onclick="trocarPosicao()">Trocar</button>
+<button class="btn-laranja" onclick="zerarContagem()">Zerar Contagem</button>
 <button class="btn-verde" onclick="exportarCSV()">Exportar CSV</button>
 </div>
 
@@ -234,7 +236,7 @@ let produtos = [];
 let contagem = {};
 let posicaoAtual = "";
 
-function normalizar(pos) {
+function normalizar(pos){
     return pos ? pos.toUpperCase().replace("-", "").trim() : "";
 }
 
@@ -244,17 +246,15 @@ fetch('./produtos_base_completa.json')
     produtos = data;
     document.getElementById("totalBase").innerText = produtos.length;
     document.getElementById("statusBase").innerText = "Base Carregada ✔";
+    renderizar();
 })
 .catch(() => {
     document.getElementById("statusBase").innerText = "Erro ao carregar base ❌";
 });
 
-function carregarPosicao() {
+function carregarPosicao(){
     posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
-    if(!posicaoAtual){
-        alert("Digite uma posição válida");
-        return;
-    }
+    if(!posicaoAtual){ alert("Digite uma posição válida"); return; }
     document.getElementById("posicaoAtual").innerText = posicaoAtual;
     renderizar();
 }
@@ -268,27 +268,32 @@ function mostrarSemPosicao(){
 function trocarPosicao(){
     posicaoAtual = "";
     contagem = {};
-    document.getElementById("tabelaProdutos").innerHTML = "";
     document.getElementById("posicaoAtual").innerText = "Nenhuma";
+    renderizar();
+}
+
+function zerarContagem(){
+    contagem = {};
+    renderizar();
 }
 
 function renderizar(){
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
-    produtos.forEach(prod => {
+    produtos.forEach(prod=>{
         let posBase = normalizar(prod.posicao);
         let pertence = posBase === posicaoAtual;
         let ehSem = !prod.posicao || prod.posicao.trim() === "";
         let qtd = contagem[prod.codigo] || 0;
 
-        let mostrar = false;
+        if(posicaoAtual === "" ) return;
 
-        if(posicaoAtual === "SEM_POSICAO" && ehSem) mostrar = true;
-        else if(pertence) mostrar = true;
-        else if(qtd > 0) mostrar = true;
-
-        if(mostrar){
+        if(
+            (posicaoAtual === "SEM_POSICAO" && ehSem) ||
+            pertence ||
+            qtd > 0
+        ){
             const tr = document.createElement("tr");
 
             if(qtd === 0 && pertence) tr.classList.add("zero");
@@ -309,51 +314,44 @@ function renderizar(){
 function adicionarProduto(){
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
-
     if(!codigo) return;
 
-    let existe = produtos.find(p => p.codigo === codigo);
+    let existe = produtos.find(p=>p.codigo===codigo);
+    if(!existe){ alert("Produto não encontrado!"); return; }
 
-    if(!existe){
-        alert("Produto não encontrado na base!");
-        return;
-    }
-
-    contagem[codigo] = (contagem[codigo] || 0) + qtd;
-
-    document.getElementById("codigoInput").value = "";
-    document.getElementById("quantidadeInput").value = 1;
-
+    contagem[codigo] = (contagem[codigo]||0)+qtd;
+    document.getElementById("codigoInput").value="";
+    document.getElementById("quantidadeInput").value=1;
     renderizar();
 }
 
 function exportarCSV(){
-    let linhas = [["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade","Status"]];
+    let linhas=[["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade","Status"]];
 
-    produtos.forEach(prod => {
+    produtos.forEach(prod=>{
+        let posBase = normalizar(prod.posicao);
+        let pertence = posBase === posicaoAtual;
+        let ehSem = !prod.posicao || prod.posicao.trim()==="";
         let qtd = contagem[prod.codigo] || 0;
-        if(qtd > 0){
-            let pertence = normalizar(prod.posicao) === posicaoAtual;
-            let status = pertence ? "OK" : "FORA_POSICAO";
 
+        if(
+            (posicaoAtual === "SEM_POSICAO" && ehSem) ||
+            pertence ||
+            qtd > 0
+        ){
             linhas.push([
                 posicaoAtual,
                 prod.codigo,
                 prod.nome,
                 prod.posicao || "SEM POSIÇÃO",
                 qtd,
-                status
+                pertence ? "OK" : (qtd>0 ? "FORA_POSICAO" : "NAO_CONTADO")
             ]);
         }
     });
 
-    if(linhas.length === 1){
-        alert("Nenhum item contado para exportar!");
-        return;
-    }
-
-    let csv = linhas.map(l => l.join(";")).join("\n");
-    let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    let csv = linhas.map(l=>l.join(";")).join("\n");
+    let blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
     let link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `inventario_${posicaoAtual}.csv`;
