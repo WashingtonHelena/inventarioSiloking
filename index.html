@@ -30,7 +30,7 @@ body {
     color: var(--text);
 }
 
-/* HEADER PROFISSIONAL */
+/* HEADER */
 header {
     background: var(--header-gradient);
     padding: 30px 20px;
@@ -72,7 +72,6 @@ header h1 {
     font-size: 13px;
 }
 
-/* DARK BUTTON */
 .btn-dark {
     position: absolute;
     top: 20px;
@@ -178,12 +177,8 @@ tr.contado {
 
 /* RESPONSIVO */
 @media (max-width: 768px) {
-    .posicao-box {
-        flex-direction: column;
-    }
-    .bipagem {
-        flex-direction: column;
-    }
+    .posicao-box { flex-direction: column; }
+    .bipagem { flex-direction: column; }
 }
 
 </style>
@@ -210,6 +205,7 @@ tr.contado {
 <div class="posicao-box">
     <input type="text" id="posicaoInput" placeholder="Digite a posição (Ex: A11)">
     <button class="btn-azul" onclick="carregarPosicao()">Carregar</button>
+    <button class="btn-azul" onclick="mostrarSemPosicao()">Sem Posição</button>
     <button class="btn-vermelho" onclick="trocarPosicao()">Trocar</button>
     <button class="btn-verde" onclick="exportarCSV()">Exportar CSV</button>
 </div>
@@ -244,6 +240,7 @@ function normalizar(pos) {
     return pos ? pos.toUpperCase().replace("-", "").trim() : "";
 }
 
+/* CARREGAR BASE */
 fetch('./produtos_base_completa.json')
 .then(res => res.json())
 .then(data => {
@@ -252,25 +249,49 @@ fetch('./produtos_base_completa.json')
     document.getElementById("statusBase").innerText = "Base Carregada ✔";
 });
 
+/* POSIÇÕES */
 function carregarPosicao() {
     posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
+    if(!posicaoAtual){
+        alert("Digite uma posição válida");
+        return;
+    }
     document.getElementById("posicaoAtual").innerText = posicaoAtual;
     renderizar();
 }
 
-function trocarPosicao() {
+function mostrarSemPosicao(){
+    posicaoAtual = "SEM_POSICAO";
+    document.getElementById("posicaoAtual").innerText = "SEM POSIÇÃO";
+    renderizar();
+}
+
+function trocarPosicao(){
     posicaoAtual = "";
     contagem = {};
     document.getElementById("tabelaProdutos").innerHTML = "";
     document.getElementById("posicaoAtual").innerText = "Nenhuma";
 }
 
-function renderizar() {
+/* RENDER */
+function renderizar(){
+
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
     produtos.forEach(prod => {
-        if(normalizar(prod.posicao) === posicaoAtual) {
+
+        let ehSem = !prod.posicao || prod.posicao.trim() === "";
+        let mostrar = false;
+
+        if(posicaoAtual === "SEM_POSICAO" && ehSem){
+            mostrar = true;
+        }
+        else if(normalizar(prod.posicao) === posicaoAtual){
+            mostrar = true;
+        }
+
+        if(mostrar){
 
             const qtd = contagem[prod.codigo] || 0;
             const tr = document.createElement("tr");
@@ -281,19 +302,29 @@ function renderizar() {
             tr.innerHTML = `
                 <td>${prod.codigo}</td>
                 <td>${prod.nome}</td>
-                <td>${prod.posicao}</td>
+                <td>${prod.posicao || "SEM POSIÇÃO"}</td>
                 <td>${qtd}</td>
             `;
+
             tbody.appendChild(tr);
         }
     });
 }
 
-function adicionarProduto() {
+/* ADICIONAR */
+function adicionarProduto(){
+
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
 
     if(!codigo) return;
+
+    let existe = produtos.find(p => p.codigo === codigo);
+
+    if(!existe){
+        alert("Produto não encontrado na base!");
+        return;
+    }
 
     contagem[codigo] = (contagem[codigo] || 0) + qtd;
 
@@ -303,18 +334,24 @@ function adicionarProduto() {
     renderizar();
 }
 
-/* EXPORTAR TODOS (inclusive zerados) */
-function exportarCSV() {
+/* EXPORTAR */
+function exportarCSV(){
 
     let linhas = [["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade"]];
 
     produtos.forEach(prod => {
-        if(normalizar(prod.posicao) === posicaoAtual) {
+
+        let ehSem = !prod.posicao || prod.posicao.trim() === "";
+
+        if(
+            (posicaoAtual === "SEM_POSICAO" && ehSem) ||
+            normalizar(prod.posicao) === posicaoAtual
+        ){
             linhas.push([
                 posicaoAtual,
                 prod.codigo,
                 prod.nome,
-                prod.posicao,
+                prod.posicao || "SEM POSIÇÃO",
                 contagem[prod.codigo] || 0
             ]);
         }
@@ -332,7 +369,8 @@ function exportarCSV() {
     renderizar();
 }
 
-function alternarModo() {
+/* DARK MODE */
+function alternarModo(){
     document.body.classList.toggle("dark");
 }
 
