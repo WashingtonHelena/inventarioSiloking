@@ -151,6 +151,12 @@ tr.contado {
     color: #166534;
 }
 
+tr.fora {
+    background: #fff3cd;
+    color: #92400e;
+    font-weight: bold;
+}
+
 /* BIPAGEM */
 .bipagem {
     position: fixed;
@@ -240,7 +246,6 @@ function normalizar(pos) {
     return pos ? pos.toUpperCase().replace("-", "").trim() : "";
 }
 
-/* CARREGAR BASE */
 fetch('./produtos_base_completa.json')
 .then(res => res.json())
 .then(data => {
@@ -281,23 +286,23 @@ function renderizar(){
 
     produtos.forEach(prod => {
 
+        let pertence = normalizar(prod.posicao) === posicaoAtual;
         let ehSem = !prod.posicao || prod.posicao.trim() === "";
+        let qtd = contagem[prod.codigo] || 0;
+
         let mostrar = false;
 
-        if(posicaoAtual === "SEM_POSICAO" && ehSem){
-            mostrar = true;
-        }
-        else if(normalizar(prod.posicao) === posicaoAtual){
-            mostrar = true;
-        }
+        if(posicaoAtual === "SEM_POSICAO" && ehSem) mostrar = true;
+        else if(pertence) mostrar = true;
+        else if(qtd > 0) mostrar = true;
 
         if(mostrar){
 
-            const qtd = contagem[prod.codigo] || 0;
             const tr = document.createElement("tr");
 
-            if(qtd === 0) tr.classList.add("zero");
-            if(qtd > 0) tr.classList.add("contado");
+            if(qtd === 0 && pertence) tr.classList.add("zero");
+            if(qtd > 0 && pertence) tr.classList.add("contado");
+            if(qtd > 0 && !pertence) tr.classList.add("fora");
 
             tr.innerHTML = `
                 <td>${prod.codigo}</td>
@@ -341,11 +346,12 @@ function exportarCSV(){
 
     produtos.forEach(prod => {
 
+        let pertence = normalizar(prod.posicao) === posicaoAtual;
         let ehSem = !prod.posicao || prod.posicao.trim() === "";
 
         if(
             (posicaoAtual === "SEM_POSICAO" && ehSem) ||
-            normalizar(prod.posicao) === posicaoAtual
+            pertence
         ){
             linhas.push([
                 posicaoAtual,
