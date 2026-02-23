@@ -1,5 +1,235 @@
-<script>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventário Siloking</title>
 
+<style>
+:root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --primary: #1e40af;
+    --header-gradient: linear-gradient(135deg,#1e3a8a,#1e40af);
+}
+
+.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f1f5f9;
+    --primary: #3b82f6;
+    --header-gradient: linear-gradient(135deg,#0f172a,#1e293b);
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+header {
+    background: var(--header-gradient);
+    padding: 30px 20px;
+    text-align: center;
+    color: white;
+    position: relative;
+}
+
+.logo-box {
+    background: white;
+    padding: 12px;
+    border-radius: 20px;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.logo-box img {
+    height: 70px;
+    display: block;
+}
+
+header h1 {
+    margin: 15px 0 5px;
+    font-size: 34px;
+    letter-spacing: 3px;
+}
+
+.subtitulo {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.status-base {
+    margin-top: 12px;
+    display: inline-block;
+    background: #16a34a;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+}
+
+.btn-dark {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.resumo {
+    background: var(--card);
+    padding: 12px;
+    display: flex;
+    justify-content: space-around;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+.posicao-box {
+    padding: 15px;
+    background: var(--card);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+input {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 12px 18px;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-azul { background: var(--primary); color: white; }
+.btn-vermelho { background: #dc2626; color: white; }
+.btn-verde { background: #16a34a; color: white; }
+
+.container {
+    padding: 15px;
+    padding-bottom: 120px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+tr.zero {
+    background: #ffe5e5;
+    color: #b91c1c;
+}
+
+tr.contado {
+    background: #e6ffe6;
+    color: #166534;
+}
+
+tr.fora {
+    background: #fff3cd;
+    color: #92400e;
+    font-weight: bold;
+}
+
+.bipagem {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+}
+
+.bipagem input {
+    flex: 1;
+}
+
+.btn-app {
+    background: var(--primary);
+    color: white;
+    font-size: 18px;
+    border-radius: 12px;
+}
+
+@media (max-width: 768px) {
+    .posicao-box { flex-direction: column; }
+    .bipagem { flex-direction: column; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<button class="btn-dark" onclick="alternarModo()">🌙 Modo</button>
+
+<div class="logo-box">
+<img src="logo.png" alt="Logo Siloking">
+</div>
+
+<h1>SILOKING INVENTÁRIO</h1>
+<div class="subtitulo">Sistema Inteligente de Contagem de Estoque</div>
+<div class="status-base" id="statusBase">Carregando base...</div>
+</header>
+
+<div class="resumo">
+<div>Total Base: <span id="totalBase">0</span></div>
+<div>Posição Atual: <span id="posicaoAtual">Nenhuma</span></div>
+</div>
+
+<div class="posicao-box">
+<input type="text" id="posicaoInput" placeholder="Digite a posição (Ex: A11)">
+<button class="btn-azul" onclick="carregarPosicao()">Carregar</button>
+<button class="btn-azul" onclick="mostrarSemPosicao()">Sem Posição</button>
+<button class="btn-vermelho" onclick="trocarPosicao()">Trocar</button>
+<button class="btn-verde" onclick="exportarCSV()">Exportar CSV</button>
+</div>
+
+<div class="container">
+<table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Produto</th>
+<th>Base</th>
+<th>Contado</th>
+</tr>
+</thead>
+<tbody id="tabelaProdutos"></tbody>
+</table>
+</div>
+
+<div class="bipagem">
+<input type="text" id="codigoInput" placeholder="Bipar código">
+<input type="number" id="quantidadeInput" value="1" min="1">
+<button class="btn-app" onclick="adicionarProduto()">Adicionar</button>
+</div>
+
+<script>
 let produtos = [];
 let contagem = {};
 let posicaoAtual = "";
@@ -14,9 +244,11 @@ fetch('./produtos_base_completa.json')
     produtos = data;
     document.getElementById("totalBase").innerText = produtos.length;
     document.getElementById("statusBase").innerText = "Base Carregada ✔";
+})
+.catch(() => {
+    document.getElementById("statusBase").innerText = "Erro ao carregar base ❌";
 });
 
-/* POSIÇÕES */
 function carregarPosicao() {
     posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
     if(!posicaoAtual){
@@ -40,14 +272,11 @@ function trocarPosicao(){
     document.getElementById("posicaoAtual").innerText = "Nenhuma";
 }
 
-/* RENDER */
 function renderizar(){
-
     const tbody = document.getElementById("tabelaProdutos");
     tbody.innerHTML = "";
 
     produtos.forEach(prod => {
-
         let posBase = normalizar(prod.posicao);
         let pertence = posBase === posicaoAtual;
         let ehSem = !prod.posicao || prod.posicao.trim() === "";
@@ -57,10 +286,9 @@ function renderizar(){
 
         if(posicaoAtual === "SEM_POSICAO" && ehSem) mostrar = true;
         else if(pertence) mostrar = true;
-        else if(qtd > 0) mostrar = true; // 🔥 mantém fora da posição visível
+        else if(qtd > 0) mostrar = true;
 
         if(mostrar){
-
             const tr = document.createElement("tr");
 
             if(qtd === 0 && pertence) tr.classList.add("zero");
@@ -73,15 +301,12 @@ function renderizar(){
                 <td>${prod.posicao || "SEM POSIÇÃO"}</td>
                 <td>${qtd}</td>
             `;
-
             tbody.appendChild(tr);
         }
     });
 }
 
-/* ADICIONAR */
 function adicionarProduto(){
-
     const codigo = document.getElementById("codigoInput").value.trim();
     const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
 
@@ -102,20 +327,13 @@ function adicionarProduto(){
     renderizar();
 }
 
-/* EXPORTAR */
 function exportarCSV(){
-
     let linhas = [["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade","Status"]];
 
     produtos.forEach(prod => {
-
-        let posBase = normalizar(prod.posicao);
-        let pertence = posBase === posicaoAtual;
-        let ehSem = !prod.posicao || prod.posicao.trim() === "";
         let qtd = contagem[prod.codigo] || 0;
-
         if(qtd > 0){
-
+            let pertence = normalizar(prod.posicao) === posicaoAtual;
             let status = pertence ? "OK" : "FORA_POSICAO";
 
             linhas.push([
@@ -129,21 +347,23 @@ function exportarCSV(){
         }
     });
 
-    let csv = linhas.map(l => l.join(";")).join("\n");
+    if(linhas.length === 1){
+        alert("Nenhum item contado para exportar!");
+        return;
+    }
 
+    let csv = linhas.map(l => l.join(";")).join("\n");
     let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     let link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `inventario_${posicaoAtual}.csv`;
     link.click();
-
-    contagem = {};
-    renderizar();
 }
 
-/* DARK MODE */
 function alternarModo(){
     document.body.classList.toggle("dark");
 }
-
 </script>
+
+</body>
+</html>
