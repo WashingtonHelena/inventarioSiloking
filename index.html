@@ -12,19 +12,104 @@
 
 <style>
 
+*{
+box-sizing:border-box;
+}
+
 body{
 font-family:Arial;
 background:#eef2f6;
 margin:0;
-padding:15px;
+padding:0;
+}
+
+.appLayout{
+display:flex;
+min-height:100vh;
+}
+
+.sidebar{
+width:230px;
+background:linear-gradient(180deg,#111722 0%, #151c29 100%);
+color:white;
+padding:20px 15px;
+display:flex;
+flex-direction:column;
+gap:18px;
+box-shadow:2px 0 12px rgba(0,0,0,0.15);
+}
+
+.sidebarLogo{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:10px;
+padding-bottom:18px;
+border-bottom:1px solid rgba(255,255,255,0.12);
+}
+
+.sidebarLogo img{
+max-width:130px;
+max-height:70px;
+object-fit:contain;
+}
+
+.sidebarLogo span{
+font-size:15px;
+font-weight:bold;
+color:#dbe7f7;
+text-align:center;
+}
+
+.sidebarMenu{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.sideBtn{
+display:flex;
+align-items:center;
+gap:10px;
+padding:14px 12px;
+background:transparent;
+border:none;
+border-radius:10px;
+cursor:pointer;
+color:#e8eef9;
+font-size:16px;
+font-weight:bold;
+text-align:left;
+transition:0.2s;
+width:100%;
+}
+
+.sideBtn:hover{
+background:rgba(255,255,255,0.08);
+}
+
+.sideBtn.active{
+background:#2c7be5;
+color:white;
+}
+
+.sideIcon{
+font-size:18px;
+width:22px;
+text-align:center;
+}
+
+.mainArea{
+flex:1;
+padding:18px;
 }
 
 .container{
-max-width:1000px;
+max-width:1100px;
 margin:auto;
 background:white;
 padding:20px;
-border-radius:10px;
+border-radius:12px;
 box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
@@ -43,31 +128,7 @@ height:50px;
 h1{
 margin:0;
 color:#2c3e50;
-font-size:22px;
-}
-
-.tabs{
-display:flex;
-gap:10px;
-margin-bottom:20px;
-flex-wrap:wrap;
-}
-
-.tabBtn{
-padding:10px 16px;
-background:#dbe7f7;
-color:#2c3e50;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:15px;
-font-weight:bold;
-transition:0.2s;
-}
-
-.tabBtn.active{
-background:#2c7be5;
-color:white;
+font-size:24px;
 }
 
 .section{
@@ -300,6 +361,30 @@ from{ transform:rotate(0deg); }
 to{ transform:rotate(360deg); }
 }
 
+@media(max-width:900px){
+.appLayout{
+flex-direction:column;
+}
+.sidebar{
+width:100%;
+padding:15px;
+}
+.sidebarLogo{
+flex-direction:row;
+justify-content:flex-start;
+}
+.sidebarMenu{
+flex-direction:row;
+flex-wrap:wrap;
+}
+.sideBtn{
+width:auto;
+}
+.mainArea{
+padding:15px;
+}
+}
+
 @media(max-width:700px){
 .acoesGrid{
 grid-template-columns:1fr;
@@ -318,144 +403,162 @@ grid-template-columns:1fr;
   </div>
 </div>
 
-<div class="container">
+<div class="appLayout">
 
-<div class="top">
-<img src="logo_siloking.png" class="logo">
-<h1>Controle de Retirada de Peças</h1>
-</div>
+  <aside class="sidebar">
+    <div class="sidebarLogo">
+      <img src="logo_siloking.png" alt="Logo">
+      <span>Controle de Peças</span>
+    </div>
 
-<div class="tabs">
-<button class="tabBtn active" onclick="trocarAba('retirada', this)">RETIRADA DE PEÇAS</button>
-<button class="tabBtn" onclick="trocarAba('producao', this)">ORDEM DE PRODUÇÃO</button>
-</div>
+    <div class="sidebarMenu">
+      <button class="sideBtn active" onclick="trocarAbaLateral('retirada', this)">
+        <span class="sideIcon">🧰</span>
+        <span>Retirada de Peças</span>
+      </button>
 
-<!-- ABA RETIRADA -->
-<div id="aba-retirada" class="section active">
+      <button class="sideBtn" onclick="trocarAbaLateral('producao', this)">
+        <span class="sideIcon">🏭</span>
+        <span>Ordem de Produção</span>
+      </button>
+    </div>
+  </aside>
 
-<div class="inputs">
+  <main class="mainArea">
+    <div class="container">
 
-<select id="mecanico">
-<option>ANTONIO</option>
-<option>RENATO</option>
-<option>MAURICIO</option>
-<option>ALAN</option>
-<option>DANIEL</option>
-<option>DANILO</option>
-<option>LUCAS</option>
-<option>WILLIAM</option>
-<option>JOSE ROBERTO</option>
-<option>AGNALDO</option>
-<option>PRODUÇÃO</option>
-</select>
+      <div class="top">
+        <h1>Controle de Retirada de Peças</h1>
+      </div>
 
-<div style="display:flex; flex:1; gap:5px;">
-<input id="codigo" placeholder="Bipar código da peça">
-<button onclick="adicionarCodigo()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
-</div>
+      <!-- ABA RETIRADA -->
+      <div id="aba-retirada" class="section active">
 
-</div>
+        <div class="inputs">
 
-<input id="observacao" placeholder="Máquina / Observação (ex: Vagão 2, Mixer 3)">
+          <select id="mecanico">
+            <option>ANTONIO</option>
+            <option>RENATO</option>
+            <option>MAURICIO</option>
+            <option>ALAN</option>
+            <option>DANIEL</option>
+            <option>DANILO</option>
+            <option>LUCAS</option>
+            <option>WILLIAM</option>
+            <option>JOSE ROBERTO</option>
+            <option>AGNALDO</option>
+            <option>PRODUÇÃO</option>
+          </select>
 
-<div class="resumo">
-Itens diferentes: <span id="totalItens">0</span> |
-Total de peças: <span id="totalPecas">0</span>
-</div>
+          <div style="display:flex; flex:1; gap:5px;">
+            <input id="codigo" placeholder="Bipar código da peça">
+            <button onclick="adicionarCodigo()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+          </div>
 
-<table>
-<thead>
-<tr>
-<th>Código</th>
-<th>Produto</th>
-<th>Quantidade</th>
-<th></th>
-</tr>
-</thead>
-<tbody id="lista"></tbody>
-</table>
+        </div>
 
-<button class="btn" onclick="gerarPDFRetirada()">GERAR RELATÓRIO PDF</button>
+        <input id="observacao" placeholder="Máquina / Observação (ex: Vagão 2, Mixer 3)">
 
-</div>
+        <div class="resumo">
+          Itens diferentes: <span id="totalItens">0</span> |
+          Total de peças: <span id="totalPecas">0</span>
+        </div>
 
-<!-- ABA PRODUÇÃO -->
-<div id="aba-producao" class="section">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="lista"></tbody>
+        </table>
 
-<div class="inputs">
-<select id="maquinaProd">
-<option value="">Selecionar máquina</option>
-<option>Compact 9</option>
-<option>Compact 12</option>
-<option>Duo 14</option>
-<option>Duo 18</option>
-<option>Premium 22</option>
-<option>Premium 26</option>
-<option>Premium 30</option>
-<option>1000+ 35</option>
-<option>1000+ 40</option>
-<option>1000+ 45</option>
-<option>Self Premium 19</option>
-<option>Self 1000+ 32</option>
-</select>
+        <button class="btn" onclick="gerarPDFRetirada()">GERAR RELATÓRIO PDF</button>
 
-<input id="serieProd" placeholder="Série da máquina">
-</div>
+      </div>
 
-<div class="acoesGrid">
-<button class="btnSec" onclick="abrirOuCriarOrdem()">ABRIR / CONTINUAR PRODUÇÃO</button>
-<button class="btnCinza" onclick="novaOrdem()">NOVA ORDEM</button>
-</div>
+      <!-- ABA PRODUÇÃO -->
+      <div id="aba-producao" class="section">
 
-<button class="btnRelatorio" onclick="gerarRelatorioAbertosCSV()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
+        <div class="inputs">
+          <select id="maquinaProd">
+            <option value="">Selecionar máquina</option>
+            <option>Compact 9</option>
+            <option>Compact 12</option>
+            <option>Duo 14</option>
+            <option>Duo 18</option>
+            <option>Premium 22</option>
+            <option>Premium 26</option>
+            <option>Premium 30</option>
+            <option>1000+ 35</option>
+            <option>1000+ 40</option>
+            <option>1000+ 45</option>
+            <option>Self Premium 19</option>
+            <option>Self 1000+ 32</option>
+          </select>
 
-<div class="infoBox">
-<div><strong>Ordem atual:</strong> <span id="ordemAtualTexto">Nenhuma ordem aberta</span></div>
-<div style="margin-top:6px;"><strong>Status:</strong> <span id="statusAtualTexto">-</span></div>
-</div>
+          <input id="serieProd" placeholder="Série da máquina">
+        </div>
 
-<div class="colapsavel" id="boxOrdensAbertas">
-  <div class="colapsavelHeader" onclick="toggleOrdensAbertas()">
-    <span>PRODUÇÕES EM ABERTO</span>
-    <span id="setaOrdensAbertas">+</span>
-  </div>
-  <div class="colapsavelBody" id="conteudoOrdensAbertas">
-    <div id="listaOrdensAbertas">Nenhuma produção em aberto.</div>
-  </div>
-</div>
+        <div class="acoesGrid">
+          <button class="btnSec" onclick="abrirOuCriarOrdem()">ABRIR / CONTINUAR PRODUÇÃO</button>
+          <button class="btnCinza" onclick="novaOrdem()">NOVA ORDEM</button>
+        </div>
 
-<div class="inputs" style="margin-top:15px;">
-<div style="display:flex; flex:1; gap:5px;">
-<input id="codigoProd" placeholder="Bipar código da peça">
-<button onclick="adicionarCodigoProd()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
-</div>
-</div>
+        <button class="btnRelatorio" onclick="gerarRelatorioAbertosCSV()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
 
-<div class="resumo">
-Itens diferentes: <span id="totalItensProd">0</span> |
-Total de peças: <span id="totalPecasProd">0</span>
-</div>
+        <div class="infoBox">
+          <div><strong>Ordem atual:</strong> <span id="ordemAtualTexto">Nenhuma ordem aberta</span></div>
+          <div style="margin-top:6px;"><strong>Status:</strong> <span id="statusAtualTexto">-</span></div>
+        </div>
 
-<table>
-<thead>
-<tr>
-<th>Código</th>
-<th>Produto</th>
-<th>Quantidade</th>
-<th>IAPP</th>
-<th></th>
-</tr>
-</thead>
-<tbody id="listaProd"></tbody>
-</table>
+        <div class="colapsavel" id="boxOrdensAbertas">
+          <div class="colapsavelHeader" onclick="toggleOrdensAbertas()">
+            <span>PRODUÇÕES EM ABERTO</span>
+            <span id="setaOrdensAbertas">+</span>
+          </div>
+          <div class="colapsavelBody" id="conteudoOrdensAbertas">
+            <div id="listaOrdensAbertas">Nenhuma produção em aberto.</div>
+          </div>
+        </div>
 
-<div class="acoesGrid">
-<button class="btnSec" onclick="salvarProducao()">SALVAR PRODUÇÃO EM ANDAMENTO</button>
-<button class="btn" onclick="finalizarProducao()">FINALIZAR PRODUÇÃO</button>
-</div>
+        <div class="inputs" style="margin-top:15px;">
+          <div style="display:flex; flex:1; gap:5px;">
+            <input id="codigoProd" placeholder="Bipar código da peça">
+            <button onclick="adicionarCodigoProd()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+          </div>
+        </div>
 
-</div>
+        <div class="resumo">
+          Itens diferentes: <span id="totalItensProd">0</span> |
+          Total de peças: <span id="totalPecasProd">0</span>
+        </div>
 
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>IAPP</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="listaProd"></tbody>
+        </table>
+
+        <div class="acoesGrid">
+          <button class="btnSec" onclick="salvarProducao()">SALVAR PRODUÇÃO EM ANDAMENTO</button>
+          <button class="btn" onclick="finalizarProducao()">FINALIZAR PRODUÇÃO</button>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
 </div>
 
 <script>
@@ -469,7 +572,7 @@ let ordemAtualMaquina = ""
 let ordemAtualSerie = ""
 let ordemAtualStatus = ""
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrKk-aWjwopVb2MSPR7fs1OFNmBCmLvqHK_PWsnfLHpg9aBuDykVp2_b-bonbM1zVIcA/exec"
+const URL_SCRIPT = "COLE_AQUI_SEU_LINK_EXEC"
 
 /* =========================
    LOADING
@@ -503,6 +606,22 @@ if(e.key==="Enter"){ adicionarCodigoProd() }
 listarOrdensAbertas()
 
 /* =========================
+   MENU LATERAL
+========================= */
+
+function trocarAbaLateral(aba, botao){
+document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"))
+document.querySelectorAll(".sideBtn").forEach(btn=>btn.classList.remove("active"))
+
+document.getElementById("aba-"+aba).classList.add("active")
+botao.classList.add("active")
+
+if(aba==="producao"){
+listarOrdensAbertas()
+}
+}
+
+/* =========================
    COLAPSÁVEL
 ========================= */
 
@@ -512,22 +631,6 @@ let seta = document.getElementById("setaOrdensAbertas")
 
 box.classList.toggle("open")
 seta.innerText = box.classList.contains("open") ? "−" : "+"
-}
-
-/* =========================
-   ABAS
-========================= */
-
-function trocarAba(aba, botao){
-document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"))
-document.querySelectorAll(".tabBtn").forEach(btn=>btn.classList.remove("active"))
-
-document.getElementById("aba-"+aba).classList.add("active")
-botao.classList.add("active")
-
-if(aba==="producao"){
-listarOrdensAbertas()
-}
 }
 
 /* =========================
@@ -618,26 +721,6 @@ render()
 function remover(i){
 retirada.splice(i,1)
 render()
-}
-
-function adicionarBlocoAssinaturas(doc, labels){
-const pageHeight = doc.internal.pageSize.getHeight()
-let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 20
-
-const alturaNecessaria = 45
-
-if(y + alturaNecessaria > pageHeight - 15){
-doc.addPage()
-y = 20
-}
-
-labels.forEach((label, idx) => {
-doc.text(label,14,y)
-doc.line(60,y,170,y)
-y += 15
-})
-
-return y
 }
 
 function gerarPDFRetirada(){
@@ -1068,6 +1151,7 @@ return
 }
 alert("Produção salva com sucesso")
 listarOrdensAbertas(false)
+novaOrdem()
 })
 .catch(()=>{
 alert("Erro ao salvar produção")
@@ -1208,21 +1292,42 @@ alert("Nenhuma produção em aberto para gerar relatório")
 return
 }
 
-let csv = "ID_ORDEM;MAQUINA;SERIE;CODIGO;PRODUTO;QTD;TRANSFERIDO_IAPP\n"
+let agrupado = {}
 
 linhas.forEach(l => {
+let chave = `${l.maquina}|||${l.serie}|||${l.id_ordem}`
+if(!agrupado[chave]){
+agrupado[chave] = []
+}
+agrupado[chave].push(l)
+})
+
+let csv = "\uFEFF"
+
+Object.keys(agrupado).forEach((chave, index) => {
+let itens = agrupado[chave]
+let primeira = itens[0]
+
+csv += `MAQUINA;${escaparCSV(primeira.maquina)}\n`
+csv += `SERIE;${escaparCSV(primeira.serie)}\n`
+csv += `ORDEM;OP-${String(primeira.id_ordem).padStart(4,"0")}\n`
+csv += "CODIGO;PRODUTO;QTD;TRANSFERIDO_IAPP\n"
+
+itens.forEach(item => {
 csv += [
-`OP-${String(l.id_ordem).padStart(4,"0")}`,
-escaparCSV(l.maquina),
-escaparCSV(l.serie),
-escaparCSV(l.codigo),
-escaparCSV(l.produto),
-escaparCSV(l.qtd),
-escaparCSV(l.iapp)
+escaparCSV(item.codigo),
+escaparCSV(item.produto),
+escaparCSV(item.qtd),
+escaparCSV(item.iapp)
 ].join(";") + "\n"
 })
 
-let blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+if(index < Object.keys(agrupado).length - 1){
+csv += "\n"
+}
+})
+
+let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
 let url = URL.createObjectURL(blob)
 let a = document.createElement("a")
 a.href = url
