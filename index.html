@@ -1307,102 +1307,102 @@ agrupado[chave] = []
 agrupado[chave].push(l)
 })
 
-let dadosPlanilha = []
+let html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<style>
+table{
+border-collapse:collapse;
+width:100%;
+font-family:Arial;
+font-size:12pt;
+}
+td, th{
+border:1px solid #bfc7d1;
+padding:6px 8px;
+}
+.titulo{
+background:#2c7be5;
+color:#ffffff;
+font-weight:bold;
+font-size:13pt;
+text-align:left;
+}
+.cabecalho{
+background:#1f4e78;
+color:#ffffff;
+font-weight:bold;
+text-align:center;
+}
+.central{
+text-align:center;
+}
+.vazio{
+border:none;
+height:10px;
+background:#ffffff;
+}
+</style>
+</head>
+<body>
+<table>
+`
 
 Object.keys(agrupado).forEach(chave => {
 
 let itens = agrupado[chave]
 let primeira = itens[0]
 
-dadosPlanilha.push([
-`${primeira.maquina} | Série ${primeira.serie} | OP-${String(primeira.id_ordem).padStart(4,"0")}`,
-"", "", ""
-])
-
-dadosPlanilha.push([
-"CODIGO",
-"PRODUTO",
-"QTD",
-"TRANSFERIDO_IAPP"
-])
+html += `
+<tr>
+  <td class="titulo" colspan="4">${primeira.maquina} | Série ${primeira.serie} | OP-${String(primeira.id_ordem).padStart(4,"0")}</td>
+</tr>
+<tr>
+  <td class="cabecalho">CODIGO</td>
+  <td class="cabecalho">PRODUTO</td>
+  <td class="cabecalho">QTD</td>
+  <td class="cabecalho">TRANSFERIDO_IAPP</td>
+</tr>
+`
 
 itens.forEach(item => {
-dadosPlanilha.push([
-item.codigo,
-item.produto,
-item.qtd,
-item.iapp
-])
+html += `
+<tr>
+  <td>${item.codigo || ""}</td>
+  <td>${item.produto || ""}</td>
+  <td class="central">${item.qtd || ""}</td>
+  <td class="central">${item.iapp || ""}</td>
+</tr>
+`
 })
 
-dadosPlanilha.push(["", "", "", ""])
+html += `
+<tr><td class="vazio" colspan="4"></td></tr>
+`
 })
 
-let ws = XLSX.utils.aoa_to_sheet(dadosPlanilha)
+html += `
+</table>
+</body>
+</html>
+`
 
-let merges = []
-let linhaAtual = 0
+let blob = new Blob(
+["\ufeff" + html],
+{ type: "application/vnd.ms-excel" }
+)
 
-Object.keys(agrupado).forEach(chave => {
-merges.push({
-s: { r: linhaAtual, c: 0 },
-e: { r: linhaAtual, c: 3 }
-})
-linhaAtual += 2 + agrupado[chave].length + 1
-})
-
-ws["!merges"] = merges
-
-ws["!cols"] = [
-{ wch: 18 },
-{ wch: 45 },
-{ wch: 10 },
-{ wch: 18 }
-]
-
-// Estilo visual básico
-let totalLinhas = dadosPlanilha.length
-
-for(let r = 0; r < totalLinhas; r++){
-
-let primeiraColuna = ws[XLSX.utils.encode_cell({r:r,c:0})]
-if(!primeiraColuna) continue
-
-let valor = String(primeiraColuna.v || "")
-
-// Linha do título da máquina
-if(valor.includes("| Série ") && valor.includes("| OP-")){
-for(let c = 0; c <= 3; c++){
-let cellRef = XLSX.utils.encode_cell({r:r,c:c})
-if(!ws[cellRef]) ws[cellRef] = { t:"s", v:"" }
-
-ws[cellRef].s = {
-font: { bold: true, sz: 13, color: { rgb: "FFFFFF" } },
-fill: { fgColor: { rgb: "2C7BE5" } },
-alignment: { horizontal: "left", vertical: "center" }
-}
-}
-}
-
-// Cabeçalho da tabela
-if(valor === "CODIGO"){
-for(let c = 0; c <= 3; c++){
-let cellRef = XLSX.utils.encode_cell({r:r,c:c})
-if(!ws[cellRef]) continue
-
-ws[cellRef].s = {
-font: { bold: true, color: { rgb: "FFFFFF" } },
-fill: { fgColor: { rgb: "1F4E78" } },
-alignment: { horizontal: "center", vertical: "center" }
-}
-}
-}
-}
-
-let wb = XLSX.utils.book_new()
-XLSX.utils.book_append_sheet(wb, ws, "Produções em Aberto")
-
-XLSX.writeFile(wb, "producoes_em_aberto.xlsx")
+let url = URL.createObjectURL(blob)
+let a = document.createElement("a")
+a.href = url
+a.download = "producoes_em_aberto.xls"
+document.body.appendChild(a)
+a.click()
+document.body.removeChild(a)
+URL.revokeObjectURL(url)
 
 })
 .catch(()=>{
