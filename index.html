@@ -9,6 +9,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 
@@ -508,7 +509,7 @@ grid-template-columns:1fr;
           <button class="btnCinza" onclick="novaOrdem()">NOVA ORDEM</button>
         </div>
 
-        <button class="btnRelatorio" onclick="gerarRelatorioAbertosCSV()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
+        <button class="btnRelatorio" onclick="gerarRelatorioAbertosXLSX()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
 
         <div class="infoBox">
           <div><strong>Ordem atual:</strong> <span id="ordemAtualTexto">Nenhuma ordem aberta</span></div>
@@ -1274,68 +1275,135 @@ esconderLoading()
 })
 }
 
-function gerarRelatorioAbertosCSV(){
-mostrarLoading("Gerando relatório das produções em aberto...")
+function gerarRelatorioAbertosXLSX(){
+
+mostrarLoading("Gerando relatório Excel das produções em aberto...")
 
 fetch(URL_SCRIPT+"?action=report_open_orders")
 .then(r=>r.json())
 .then(res=>{
+
 if(!res.ok){
-alert(res.message || "Erro ao gerar relatório")
+alert("Erro ao gerar relatório")
 return
 }
 
 let linhas = res.rows || []
 
 if(linhas.length===0){
-alert("Nenhuma produção em aberto para gerar relatório")
+alert("Nenhuma produção em aberto")
 return
 }
 
 let agrupado = {}
 
 linhas.forEach(l => {
-let chave = `${l.maquina}|||${l.serie}|||${l.id_ordem}`
+let chave = l.maquina + "||" + l.serie + "||" + l.id_ordem
+
 if(!agrupado[chave]){
 agrupado[chave] = []
 }
+
 agrupado[chave].push(l)
 })
 
-let csv = "\uFEFF"
+let dadosPlanilha = []
 
-Object.keys(agrupado).forEach((chave, index) => {
+Object.keys(agrupado).forEach(chave => {
+
 let itens = agrupado[chave]
 let primeira = itens[0]
 
-csv += `MAQUINA;${escaparCSV(primeira.maquina)}\n`
-csv += `SERIE;${escaparCSV(primeira.serie)}\n`
-csv += `ORDEM;OP-${String(primeira.id_ordem).padStart(4,"0")}\n`
-csv += "CODIGO;PRODUTO;QTD;TRANSFERIDO_IAPP\n"
+dadosPlanilha.push([
+`${primeira.maquina} | Série ${primeira.serie} | OP-${String(primeira.id_ordem).padStart(4,"0")}`,
+"", "", ""
+])
+
+dadosPlanilha.push([
+"CODIGO",
+"PRODUTO",
+"QTD",
+"TRANSFERIDO_IAPP"
+])
 
 itens.forEach(item => {
-csv += [
-escaparCSV(item.codigo),
-escaparCSV(item.produto),
-escaparCSV(item.qtd),
-escaparCSV(item.iapp)
-].join(";") + "\n"
+dadosPlanilha.push([
+item.codigo,
+item.produto,
+item.qtd,
+item.iapp
+])
 })
 
-if(index < Object.keys(agrupado).length - 1){
-csv += "\n"
+dadosPlanilha.push(["", "", "", ""])
+})
+
+let ws = XLSX.utils.aoa_to_sheet(dadosPlanilha)
+
+let merges = []
+let linhaAtual = 0
+
+Object.keys(agrupado).forEach(chave => {
+merges.push({
+s: { r: linhaAtual, c: 0 },
+e: { r: linhaAtual, c: 3 }
+})
+linhaAtual += 2 + agrupado[chave].length + 1
+})
+
+ws["!merges"] = merges
+
+ws["!cols"] = [
+{ wch: 18 },
+{ wch: 45 },
+{ wch: 10 },
+{ wch: 18 }
+]
+
+// Estilo visual básico
+let totalLinhas = dadosPlanilha.length
+
+for(let r = 0; r < totalLinhas; r++){
+
+let primeiraColuna = ws[XLSX.utils.encode_cell({r:r,c:0})]
+if(!primeiraColuna) continue
+
+let valor = String(primeiraColuna.v || "")
+
+// Linha do título da máquina
+if(valor.includes("| Série ") && valor.includes("| OP-")){
+for(let c = 0; c <= 3; c++){
+let cellRef = XLSX.utils.encode_cell({r:r,c:c})
+if(!ws[cellRef]) ws[cellRef] = { t:"s", v:"" }
+
+ws[cellRef].s = {
+font: { bold: true, sz: 13, color: { rgb: "FFFFFF" } },
+fill: { fgColor: { rgb: "2C7BE5" } },
+alignment: { horizontal: "left", vertical: "center" }
 }
-})
+}
+}
 
-let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-let url = URL.createObjectURL(blob)
-let a = document.createElement("a")
-a.href = url
-a.download = "producoes_em_aberto.csv"
-document.body.appendChild(a)
-a.click()
-document.body.removeChild(a)
-URL.revokeObjectURL(url)
+// Cabeçalho da tabela
+if(valor === "CODIGO"){
+for(let c = 0; c <= 3; c++){
+let cellRef = XLSX.utils.encode_cell({r:r,c:c})
+if(!ws[cellRef]) continue
+
+ws[cellRef].s = {
+font: { bold: true, color: { rgb: "FFFFFF" } },
+fill: { fgColor: { rgb: "1F4E78" } },
+alignment: { horizontal: "center", vertical: "center" }
+}
+}
+}
+}
+
+let wb = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(wb, ws, "Produções em Aberto")
+
+XLSX.writeFile(wb, "producoes_em_aberto.xlsx")
+
 })
 .catch(()=>{
 alert("Erro ao gerar relatório")
@@ -1343,6 +1411,7 @@ alert("Erro ao gerar relatório")
 .finally(()=>{
 esconderLoading()
 })
+
 }
 
 function escaparCSV(valor){
