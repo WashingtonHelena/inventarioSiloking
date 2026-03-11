@@ -1,366 +1,1253 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventário Siloking</title>
+
+<title>Controle de Retirada de Peças</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-:root {
-    --bg: #f4f6f9;
-    --card: #ffffff;
-    --text: #1e293b;
-    --primary: #1e40af;
-    --header-gradient: linear-gradient(135deg,#1e3a8a,#1e40af);
+
+body{
+font-family:Arial;
+background:#eef2f6;
+margin:0;
+padding:15px;
 }
 
-.dark {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --text: #f1f5f9;
-    --primary: #3b82f6;
-    --header-gradient: linear-gradient(135deg,#0f172a,#1e293b);
+.container{
+max-width:1000px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
+.top{
+display:flex;
+align-items:center;
+gap:15px;
+margin-bottom:20px;
+flex-wrap:wrap;
 }
 
-header {
-    background: var(--header-gradient);
-    padding: 30px 20px;
-    text-align: center;
-    color: white;
-    position: relative;
+.logo{
+height:50px;
 }
 
-.logo-box {
-    background: white;
-    padding: 12px;
-    border-radius: 20px;
-    display: inline-block;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+h1{
+margin:0;
+color:#2c3e50;
+font-size:22px;
 }
 
-.logo-box img {
-    height: 70px;
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+flex-wrap:wrap;
 }
 
-header h1 {
-    margin: 15px 0 5px;
-    font-size: 34px;
-    letter-spacing: 3px;
+.tabBtn{
+padding:10px 16px;
+background:#dbe7f7;
+color:#2c3e50;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+font-weight:bold;
+transition:0.2s;
 }
 
-.subtitulo { font-size: 14px; opacity: 0.9; }
-
-.status-base {
-    margin-top: 12px;
-    display: inline-block;
-    background: #16a34a;
-    padding: 6px 16px;
-    border-radius: 30px;
-    font-size: 13px;
+.tabBtn.active{
+background:#2c7be5;
+color:white;
 }
 
-.btn-dark {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: bold;
+.section{
+display:none;
 }
 
-.resumo {
-    background: var(--card);
-    padding: 12px;
-    display: flex;
-    justify-content: space-around;
-    font-weight: bold;
-    border-bottom: 1px solid #ddd;
+.section.active{
+display:block;
 }
 
-.posicao-box {
-    padding: 15px;
-    background: var(--card);
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
+.inputs{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+flex-wrap:wrap;
 }
 
-input {
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
+input,select{
+padding:10px;
+font-size:16px;
+border-radius:5px;
+border:1px solid #ccc;
 }
 
-button {
-    padding: 12px 18px;
-    border-radius: 10px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
+#codigo,
+#codigoProd{
+flex:1;
+font-size:18px;
 }
 
-.btn-azul { background: var(--primary); color: white; }
-.btn-vermelho { background: #dc2626; color: white; }
-.btn-verde { background: #16a34a; color: white; }
-.btn-laranja { background: #f97316; color: white; }
-
-.container {
-    padding: 15px;
-    padding-bottom: 120px;
+#observacao{
+width:100%;
+margin-bottom:10px;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--card);
-    table-layout: fixed;
+table{
+width:100%;
+border-collapse:collapse;
 }
 
-th, td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    font-size: 14px;
-    text-align: center;
+th{
+background:#2c7be5;
+color:white;
+padding:10px;
 }
 
-td:nth-child(2) {
-    text-align: left;
+td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
 }
 
-tr.zero {
-    background: #ffe5e5;
-    color: #b91c1c;
+tr:hover{
+background:#f5f9ff;
 }
 
-tr.contado {
-    background: #e6ffe6;
-    color: #166534;
+.qtdInput{
+width:60px;
+text-align:center;
+border:1px solid #ccc;
+border-radius:4px;
 }
 
-tr.fora {
-    background: #fff3cd;
-    color: #92400e;
-    font-weight: bold;
+.btn{
+margin-top:15px;
+padding:14px;
+background:#27ae60;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:16px;
+width:100%;
 }
 
-.bipagem {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--card);
-    padding: 15px;
-    display: flex;
-    gap: 10px;
-    box-shadow: 0 -2px 15px rgba(0,0,0,0.2);
+.btnSec{
+margin-top:10px;
+padding:12px;
+background:#2c7be5;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+width:100%;
 }
 
-.bipagem input { flex: 1; }
-
-.btn-app {
-    background: var(--primary);
-    color: white;
-    font-size: 18px;
-    border-radius: 12px;
+.btnCinza{
+margin-top:10px;
+padding:12px;
+background:#7f8c8d;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+width:100%;
 }
 
-@media (max-width: 768px) {
-    .posicao-box { flex-direction: column; }
-    .bipagem { flex-direction: column; }
+.btnRelatorio{
+margin-top:10px;
+padding:12px;
+background:#8e44ad;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+width:100%;
 }
+
+.resumo{
+margin:15px 0;
+padding:10px;
+background:#f1f6ff;
+border-left:5px solid #2c7be5;
+font-weight:bold;
+}
+
+.infoBox{
+margin:10px 0 15px;
+padding:12px;
+background:#f8fbff;
+border:1px solid #d8e7ff;
+border-radius:6px;
+}
+
+.ordemItem{
+padding:10px;
+background:#f7f9fc;
+border:1px solid #dfe7f1;
+border-radius:6px;
+margin-bottom:8px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.ordemTitulo{
+font-weight:bold;
+color:#2c3e50;
+}
+
+.acoesGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px;
+}
+
+.colapsavel{
+margin-top:15px;
+border:1px solid #d8e7ff;
+border-radius:8px;
+overflow:hidden;
+background:#fff;
+}
+
+.colapsavelHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 14px;
+background:#f1f6ff;
+cursor:pointer;
+font-weight:bold;
+color:#2c3e50;
+}
+
+.colapsavelHeader span:last-child{
+font-size:18px;
+font-weight:bold;
+}
+
+.colapsavelBody{
+display:none;
+padding:12px;
+background:#fff;
+}
+
+.colapsavel.open .colapsavelBody{
+display:block;
+}
+
+.loadingOverlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.35);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+.loadingBox{
+background:white;
+padding:25px 30px;
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.18);
+text-align:center;
+min-width:260px;
+}
+
+.loadingSpinner{
+width:42px;
+height:42px;
+border:4px solid #dbe7f7;
+border-top:4px solid #2c7be5;
+border-radius:50%;
+margin:0 auto 15px;
+animation:girar 0.8s linear infinite;
+}
+
+.loadingText{
+font-size:16px;
+font-weight:bold;
+color:#2c3e50;
+}
+
+.iappCheck{
+width:20px;
+height:20px;
+cursor:pointer;
+}
+
+@keyframes girar{
+from{ transform:rotate(0deg); }
+to{ transform:rotate(360deg); }
+}
+
+@media(max-width:700px){
+.acoesGrid{
+grid-template-columns:1fr;
+}
+}
+
 </style>
 </head>
 
 <body>
 
-<header>
-<button class="btn-dark" onclick="alternarModo()">🌙 Modo</button>
-
-<div class="logo-box">
-<img src="logo.png" alt="Logo Siloking">
-</div>
-
-<h1>SILOKING INVENTÁRIO</h1>
-<div class="subtitulo">Sistema Inteligente de Contagem de Estoque</div>
-<div class="status-base" id="statusBase">Carregando base...</div>
-</header>
-
-<div class="resumo">
-<div>Total Base: <span id="totalBase">0</span></div>
-<div>Posição Atual: <span id="posicaoAtual">Nenhuma</span></div>
-</div>
-
-<div class="posicao-box">
-<input type="text" id="posicaoInput" placeholder="Digite a posição (Ex: A11)">
-<button class="btn-azul" onclick="carregarPosicao()">Carregar</button>
-<button class="btn-azul" onclick="mostrarSemPosicao()">Sem Posição</button>
-<button class="btn-vermelho" onclick="trocarPosicao()">Trocar</button>
-<button class="btn-laranja" onclick="zerarContagem()">Zerar Contagem</button>
-<button class="btn-verde" onclick="exportarCSV()">Exportar CSV</button>
+<div class="loadingOverlay" id="loadingOverlay">
+  <div class="loadingBox">
+    <div class="loadingSpinner"></div>
+    <div class="loadingText" id="loadingText">Processando...</div>
+  </div>
 </div>
 
 <div class="container">
+
+<div class="top">
+<img src="logo_siloking.png" class="logo">
+<h1>Controle de Retirada de Peças</h1>
+</div>
+
+<div class="tabs">
+<button class="tabBtn active" onclick="trocarAba('retirada', this)">RETIRADA DE PEÇAS</button>
+<button class="tabBtn" onclick="trocarAba('producao', this)">ORDEM DE PRODUÇÃO</button>
+</div>
+
+<!-- ABA RETIRADA -->
+<div id="aba-retirada" class="section active">
+
+<div class="inputs">
+
+<select id="mecanico">
+<option>ANTONIO</option>
+<option>RENATO</option>
+<option>MAURICIO</option>
+<option>ALAN</option>
+<option>DANIEL</option>
+<option>DANILO</option>
+<option>LUCAS</option>
+<option>WILLIAM</option>
+<option>JOSE ROBERTO</option>
+<option>AGNALDO</option>
+<option>PRODUÇÃO</option>
+</select>
+
+<div style="display:flex; flex:1; gap:5px;">
+<input id="codigo" placeholder="Bipar código da peça">
+<button onclick="adicionarCodigo()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+</div>
+
+</div>
+
+<input id="observacao" placeholder="Máquina / Observação (ex: Vagão 2, Mixer 3)">
+
+<div class="resumo">
+Itens diferentes: <span id="totalItens">0</span> |
+Total de peças: <span id="totalPecas">0</span>
+</div>
+
 <table>
 <thead>
 <tr>
 <th>Código</th>
 <th>Produto</th>
-<th>Base</th>
-<th>Contado</th>
+<th>Quantidade</th>
+<th></th>
 </tr>
 </thead>
-<tbody id="tabelaProdutos"></tbody>
+<tbody id="lista"></tbody>
 </table>
+
+<button class="btn" onclick="gerarPDFRetirada()">GERAR RELATÓRIO PDF</button>
+
 </div>
 
-<div class="bipagem">
-<input type="text" id="codigoInput" placeholder="Bipar código">
-<input type="number" id="quantidadeInput" value="1" min="1">
-<button class="btn-app" onclick="adicionarProduto()">Adicionar</button>
+<!-- ABA PRODUÇÃO -->
+<div id="aba-producao" class="section">
+
+<div class="inputs">
+<select id="maquinaProd">
+<option value="">Selecionar máquina</option>
+<option>Compact 9</option>
+<option>Compact 12</option>
+<option>Duo 14</option>
+<option>Duo 18</option>
+<option>Premium 22</option>
+<option>Premium 26</option>
+<option>Premium 30</option>
+<option>1000+ 35</option>
+<option>1000+ 40</option>
+<option>1000+ 45</option>
+<option>Self Premium 19</option>
+<option>Self 1000+ 32</option>
+</select>
+
+<input id="serieProd" placeholder="Série da máquina">
+</div>
+
+<div class="acoesGrid">
+<button class="btnSec" onclick="abrirOuCriarOrdem()">ABRIR / CONTINUAR PRODUÇÃO</button>
+<button class="btnCinza" onclick="novaOrdem()">NOVA ORDEM</button>
+</div>
+
+<button class="btnRelatorio" onclick="gerarRelatorioAbertosCSV()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
+
+<div class="infoBox">
+<div><strong>Ordem atual:</strong> <span id="ordemAtualTexto">Nenhuma ordem aberta</span></div>
+<div style="margin-top:6px;"><strong>Status:</strong> <span id="statusAtualTexto">-</span></div>
+</div>
+
+<div class="colapsavel" id="boxOrdensAbertas">
+  <div class="colapsavelHeader" onclick="toggleOrdensAbertas()">
+    <span>PRODUÇÕES EM ABERTO</span>
+    <span id="setaOrdensAbertas">+</span>
+  </div>
+  <div class="colapsavelBody" id="conteudoOrdensAbertas">
+    <div id="listaOrdensAbertas">Nenhuma produção em aberto.</div>
+  </div>
+</div>
+
+<div class="inputs" style="margin-top:15px;">
+<div style="display:flex; flex:1; gap:5px;">
+<input id="codigoProd" placeholder="Bipar código da peça">
+<button onclick="adicionarCodigoProd()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+</div>
+</div>
+
+<div class="resumo">
+Itens diferentes: <span id="totalItensProd">0</span> |
+Total de peças: <span id="totalPecasProd">0</span>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Produto</th>
+<th>Quantidade</th>
+<th>IAPP</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="listaProd"></tbody>
+</table>
+
+<div class="acoesGrid">
+<button class="btnSec" onclick="salvarProducao()">SALVAR PRODUÇÃO EM ANDAMENTO</button>
+<button class="btn" onclick="finalizarProducao()">FINALIZAR PRODUÇÃO</button>
+</div>
+
+</div>
+
 </div>
 
 <script>
-let produtos = [];
-let contagem = {};
-let posicaoAtual = "";
 
-function normalizar(pos){
-    return pos ? pos.toUpperCase().replace("-", "").trim() : "";
+let produtos=[]
+let retirada=[]
+let producao=[]
+
+let ordemAtualId = ""
+let ordemAtualMaquina = ""
+let ordemAtualSerie = ""
+let ordemAtualStatus = ""
+
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxrKk-aWjwopVb2MSPR7fs1OFNmBCmLvqHK_PWsnfLHpg9aBuDykVp2_b-bonbM1zVIcA/exec"
+
+/* =========================
+   LOADING
+========================= */
+
+function mostrarLoading(texto="Processando..."){
+document.getElementById("loadingText").innerText = texto
+document.getElementById("loadingOverlay").style.display = "flex"
 }
 
-fetch('./produtos_base_completa.json')
-.then(res => res.json())
-.then(data => {
-    produtos = data;
-    document.getElementById("totalBase").innerText = produtos.length;
-    document.getElementById("statusBase").innerText = "Base Carregada ✔";
-    renderizar();
+function esconderLoading(){
+document.getElementById("loadingOverlay").style.display = "none"
+}
+
+/* =========================
+   CARREGAMENTO INICIAL
+========================= */
+
+fetch("produtos_base_completa.json")
+.then(r=>r.json())
+.then(data=>produtos=data)
+
+document.getElementById("codigo").addEventListener("keypress",function(e){
+if(e.key==="Enter"){ adicionarCodigo() }
+})
+
+document.getElementById("codigoProd").addEventListener("keypress",function(e){
+if(e.key==="Enter"){ adicionarCodigoProd() }
+})
+
+listarOrdensAbertas()
+
+/* =========================
+   COLAPSÁVEL
+========================= */
+
+function toggleOrdensAbertas(){
+let box = document.getElementById("boxOrdensAbertas")
+let seta = document.getElementById("setaOrdensAbertas")
+
+box.classList.toggle("open")
+seta.innerText = box.classList.contains("open") ? "−" : "+"
+}
+
+/* =========================
+   ABAS
+========================= */
+
+function trocarAba(aba, botao){
+document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"))
+document.querySelectorAll(".tabBtn").forEach(btn=>btn.classList.remove("active"))
+
+document.getElementById("aba-"+aba).classList.add("active")
+botao.classList.add("active")
+
+if(aba==="producao"){
+listarOrdensAbertas()
+}
+}
+
+/* =========================
+   RETIRADA
+========================= */
+
+function atualizarResumo(){
+document.getElementById("totalItens").innerText = retirada.length
+let total = retirada.reduce((soma,item)=> soma + item.quantidade ,0)
+document.getElementById("totalPecas").innerText = total
+}
+
+function adicionarCodigo(){
+
+let campo=document.getElementById("codigo")
+let codigo=campo.value.trim()
+
+if(!codigo) return
+
+let produto=produtos.find(p=>String(p.codigo)==String(codigo))
+
+if(!produto){
+alert("Produto não encontrado")
+return
+}
+
+let existente=retirada.find(p=>String(p.codigo)==String(codigo))
+
+if(existente){
+existente.quantidade++
+}else{
+retirada.push({
+codigo:produto.codigo,
+nome:produto.nome,
+quantidade:1
+})
+}
+
+render()
+campo.value=""
+}
+
+function render(){
+
+let tabela=document.getElementById("lista")
+tabela.innerHTML=""
+
+retirada.forEach((item,index)=>{
+
+tabela.innerHTML+=`
+<tr>
+<td>${item.codigo}</td>
+<td>${item.nome}</td>
+<td>
+<button onclick="diminuir(${index})">-</button>
+<input class="qtdInput" type="number" min="1"
+value="${item.quantidade}"
+onchange="alterarQtd(${index},this.value)">
+<button onclick="aumentar(${index})">+</button>
+</td>
+<td>
+<button style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:5px;" onclick="remover(${index})">X</button>
+</td>
+</tr>
+`
+})
+
+atualizarResumo()
+}
+
+function alterarQtd(i,v){
+retirada[i].quantidade=parseInt(v) || 1
+atualizarResumo()
+}
+
+function aumentar(i){
+retirada[i].quantidade++
+render()
+}
+
+function diminuir(i){
+if(retirada[i].quantidade>1){
+retirada[i].quantidade--
+render()
+}
+}
+
+function remover(i){
+retirada.splice(i,1)
+render()
+}
+
+function adicionarBlocoAssinaturas(doc, labels){
+const pageHeight = doc.internal.pageSize.getHeight()
+let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 20
+
+const alturaNecessaria = 45
+
+if(y + alturaNecessaria > pageHeight - 15){
+doc.addPage()
+y = 20
+}
+
+labels.forEach((label, idx) => {
+doc.text(label,14,y)
+doc.line(60,y,170,y)
+y += 15
+})
+
+return y
+}
+
+function gerarPDFRetirada(){
+
+if(retirada.length===0){
+alert("Nenhuma peça adicionada")
+return
+}
+
+const {jsPDF}=window.jspdf
+let doc=new jsPDF()
+
+let mecanico=document.getElementById("mecanico").value
+let observacao=document.getElementById("observacao").value
+let data=new Date().toLocaleDateString()
+
+doc.setFont("helvetica","bold")
+doc.setFontSize(22)
+
+let titulo="SILOKING DO BRASIL"
+let larguraTexto = doc.getTextWidth(titulo)
+let xCentro = 105
+
+doc.setFillColor(0,0,0)
+doc.rect(xCentro - (larguraTexto/2), 15, larguraTexto, 6, "F")
+
+doc.setTextColor(0,0,0)
+doc.text(titulo, xCentro, 30, {align:"center"})
+
+doc.setFillColor(0,0,0)
+doc.rect(xCentro - (larguraTexto/2), 33, larguraTexto, 6, "F")
+
+doc.setFontSize(12)
+doc.text("Controle de Retirada de Peças",105,45,{align:"center"})
+
+doc.setFont("helvetica","normal")
+doc.setFontSize(11)
+
+doc.text("Mecânico: "+mecanico,14,55)
+doc.text("Data retirada: "+data,14,62)
+doc.text("Máquina / Observação: "+observacao,14,69)
+
+let dados=retirada.map(i=>[i.codigo,i.nome,i.quantidade])
+
+doc.autoTable({
+startY:78,
+head:[["Código","Produto","Quantidade"]],
+body:dados,
+theme:"grid",
+styles:{lineWidth:0.6},
+headStyles:{fillColor:[0,0,0],textColor:255}
+})
+
+let pageHeight = doc.internal.pageSize.getHeight()
+let y=doc.lastAutoTable.finalY+10
+
+if(y + 35 > pageHeight - 15){
+doc.addPage()
+y = 20
+}
+
+doc.setFont("helvetica","bold")
+doc.text("RETIRADA",14,y)
+y+=10
+
+doc.setFont("helvetica","normal")
+doc.text("Assinatura Mecânico:",14,y)
+doc.line(60,y,170,y)
+
+y+=15
+doc.text("Responsável Estoque:",14,y)
+doc.line(70,y,170,y)
+
+y+=25
+
+if(y + 40 > pageHeight - 15){
+doc.addPage()
+y = 20
+}
+
+doc.setFont("helvetica","bold")
+doc.text("DEVOLUÇÃO",14,y)
+
+y+=10
+doc.setFont("helvetica","normal")
+doc.text("Data retorno: ____ / ____ / ______",14,y)
+
+let retorno=retirada.map(i=>[i.codigo,i.nome,""])
+
+doc.autoTable({
+startY:y+5,
+head:[["Código","Produto","Qtd retornada"]],
+body:retorno,
+theme:"grid",
+styles:{lineWidth:0.6},
+headStyles:{fillColor:[0,0,0],textColor:255}
+})
+
+let y2 = doc.lastAutoTable.finalY + 10
+if(y2 + 30 > doc.internal.pageSize.getHeight() - 15){
+doc.addPage()
+y2 = 20
+}
+
+doc.text("Assinatura Mecânico:",14,y2)
+doc.line(60,y2,170,y2)
+
+y2+=15
+doc.text("Responsável Estoque:",14,y2)
+doc.line(70,y2,170,y2)
+
+let nomeArquivo="retirada_"+mecanico+"_"+data.replaceAll("/","-")+".pdf"
+let pdfBase64 = doc.output('datauristring').split(',')[1]
+
+mostrarLoading("Gerando relatório da retirada...")
+
+fetch(URL_SCRIPT,{
+method:"POST",
+body:JSON.stringify({
+action:"save_retirada_pdf",
+pdf:pdfBase64,
+nome:nomeArquivo,
+data:data,
+mecanico:mecanico,
+observacao:observacao
+})
+})
+.then(()=> {
+doc.save(nomeArquivo)
+retirada=[]
+render()
+document.getElementById("observacao").value=""
 })
 .catch(() => {
-    document.getElementById("statusBase").innerText = "Erro ao carregar base ❌";
-});
-
-function carregarPosicao(){
-    posicaoAtual = normalizar(document.getElementById("posicaoInput").value);
-    if(!posicaoAtual){ alert("Digite uma posição válida"); return; }
-    document.getElementById("posicaoAtual").innerText = posicaoAtual;
-    renderizar();
+alert("Erro ao enviar retirada para o Apps Script")
+})
+.finally(() => {
+esconderLoading()
+})
 }
 
-function mostrarSemPosicao(){
-    posicaoAtual = "SEM_POSICAO";
-    document.getElementById("posicaoAtual").innerText = "SEM POSIÇÃO";
-    renderizar();
+/* =========================
+   PRODUÇÃO
+========================= */
+
+function atualizarResumoProd(){
+document.getElementById("totalItensProd").innerText = producao.length
+let total = producao.reduce((soma,item)=> soma + item.quantidade ,0)
+document.getElementById("totalPecasProd").innerText = total
 }
 
-function trocarPosicao(){
-    posicaoAtual = "";
-    contagem = {};
-    document.getElementById("posicaoAtual").innerText = "Nenhuma";
-    renderizar();
+function renderProd(){
+
+let tabela=document.getElementById("listaProd")
+tabela.innerHTML=""
+
+producao.forEach((item,index)=>{
+
+tabela.innerHTML+=`
+<tr>
+<td>${item.codigo}</td>
+<td>${item.nome}</td>
+<td>
+<button onclick="diminuirProd(${index})">-</button>
+<input class="qtdInput" type="number" min="1"
+value="${item.quantidade}"
+onchange="alterarQtdProd(${index},this.value)">
+<button onclick="aumentarProd(${index})">+</button>
+</td>
+<td>
+<input type="checkbox" class="iappCheck" ${item.iappTransferido ? "checked" : ""} onchange="alterarIapp(${index}, this.checked)">
+</td>
+<td>
+<button style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:5px;" onclick="removerProd(${index})">X</button>
+</td>
+</tr>
+`
+})
+
+atualizarResumoProd()
 }
 
-function zerarContagem(){
-    contagem = {};
-    renderizar();
+function alterarQtdProd(i,v){
+producao[i].quantidade=parseInt(v) || 1
+atualizarResumoProd()
 }
 
-function renderizar(){
-    const tbody = document.getElementById("tabelaProdutos");
-    tbody.innerHTML = "";
-
-    produtos.forEach(prod=>{
-        let posBase = normalizar(prod.posicao);
-        let pertence = posBase === posicaoAtual;
-        let ehSem = !prod.posicao || prod.posicao.trim() === "";
-        let qtd = contagem[prod.codigo] || 0;
-
-        if(posicaoAtual === "" ) return;
-
-        if(
-            (posicaoAtual === "SEM_POSICAO" && ehSem) ||
-            pertence ||
-            qtd > 0
-        ){
-            const tr = document.createElement("tr");
-
-            if(qtd === 0 && pertence) tr.classList.add("zero");
-            if(qtd > 0 && pertence) tr.classList.add("contado");
-            if(qtd > 0 && !pertence) tr.classList.add("fora");
-
-            tr.innerHTML = `
-                <td>${prod.codigo}</td>
-                <td>${prod.nome}</td>
-                <td>${prod.posicao || "SEM POSIÇÃO"}</td>
-                <td>${qtd}</td>
-            `;
-            tbody.appendChild(tr);
-        }
-    });
+function aumentarProd(i){
+producao[i].quantidade++
+renderProd()
 }
 
-function adicionarProduto(){
-    const codigo = document.getElementById("codigoInput").value.trim();
-    const qtd = parseInt(document.getElementById("quantidadeInput").value) || 1;
-    if(!codigo) return;
-
-    let existe = produtos.find(p=>p.codigo===codigo);
-    if(!existe){ alert("Produto não encontrado!"); return; }
-
-    contagem[codigo] = (contagem[codigo]||0)+qtd;
-    document.getElementById("codigoInput").value="";
-    document.getElementById("quantidadeInput").value=1;
-    renderizar();
+function diminuirProd(i){
+if(producao[i].quantidade>1){
+producao[i].quantidade--
+renderProd()
+}
 }
 
-function exportarCSV(){
-    let linhas=[["Posicao_Contada","Codigo","Produto","Posicao_Base_JSON","Quantidade","Status"]];
-
-    produtos.forEach(prod=>{
-        let posBase = normalizar(prod.posicao);
-        let pertence = posBase === posicaoAtual;
-        let ehSem = !prod.posicao || prod.posicao.trim()==="";
-        let qtd = contagem[prod.codigo] || 0;
-
-        if(
-            (posicaoAtual === "SEM_POSICAO" && ehSem) ||
-            pertence ||
-            qtd > 0
-        ){
-            linhas.push([
-                posicaoAtual,
-                prod.codigo,
-                prod.nome,
-                prod.posicao || "SEM POSIÇÃO",
-                qtd,
-                pertence ? "OK" : (qtd>0 ? "FORA_POSICAO" : "NAO_CONTADO")
-            ]);
-        }
-    });
-
-    let csv = linhas.map(l=>l.join(";")).join("\n");
-    let blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
-    let link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `inventario_${posicaoAtual}.csv`;
-    link.click();
+function removerProd(i){
+producao.splice(i,1)
+renderProd()
 }
 
-function alternarModo(){
-    document.body.classList.toggle("dark");
+function alterarIapp(i, valor){
+producao[i].iappTransferido = valor
 }
+
+function atualizarInfoOrdem(){
+if(ordemAtualId){
+document.getElementById("ordemAtualTexto").innerText = "OP-"+String(ordemAtualId).padStart(4,"0")+" | "+ordemAtualMaquina+" ("+ordemAtualSerie+")"
+document.getElementById("statusAtualTexto").innerText = ordemAtualStatus || "EM PRODUÇÃO"
+}else{
+document.getElementById("ordemAtualTexto").innerText = "Nenhuma ordem aberta"
+document.getElementById("statusAtualTexto").innerText = "-"
+}
+}
+
+function novaOrdem(){
+ordemAtualId = ""
+ordemAtualMaquina = ""
+ordemAtualSerie = ""
+ordemAtualStatus = ""
+producao = []
+renderProd()
+document.getElementById("maquinaProd").value = ""
+document.getElementById("serieProd").value = ""
+atualizarInfoOrdem()
+}
+
+function abrirOuCriarOrdem(){
+
+let maquina = document.getElementById("maquinaProd").value
+let serie = document.getElementById("serieProd").value.trim()
+
+if(!maquina){
+alert("Selecione a máquina")
+return
+}
+
+if(!serie){
+alert("Preencha a série da máquina")
+return
+}
+
+mostrarLoading("Abrindo ordem de produção...")
+
+fetch(URL_SCRIPT,{
+method:"POST",
+body:JSON.stringify({
+action:"open_or_create_order",
+maquina:maquina,
+serie:serie
+})
+})
+.then(r=>r.json())
+.then(res=>{
+if(!res.ok){
+alert(res.message || "Erro ao abrir ordem")
+return
+}
+
+ordemAtualId = res.order.id
+ordemAtualMaquina = res.order.maquina
+ordemAtualSerie = res.order.serie
+ordemAtualStatus = res.order.status
+producao = (res.items || []).map(item => ({
+codigo:item.codigo,
+nome:item.nome,
+quantidade:Number(item.quantidade || 0),
+iappTransferido: !!item.iappTransferido
+}))
+
+renderProd()
+atualizarInfoOrdem()
+listarOrdensAbertas(false)
+alert("Ordem carregada com sucesso")
+})
+.catch(()=>{
+alert("Erro ao comunicar com o Apps Script")
+})
+.finally(()=>{
+esconderLoading()
+})
+}
+
+function listarOrdensAbertas(mostrarMensagem=true){
+
+if(mostrarMensagem){
+mostrarLoading("Carregando produções em aberto...")
+}
+
+fetch(URL_SCRIPT+"?action=list_open_orders")
+.then(r=>r.json())
+.then(res=>{
+let box = document.getElementById("listaOrdensAbertas")
+box.innerHTML = ""
+
+if(!res.ok){
+box.innerHTML = "Erro ao carregar ordens em aberto."
+return
+}
+
+if(!res.orders || res.orders.length===0){
+box.innerHTML = "Nenhuma produção em aberto."
+return
+}
+
+res.orders.forEach(ordem=>{
+box.innerHTML += `
+<div class="ordemItem">
+<div>
+<div class="ordemTitulo">OP-${String(ordem.id).padStart(4,"0")} | ${ordem.maquina} (${ordem.serie})</div>
+<div>${ordem.total_itens} itens diferentes | ${ordem.total_pecas} peças</div>
+</div>
+<div>
+<button style="padding:8px 12px;background:#2c7be5;color:white;border:none;border-radius:5px;cursor:pointer;" onclick="abrirOrdemExistente('${ordem.id}')">ABRIR</button>
+</div>
+</div>
+`
+})
+})
+.catch(()=>{
+document.getElementById("listaOrdensAbertas").innerHTML = "Erro ao carregar ordens em aberto."
+})
+.finally(()=>{
+if(mostrarMensagem){
+esconderLoading()
+}
+})
+}
+
+function abrirOrdemExistente(id){
+mostrarLoading("Abrindo produção em andamento...")
+
+fetch(URL_SCRIPT+"?action=get_order&id="+encodeURIComponent(id))
+.then(r=>r.json())
+.then(res=>{
+if(!res.ok){
+alert(res.message || "Erro ao abrir ordem")
+return
+}
+
+ordemAtualId = res.order.id
+ordemAtualMaquina = res.order.maquina
+ordemAtualSerie = res.order.serie
+ordemAtualStatus = res.order.status
+producao = (res.items || []).map(item => ({
+codigo:item.codigo,
+nome:item.nome,
+quantidade:Number(item.quantidade || 0),
+iappTransferido: !!item.iappTransferido
+}))
+
+document.getElementById("maquinaProd").value = ordemAtualMaquina
+document.getElementById("serieProd").value = ordemAtualSerie
+
+renderProd()
+atualizarInfoOrdem()
+alert("Produção aberta com sucesso")
+})
+.catch(()=>{
+alert("Erro ao carregar ordem existente")
+})
+.finally(()=>{
+esconderLoading()
+})
+}
+
+function adicionarCodigoProd(){
+
+if(!ordemAtualId){
+alert("Abra ou crie uma ordem de produção antes de bipar as peças")
+return
+}
+
+let campo=document.getElementById("codigoProd")
+let codigo=campo.value.trim()
+
+if(!codigo) return
+
+let produto=produtos.find(p=>String(p.codigo)==String(codigo))
+
+if(!produto){
+alert("Produto não encontrado")
+return
+}
+
+let existente=producao.find(p=>String(p.codigo)==String(codigo))
+
+if(existente){
+existente.quantidade++
+}else{
+producao.push({
+codigo:produto.codigo,
+nome:produto.nome,
+quantidade:1,
+iappTransferido:false
+})
+}
+
+renderProd()
+campo.value=""
+}
+
+function salvarProducao(){
+
+if(!ordemAtualId){
+alert("Nenhuma ordem aberta")
+return
+}
+
+mostrarLoading("Salvando produção em andamento...")
+
+fetch(URL_SCRIPT,{
+method:"POST",
+body:JSON.stringify({
+action:"save_order_items",
+orderId:ordemAtualId,
+items:producao
+})
+})
+.then(r=>r.json())
+.then(res=>{
+if(!res.ok){
+alert(res.message || "Erro ao salvar produção")
+return
+}
+alert("Produção salva com sucesso")
+listarOrdensAbertas(false)
+})
+.catch(()=>{
+alert("Erro ao salvar produção")
+})
+.finally(()=>{
+esconderLoading()
+})
+}
+
+function finalizarProducao(){
+
+if(!ordemAtualId){
+alert("Nenhuma ordem aberta")
+return
+}
+
+if(producao.length===0){
+alert("Nenhuma peça adicionada")
+return
+}
+
+const {jsPDF}=window.jspdf
+let doc=new jsPDF()
+let data=new Date().toLocaleDateString()
+
+doc.setFont("helvetica","bold")
+doc.setFontSize(22)
+
+let titulo="SILOKING DO BRASIL"
+let larguraTexto = doc.getTextWidth(titulo)
+let xCentro = 105
+
+doc.setFillColor(0,0,0)
+doc.rect(xCentro - (larguraTexto/2), 15, larguraTexto, 6, "F")
+
+doc.setTextColor(0,0,0)
+doc.text(titulo, xCentro, 30, {align:"center"})
+
+doc.setFillColor(0,0,0)
+doc.rect(xCentro - (larguraTexto/2), 33, larguraTexto, 6, "F")
+
+doc.setFontSize(12)
+doc.text("Ordem de Produção",105,45,{align:"center"})
+
+doc.setFont("helvetica","normal")
+doc.setFontSize(11)
+
+doc.text("Ordem: OP-"+String(ordemAtualId).padStart(4,"0"),14,55)
+doc.text("Máquina: "+ordemAtualMaquina,14,62)
+doc.text("Série: "+ordemAtualSerie,14,69)
+doc.text("Data finalização: "+data,14,76)
+
+let dados=producao.map(i=>[
+i.codigo,
+i.nome,
+i.quantidade,
+i.iappTransferido ? "SIM" : "NAO"
+])
+
+doc.autoTable({
+startY:84,
+head:[["Código","Produto","Quantidade","IAPP"]],
+body:dados,
+theme:"grid",
+styles:{lineWidth:0.6},
+headStyles:{fillColor:[0,0,0],textColor:255}
+})
+
+let y=doc.lastAutoTable.finalY+15
+let pageHeight = doc.internal.pageSize.getHeight()
+
+if(y + 30 > pageHeight - 15){
+doc.addPage()
+y = 20
+}
+
+doc.text("Assinatura Produção:",14,y)
+doc.line(60,y,170,y)
+
+y+=15
+doc.text("Responsável Estoque:",14,y)
+doc.line(70,y,170,y)
+
+let nomeArquivo="ordem_producao_OP-"+String(ordemAtualId).padStart(4,"0")+"_"+ordemAtualMaquina.replaceAll(" ","_")+"_"+ordemAtualSerie+"_"+data.replaceAll("/","-")+".pdf"
+let pdfBase64 = doc.output('datauristring').split(',')[1]
+
+mostrarLoading("Finalizando produção...")
+
+fetch(URL_SCRIPT,{
+method:"POST",
+body:JSON.stringify({
+action:"finalize_order",
+orderId:ordemAtualId,
+maquina:ordemAtualMaquina,
+serie:ordemAtualSerie,
+dataFinal:data,
+nome:nomeArquivo,
+pdf:pdfBase64,
+items:producao
+})
+})
+.then(r=>r.json())
+.then(res=>{
+if(!res.ok){
+alert(res.message || "Erro ao finalizar ordem")
+return
+}
+
+doc.save(nomeArquivo)
+alert("Produção finalizada com sucesso")
+
+novaOrdem()
+listarOrdensAbertas(false)
+})
+.catch(()=>{
+alert("Erro ao finalizar produção")
+})
+.finally(()=>{
+esconderLoading()
+})
+}
+
+function gerarRelatorioAbertosCSV(){
+mostrarLoading("Gerando relatório das produções em aberto...")
+
+fetch(URL_SCRIPT+"?action=report_open_orders")
+.then(r=>r.json())
+.then(res=>{
+if(!res.ok){
+alert(res.message || "Erro ao gerar relatório")
+return
+}
+
+let linhas = res.rows || []
+
+if(linhas.length===0){
+alert("Nenhuma produção em aberto para gerar relatório")
+return
+}
+
+let csv = "ID_ORDEM;MAQUINA;SERIE;CODIGO;PRODUTO;QTD;TRANSFERIDO_IAPP\n"
+
+linhas.forEach(l => {
+csv += [
+`OP-${String(l.id_ordem).padStart(4,"0")}`,
+escaparCSV(l.maquina),
+escaparCSV(l.serie),
+escaparCSV(l.codigo),
+escaparCSV(l.produto),
+escaparCSV(l.qtd),
+escaparCSV(l.iapp)
+].join(";") + "\n"
+})
+
+let blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+let url = URL.createObjectURL(blob)
+let a = document.createElement("a")
+a.href = url
+a.download = "producoes_em_aberto.csv"
+document.body.appendChild(a)
+a.click()
+document.body.removeChild(a)
+URL.revokeObjectURL(url)
+})
+.catch(()=>{
+alert("Erro ao gerar relatório")
+})
+.finally(()=>{
+esconderLoading()
+})
+}
+
+function escaparCSV(valor){
+let texto = String(valor ?? "")
+if(texto.includes(";") || texto.includes('"') || texto.includes("\n")){
+texto = '"' + texto.replace(/"/g, '""') + '"'
+}
+return texto
+}
+
 </script>
 
 </body>
