@@ -122,10 +122,6 @@ margin-bottom:20px;
 flex-wrap:wrap;
 }
 
-.logo{
-height:50px;
-}
-
 h1{
 margin:0;
 color:#2c3e50;
@@ -155,7 +151,8 @@ border:1px solid #ccc;
 }
 
 #codigo,
-#codigoProd{
+#codigoProd,
+#codigoInv{
 flex:1;
 font-size:18px;
 }
@@ -233,6 +230,18 @@ width:100%;
 margin-top:10px;
 padding:12px;
 background:#8e44ad;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+width:100%;
+}
+
+.btnLaranja{
+margin-top:10px;
+padding:12px;
+background:#f39c12;
 color:white;
 border:none;
 border-radius:6px;
@@ -357,6 +366,50 @@ height:20px;
 cursor:pointer;
 }
 
+.inv-ok{
+background:#eefaf1;
+}
+
+.inv-zero{
+background:#fdecec !important;
+}
+
+.inv-fora{
+background:#fff7df !important;
+}
+
+.inv-livre{
+background:#eef4ff !important;
+}
+
+.statusBadge{
+display:inline-block;
+padding:4px 8px;
+border-radius:999px;
+font-size:12px;
+font-weight:bold;
+}
+
+.status-ok{
+background:#dff4e6;
+color:#1f7a3f;
+}
+
+.status-zero{
+background:#fde2e2;
+color:#b42318;
+}
+
+.status-fora{
+background:#fff1cc;
+color:#9a6700;
+}
+
+.status-livre{
+background:#dbeafe;
+color:#1d4ed8;
+}
+
 @keyframes girar{
 from{ transform:rotate(0deg); }
 to{ transform:rotate(360deg); }
@@ -421,6 +474,11 @@ grid-template-columns:1fr;
       <button class="sideBtn" onclick="trocarAbaLateral('producao', this)">
         <span class="sideIcon">🏭</span>
         <span>Ordem de Produção</span>
+      </button>
+
+      <button class="sideBtn" onclick="trocarAbaLateral('inventario', this)">
+        <span class="sideIcon">📦</span>
+        <span>Inventário</span>
       </button>
     </div>
   </aside>
@@ -558,6 +616,58 @@ grid-template-columns:1fr;
 
       </div>
 
+      <!-- ABA INVENTÁRIO -->
+      <div id="aba-inventario" class="section">
+
+        <div class="inputs">
+          <input id="posicaoInv" placeholder="Digite a posição (ex: A11)">
+          <button class="btnSec" style="width:auto; margin-top:0;" onclick="buscarPosicaoInventario()">BUSCAR POSIÇÃO</button>
+          <button class="btnCinza" style="width:auto; margin-top:0;" onclick="ativarInventarioLivre()">INVENTÁRIO LIVRE</button>
+        </div>
+
+        <div class="infoBox">
+          <div><strong>Posição contada:</strong> <span id="inventarioPosicaoAtual">-</span></div>
+          <div style="margin-top:6px;">
+            <strong>Esperados:</strong> <span id="invEsperados">0</span> |
+            <strong>Conferidos:</strong> <span id="invConferidos">0</span> |
+            <strong>Pendentes:</strong> <span id="invPendentes">0</span>
+          </div>
+        </div>
+
+        <div class="inputs">
+          <div style="display:flex; flex:1; gap:5px;">
+            <input id="codigoInv" placeholder="Bipar código do produto">
+            <button onclick="adicionarCodigoInventario()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+          </div>
+        </div>
+
+        <div class="resumo">
+          Itens na conferência: <span id="invTotalItens">0</span> |
+          Total contado: <span id="invTotalPecas">0</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th>Posição sistema</th>
+              <th>Posição contada</th>
+              <th>Qtd contada</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="listaInventario"></tbody>
+        </table>
+
+        <div class="acoesGrid">
+          <button class="btnCinza" onclick="limparInventario()">LIMPAR CONTAGEM</button>
+          <button class="btnRelatorio" onclick="finalizarInventarioExcel()">FINALIZAR INVENTÁRIO E GERAR EXCEL</button>
+        </div>
+
+      </div>
+
     </div>
   </main>
 </div>
@@ -572,6 +682,10 @@ let ordemAtualId = ""
 let ordemAtualMaquina = ""
 let ordemAtualSerie = ""
 let ordemAtualStatus = ""
+
+let inventario=[]
+let inventarioPosicaoAtual=""
+let inventarioLivre=false
 
 const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyAB_tMptSMgpXqOUYi7MwG_BHjvu8Z_I9-k9Te3cHk61dVjuu6Y_SwSsQlAv3IC-CP7w/exec"
 
@@ -602,6 +716,10 @@ if(e.key==="Enter"){ adicionarCodigo() }
 
 document.getElementById("codigoProd").addEventListener("keypress",function(e){
 if(e.key==="Enter"){ adicionarCodigoProd() }
+})
+
+document.getElementById("codigoInv").addEventListener("keypress",function(e){
+if(e.key==="Enter"){ adicionarCodigoInventario() }
 })
 
 listarOrdensAbertas()
@@ -1414,12 +1532,363 @@ esconderLoading()
 
 }
 
-function escaparCSV(valor){
-let texto = String(valor ?? "")
-if(texto.includes(";") || texto.includes('"') || texto.includes("\n")){
-texto = '"' + texto.replace(/"/g, '""') + '"'
+/* =========================
+   INVENTÁRIO
+========================= */
+
+function normalizarPosicao(valor){
+return String(valor || "").trim().toUpperCase()
 }
-return texto
+
+function atualizarResumoInventario(){
+document.getElementById("inventarioPosicaoAtual").innerText = inventarioLivre
+? "LIVRE"
+: (inventarioPosicaoAtual || "-")
+
+let esperados = inventario.filter(i => i.esperado).length
+let conferidos = inventario.filter(i => i.esperado && i.quantidade > 0).length
+let pendentes = inventario.filter(i => i.esperado && i.quantidade === 0).length
+let totalPecas = inventario.reduce((soma,item)=> soma + Number(item.quantidade || 0),0)
+
+document.getElementById("invEsperados").innerText = esperados
+document.getElementById("invConferidos").innerText = conferidos
+document.getElementById("invPendentes").innerText = pendentes
+document.getElementById("invTotalItens").innerText = inventario.length
+document.getElementById("invTotalPecas").innerText = totalPecas
+}
+
+function definirStatusInventario(item){
+let posContada = normalizarPosicao(item.posicaoContada)
+let posSistema = normalizarPosicao(item.posicaoSistema)
+
+if(inventarioLivre){
+item.status = "LIVRE"
+return
+}
+
+if(item.esperado){
+if(Number(item.quantidade || 0) === 0){
+item.status = "NÃO CONTADO"
+}else{
+item.status = "OK"
+}
+return
+}
+
+if(posContada && posSistema && posContada !== posSistema){
+item.status = "FORA DA POSIÇÃO"
+}else if(Number(item.quantidade || 0) === 0){
+item.status = "NÃO CONTADO"
+}else{
+item.status = "OK"
+}
+}
+
+function classeLinhaInventario(item){
+if(item.status === "NÃO CONTADO") return "inv-zero"
+if(item.status === "FORA DA POSIÇÃO") return "inv-fora"
+if(item.status === "LIVRE") return "inv-livre"
+return "inv-ok"
+}
+
+function badgeStatusInventario(item){
+if(item.status === "NÃO CONTADO") return `<span class="statusBadge status-zero">NÃO CONTADO</span>`
+if(item.status === "FORA DA POSIÇÃO") return `<span class="statusBadge status-fora">FORA DA POSIÇÃO</span>`
+if(item.status === "LIVRE") return `<span class="statusBadge status-livre">LIVRE</span>`
+return `<span class="statusBadge status-ok">OK</span>`
+}
+
+function renderInventario(){
+let tabela = document.getElementById("listaInventario")
+tabela.innerHTML = ""
+
+inventario.forEach((item,index) => {
+definirStatusInventario(item)
+
+tabela.innerHTML += `
+<tr class="${classeLinhaInventario(item)}">
+<td>${item.codigo}</td>
+<td>${item.nome}</td>
+<td>${item.posicaoSistema || ""}</td>
+<td>${item.posicaoContada || ""}</td>
+<td>
+<button onclick="diminuirInventario(${index})">-</button>
+<input class="qtdInput" type="number" min="0"
+value="${item.quantidade}"
+onchange="alterarQtdInventario(${index},this.value)">
+<button onclick="aumentarInventario(${index})">+</button>
+</td>
+<td>${badgeStatusInventario(item)}</td>
+<td>
+<button style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:5px;" onclick="removerInventario(${index})">X</button>
+</td>
+</tr>
+`
+})
+
+atualizarResumoInventario()
+}
+
+function limparInventario(){
+inventario = []
+inventarioPosicaoAtual = ""
+inventarioLivre = false
+document.getElementById("posicaoInv").value = ""
+document.getElementById("codigoInv").value = ""
+renderInventario()
+}
+
+function ativarInventarioLivre(){
+inventario = []
+inventarioPosicaoAtual = ""
+inventarioLivre = true
+document.getElementById("posicaoInv").value = ""
+renderInventario()
+alert("Inventário livre ativado")
+}
+
+function buscarPosicaoInventario(){
+let posicao = normalizarPosicao(document.getElementById("posicaoInv").value)
+
+if(!posicao){
+alert("Digite uma posição")
+return
+}
+
+mostrarLoading("Buscando posição no sistema...")
+
+inventarioLivre = false
+inventarioPosicaoAtual = posicao
+
+let itensPosicao = produtos.filter(p => normalizarPosicao(p.posicao) === posicao)
+
+let agrupados = {}
+
+itensPosicao.forEach(item => {
+let chave = `${item.codigo}|||${item.nome}|||${normalizarPosicao(item.posicao)}`
+if(!agrupados[chave]){
+agrupados[chave] = {
+codigo:item.codigo,
+nome:item.nome,
+posicaoSistema:normalizarPosicao(item.posicao),
+posicaoContada:posicao,
+quantidade:0,
+esperado:true,
+status:"NÃO CONTADO"
+}
+}
+})
+
+inventario = Object.values(agrupados)
+
+renderInventario()
+
+esconderLoading()
+
+if(inventario.length===0){
+alert("Nenhum item encontrado nessa posição. Você ainda pode bipar itens manualmente.")
+}
+}
+
+function buscarProdutoPorCodigo(codigo){
+return produtos.filter(p => String(p.codigo) === String(codigo))
+}
+
+function adicionarCodigoInventario(){
+let campo = document.getElementById("codigoInv")
+let codigo = campo.value.trim()
+
+if(!codigo) return
+
+let encontrados = buscarProdutoPorCodigo(codigo)
+
+if(encontrados.length===0){
+alert("Produto não encontrado")
+return
+}
+
+if(!inventarioLivre && !inventarioPosicaoAtual){
+alert("Busque uma posição ou ative inventário livre")
+return
+}
+
+let posicoesSistema = [...new Set(encontrados.map(p => normalizarPosicao(p.posicao) || ""))].filter(Boolean)
+let posicaoSistemaTexto = posicoesSistema.join(" | ")
+let nomeProduto = encontrados[0].nome || ""
+
+if(!inventarioLivre){
+let existenteEsperado = inventario.find(i =>
+String(i.codigo) === String(codigo) &&
+normalizarPosicao(i.posicaoSistema) === inventarioPosicaoAtual &&
+i.esperado
+)
+
+if(existenteEsperado){
+existenteEsperado.quantidade++
+renderInventario()
+campo.value=""
+return
+}
+}
+
+let existente = inventario.find(i =>
+String(i.codigo) === String(codigo) &&
+String(i.posicaoSistema) === String(posicaoSistemaTexto) &&
+String(i.posicaoContada) === String(inventarioLivre ? "LIVRE" : inventarioPosicaoAtual) &&
+!i.esperado
+)
+
+if(existente){
+existente.quantidade++
+}else{
+inventario.push({
+codigo:codigo,
+nome:nomeProduto,
+posicaoSistema:posicaoSistemaTexto || "SEM POSIÇÃO",
+posicaoContada: inventarioLivre ? "LIVRE" : inventarioPosicaoAtual,
+quantidade:1,
+esperado:false,
+status: inventarioLivre ? "LIVRE" : "FORA DA POSIÇÃO"
+})
+}
+
+renderInventario()
+campo.value=""
+}
+
+function alterarQtdInventario(i,v){
+inventario[i].quantidade = Math.max(0, parseInt(v) || 0)
+renderInventario()
+}
+
+function aumentarInventario(i){
+inventario[i].quantidade++
+renderInventario()
+}
+
+function diminuirInventario(i){
+if(inventario[i].quantidade > 0){
+inventario[i].quantidade--
+renderInventario()
+}
+}
+
+function removerInventario(i){
+inventario.splice(i,1)
+renderInventario()
+}
+
+function finalizarInventarioExcel(){
+if(inventario.length===0){
+alert("Nenhum item no inventário")
+return
+}
+
+mostrarLoading("Gerando Excel do inventário...")
+
+inventario.forEach(item => definirStatusInventario(item))
+
+let html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<style>
+table{
+border-collapse:collapse;
+width:100%;
+font-family:Arial;
+font-size:12pt;
+}
+td, th{
+border:1px solid #bfc7d1;
+padding:6px 8px;
+}
+.titulo{
+background:#2c7be5;
+color:#ffffff;
+font-weight:bold;
+font-size:13pt;
+text-align:left;
+}
+.cabecalho{
+background:#1f4e78;
+color:#ffffff;
+font-weight:bold;
+text-align:center;
+}
+.central{
+text-align:center;
+}
+.zero{
+background:#fdecec;
+}
+.fora{
+background:#fff7df;
+}
+.ok{
+background:#eefaf1;
+}
+.livre{
+background:#eef4ff;
+}
+</style>
+</head>
+<body>
+<table>
+<tr>
+<td class="titulo" colspan="6">INVENTÁRIO ${inventarioLivre ? "LIVRE" : "| POSIÇÃO " + inventarioPosicaoAtual}</td>
+</tr>
+<tr>
+<td class="cabecalho">CODIGO</td>
+<td class="cabecalho">PRODUTO</td>
+<td class="cabecalho">QTD CONTADA</td>
+<td class="cabecalho">POSIÇÃO CONTADA</td>
+<td class="cabecalho">POSIÇÃO SISTEMA</td>
+<td class="cabecalho">STATUS</td>
+</tr>
+`
+
+inventario.forEach(item => {
+let classe = "ok"
+if(item.status === "NÃO CONTADO") classe = "zero"
+if(item.status === "FORA DA POSIÇÃO") classe = "fora"
+if(item.status === "LIVRE") classe = "livre"
+
+html += `
+<tr class="${classe}">
+<td>${item.codigo || ""}</td>
+<td>${item.nome || ""}</td>
+<td class="central">${item.quantidade || 0}</td>
+<td class="central">${item.posicaoContada || ""}</td>
+<td class="central">${item.posicaoSistema || ""}</td>
+<td class="central">${item.status || ""}</td>
+</tr>
+`
+})
+
+html += `
+</table>
+</body>
+</html>
+`
+
+let blob = new Blob(
+["\ufeff" + html],
+{ type: "application/vnd.ms-excel" }
+)
+
+let url = URL.createObjectURL(blob)
+let a = document.createElement("a")
+a.href = url
+a.download = `inventario_${inventarioLivre ? "livre" : inventarioPosicaoAtual}.xls`
+document.body.appendChild(a)
+a.click()
+document.body.removeChild(a)
+URL.revokeObjectURL(url)
+
+esconderLoading()
 }
 
 </script>
