@@ -238,18 +238,6 @@ font-size:15px;
 width:100%;
 }
 
-.btnLaranja{
-margin-top:10px;
-padding:12px;
-background:#f39c12;
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:15px;
-width:100%;
-}
-
 .resumo{
 margin:15px 0;
 padding:10px;
@@ -408,6 +396,26 @@ color:#9a6700;
 .status-livre{
 background:#dbeafe;
 color:#1d4ed8;
+}
+
+.invSticky{
+position:sticky;
+top:0;
+z-index:20;
+background:white;
+padding-bottom:8px;
+border-bottom:1px solid #e5e7eb;
+margin-bottom:12px;
+}
+
+.ultimoBipado{
+margin-top:10px;
+padding:10px;
+background:#fff7df;
+border-left:5px solid #f39c12;
+border-radius:6px;
+font-weight:bold;
+color:#6b4f00;
 }
 
 @keyframes girar{
@@ -619,25 +627,31 @@ grid-template-columns:1fr;
       <!-- ABA INVENTÁRIO -->
       <div id="aba-inventario" class="section">
 
-        <div class="inputs">
-          <input id="posicaoInv" placeholder="Digite a posição (ex: A11)">
-          <button class="btnSec" style="width:auto; margin-top:0;" onclick="buscarPosicaoInventario()">BUSCAR POSIÇÃO</button>
-          <button class="btnCinza" style="width:auto; margin-top:0;" onclick="ativarInventarioLivre()">INVENTÁRIO LIVRE</button>
-        </div>
-
-        <div class="infoBox">
-          <div><strong>Posição contada:</strong> <span id="inventarioPosicaoAtual">-</span></div>
-          <div style="margin-top:6px;">
-            <strong>Esperados:</strong> <span id="invEsperados">0</span> |
-            <strong>Conferidos:</strong> <span id="invConferidos">0</span> |
-            <strong>Pendentes:</strong> <span id="invPendentes">0</span>
+        <div class="invSticky">
+          <div class="inputs">
+            <input id="posicaoInv" placeholder="Digite a posição (ex: A11)">
+            <button class="btnSec" style="width:auto; margin-top:0;" onclick="buscarPosicaoInventario()">BUSCAR POSIÇÃO</button>
+            <button class="btnCinza" style="width:auto; margin-top:0;" onclick="ativarInventarioLivre()">INVENTÁRIO LIVRE</button>
           </div>
-        </div>
 
-        <div class="inputs">
-          <div style="display:flex; flex:1; gap:5px;">
-            <input id="codigoInv" placeholder="Bipar código do produto">
-            <button onclick="adicionarCodigoInventario()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+          <div class="infoBox">
+            <div><strong>Posição contada:</strong> <span id="inventarioPosicaoAtual">-</span></div>
+            <div style="margin-top:6px;">
+              <strong>Esperados:</strong> <span id="invEsperados">0</span> |
+              <strong>Conferidos:</strong> <span id="invConferidos">0</span> |
+              <strong>Pendentes:</strong> <span id="invPendentes">0</span>
+            </div>
+          </div>
+
+          <div class="inputs">
+            <div style="display:flex; flex:1; gap:5px;">
+              <input id="codigoInv" placeholder="Bipar código do produto">
+              <button onclick="adicionarCodigoInventario()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+            </div>
+          </div>
+
+          <div class="ultimoBipado" id="ultimoBipadoBox">
+            Último bipado: <span id="ultimoBipadoTexto">Nenhum item bipado ainda</span>
           </div>
         </div>
 
@@ -663,7 +677,7 @@ grid-template-columns:1fr;
 
         <div class="acoesGrid">
           <button class="btnCinza" onclick="limparInventario()">LIMPAR CONTAGEM</button>
-          <button class="btnRelatorio" onclick="finalizarInventarioExcel()">FINALIZAR INVENTÁRIO E GERAR EXCEL</button>
+          <button class="btnRelatorio" onclick="finalizarInventarioCSV()">FINALIZAR INVENTÁRIO E GERAR CSV</button>
         </div>
 
       </div>
@@ -686,6 +700,7 @@ let ordemAtualStatus = ""
 let inventario=[]
 let inventarioPosicaoAtual=""
 let inventarioLivre=false
+let ultimoBipadoInventario=""
 
 const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyAB_tMptSMgpXqOUYi7MwG_BHjvu8Z_I9-k9Te3cHk61dVjuu6Y_SwSsQlAv3IC-CP7w/exec"
 
@@ -882,74 +897,46 @@ doc.text("Mecânico: "+mecanico,14,55)
 doc.text("Data retirada: "+data,14,62)
 doc.text("Máquina / Observação: "+observacao,14,69)
 
-let dados=retirada.map(i=>[i.codigo,i.nome,i.quantidade])
+let dados=retirada.map(i=>[i.codigo,i.nome,i.quantidade,""])
 
 doc.autoTable({
 startY:78,
-head:[["Código","Produto","Quantidade"]],
+head:[["Código","Produto","Qtd retirada","Qtd devolução"]],
 body:dados,
 theme:"grid",
-styles:{lineWidth:0.6},
-headStyles:{fillColor:[0,0,0],textColor:255}
+styles:{lineWidth:0.5, fontSize:9, cellPadding:2},
+headStyles:{fillColor:[0,0,0],textColor:255, fontSize:9}
 })
 
 let pageHeight = doc.internal.pageSize.getHeight()
-let y=doc.lastAutoTable.finalY+10
+let y = doc.lastAutoTable.finalY + 10
 
-if(y + 35 > pageHeight - 15){
+if(y + 45 > pageHeight - 12){
 doc.addPage()
 y = 20
 }
 
 doc.setFont("helvetica","bold")
 doc.text("RETIRADA",14,y)
-y+=10
+doc.text("DEVOLUÇÃO",110,y)
 
 doc.setFont("helvetica","normal")
+y += 8
+
+doc.text("Data: "+data,14,y)
+doc.text("Data: ____ / ____ / ______",110,y)
+
+y += 12
 doc.text("Assinatura Mecânico:",14,y)
-doc.line(60,y,170,y)
+doc.line(60,y,100,y)
+doc.text("Assinatura Mecânico:",110,y)
+doc.line(156,y,196,y)
 
-y+=15
+y += 14
 doc.text("Responsável Estoque:",14,y)
-doc.line(70,y,170,y)
-
-y+=25
-
-if(y + 40 > pageHeight - 15){
-doc.addPage()
-y = 20
-}
-
-doc.setFont("helvetica","bold")
-doc.text("DEVOLUÇÃO",14,y)
-
-y+=10
-doc.setFont("helvetica","normal")
-doc.text("Data retorno: ____ / ____ / ______",14,y)
-
-let retorno=retirada.map(i=>[i.codigo,i.nome,""])
-
-doc.autoTable({
-startY:y+5,
-head:[["Código","Produto","Qtd retornada"]],
-body:retorno,
-theme:"grid",
-styles:{lineWidth:0.6},
-headStyles:{fillColor:[0,0,0],textColor:255}
-})
-
-let y2 = doc.lastAutoTable.finalY + 10
-if(y2 + 30 > doc.internal.pageSize.getHeight() - 15){
-doc.addPage()
-y2 = 20
-}
-
-doc.text("Assinatura Mecânico:",14,y2)
-doc.line(60,y2,170,y2)
-
-y2+=15
-doc.text("Responsável Estoque:",14,y2)
-doc.line(70,y2,170,y2)
+doc.line(70,y,100,y)
+doc.text("Responsável Estoque:",110,y)
+doc.line(166,y,196,y)
 
 let nomeArquivo="retirada_"+mecanico+"_"+data.replaceAll("/","-")+".pdf"
 let pdfBase64 = doc.output('datauristring').split(',')[1]
@@ -1540,6 +1527,11 @@ function normalizarPosicao(valor){
 return String(valor || "").trim().toUpperCase()
 }
 
+function atualizarUltimoBipado(texto){
+ultimoBipadoInventario = texto || "Nenhum item bipado ainda"
+document.getElementById("ultimoBipadoTexto").innerText = ultimoBipadoInventario
+}
+
 function atualizarResumoInventario(){
 document.getElementById("inventarioPosicaoAtual").innerText = inventarioLivre
 ? "LIVRE"
@@ -1635,6 +1627,7 @@ inventarioPosicaoAtual = ""
 inventarioLivre = false
 document.getElementById("posicaoInv").value = ""
 document.getElementById("codigoInv").value = ""
+atualizarUltimoBipado("Nenhum item bipado ainda")
 renderInventario()
 }
 
@@ -1643,6 +1636,7 @@ inventario = []
 inventarioPosicaoAtual = ""
 inventarioLivre = true
 document.getElementById("posicaoInv").value = ""
+atualizarUltimoBipado("Inventário livre ativado")
 renderInventario()
 alert("Inventário livre ativado")
 }
@@ -1682,6 +1676,7 @@ status:"NÃO CONTADO"
 inventario = Object.values(agrupados)
 
 renderInventario()
+atualizarUltimoBipado("Posição carregada: " + posicao)
 
 esconderLoading()
 
@@ -1727,6 +1722,7 @@ if(existenteEsperado){
 existenteEsperado.quantidade++
 renderInventario()
 campo.value=""
+atualizarUltimoBipado(`${codigo} - ${existenteEsperado.nome} | Posição sistema: ${existenteEsperado.posicaoSistema}`)
 return
 }
 }
@@ -1754,6 +1750,7 @@ status: inventarioLivre ? "LIVRE" : "FORA DA POSIÇÃO"
 
 renderInventario()
 campo.value=""
+atualizarUltimoBipado(`${codigo} - ${nomeProduto} | Posição sistema: ${posicaoSistemaTexto || "SEM POSIÇÃO"}`)
 }
 
 function alterarQtdInventario(i,v){
@@ -1778,117 +1775,49 @@ inventario.splice(i,1)
 renderInventario()
 }
 
-function finalizarInventarioExcel(){
+function finalizarInventarioCSV(){
 if(inventario.length===0){
 alert("Nenhum item no inventário")
 return
 }
 
-mostrarLoading("Gerando Excel do inventário...")
+mostrarLoading("Gerando CSV do inventário...")
 
 inventario.forEach(item => definirStatusInventario(item))
 
-let html = `
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:x="urn:schemas-microsoft-com:office:excel"
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-<meta charset="UTF-8">
-<style>
-table{
-border-collapse:collapse;
-width:100%;
-font-family:Arial;
-font-size:12pt;
-}
-td, th{
-border:1px solid #bfc7d1;
-padding:6px 8px;
-}
-.titulo{
-background:#2c7be5;
-color:#ffffff;
-font-weight:bold;
-font-size:13pt;
-text-align:left;
-}
-.cabecalho{
-background:#1f4e78;
-color:#ffffff;
-font-weight:bold;
-text-align:center;
-}
-.central{
-text-align:center;
-}
-.zero{
-background:#fdecec;
-}
-.fora{
-background:#fff7df;
-}
-.ok{
-background:#eefaf1;
-}
-.livre{
-background:#eef4ff;
-}
-</style>
-</head>
-<body>
-<table>
-<tr>
-<td class="titulo" colspan="6">INVENTÁRIO ${inventarioLivre ? "LIVRE" : "| POSIÇÃO " + inventarioPosicaoAtual}</td>
-</tr>
-<tr>
-<td class="cabecalho">CODIGO</td>
-<td class="cabecalho">PRODUTO</td>
-<td class="cabecalho">QTD CONTADA</td>
-<td class="cabecalho">POSIÇÃO CONTADA</td>
-<td class="cabecalho">POSIÇÃO SISTEMA</td>
-<td class="cabecalho">STATUS</td>
-</tr>
-`
+let csv = "\uFEFF"
+csv += "CODIGO;PRODUTO;QTD_CONTADA;POSICAO_CONTADA;POSICAO_SISTEMA;STATUS\n"
 
 inventario.forEach(item => {
-let classe = "ok"
-if(item.status === "NÃO CONTADO") classe = "zero"
-if(item.status === "FORA DA POSIÇÃO") classe = "fora"
-if(item.status === "LIVRE") classe = "livre"
-
-html += `
-<tr class="${classe}">
-<td>${item.codigo || ""}</td>
-<td>${item.nome || ""}</td>
-<td class="central">${item.quantidade || 0}</td>
-<td class="central">${item.posicaoContada || ""}</td>
-<td class="central">${item.posicaoSistema || ""}</td>
-<td class="central">${item.status || ""}</td>
-</tr>
-`
+csv += [
+escaparCSV(item.codigo),
+escaparCSV(item.nome),
+escaparCSV(item.quantidade),
+escaparCSV(item.posicaoContada || ""),
+escaparCSV(item.posicaoSistema || ""),
+escaparCSV(item.status || "")
+].join(";") + "\n"
 })
 
-html += `
-</table>
-</body>
-</html>
-`
-
-let blob = new Blob(
-["\ufeff" + html],
-{ type: "application/vnd.ms-excel" }
-)
-
+let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
 let url = URL.createObjectURL(blob)
 let a = document.createElement("a")
 a.href = url
-a.download = `inventario_${inventarioLivre ? "livre" : inventarioPosicaoAtual}.xls`
+a.download = `inventario_${inventarioLivre ? "livre" : inventarioPosicaoAtual}.csv`
 document.body.appendChild(a)
 a.click()
 document.body.removeChild(a)
 URL.revokeObjectURL(url)
 
 esconderLoading()
+}
+
+function escaparCSV(valor){
+let texto = String(valor ?? "")
+if(texto.includes(";") || texto.includes('"') || texto.includes("\n")){
+texto = '"' + texto.replace(/"/g, '""') + '"'
+}
+return texto
 }
 
 </script>
