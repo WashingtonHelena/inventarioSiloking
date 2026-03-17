@@ -1153,9 +1153,17 @@ document.getElementById("cardIapp").innerText = iappMarcados
 }
 
 function atualizarCardsProducao(){
-document.getElementById("cardOpAtual").innerText = ordemAtualId ? "OP-"+String(ordemAtualId).padStart(4,"0") : "-"
-document.getElementById("cardMaquinaSerie").innerText = ordemAtualMaquina ? `${ordemAtualMaquina} / ${ordemAtualSerie}` : "-"
-document.getElementById("cardStatus").innerText = ordemAtualStatus || "-"
+  document.getElementById("cardOpAtual").innerText =
+    ordemAtualId ? "OP-"+String(ordemAtualId).padStart(4,"0") : "-"
+
+  document.getElementById("cardMaquinaSerie").innerText =
+    ordemAtualMaquina ? `${ordemAtualMaquina} / ${ordemAtualSerie}` : "-"
+
+  document.getElementById("cardStatus").innerText =
+    ordemAtualStatus || "-"
+
+  let iappMarcados = producao.filter(i => i.iappTransferido).length
+  document.getElementById("cardIapp").innerText = iappMarcados
 }
 
 function renderProd(){
@@ -1216,9 +1224,7 @@ atualizarResumoProd()
 }
 
 function atualizarInfoOrdem(){
-if(ordemAtualId){
-document.getElementById("ordemAtualTexto").innerText = "OP-"+String(ordemAtualId).padStart(4,"0")+" | "+ordemAtualMaquina+" ("+ordemAtualSerie+")"
-document.getElementById("statusAtualTexto").innerText = ordemAtualStatus || "EM PRODUÇÃO"
+  atualizarCardsProducao()
 }else{
 document.getElementById("ordemAtualTexto").innerText = "Nenhuma ordem aberta"
 document.getElementById("statusAtualTexto").innerText = "-"
@@ -1339,17 +1345,48 @@ esconderLoading()
 }
 
 function abrirOrdemExistente(id){
+  mostrarLoading("Abrindo produção em andamento...")
 
-mostrarLoading("Abrindo produção em andamento...")
+  fetch(URL_SCRIPT+"?action=get_order&id="+encodeURIComponent(id))
+  .then(r => r.text())
+  .then(texto => {
+    let res
 
-fetch(URL_SCRIPT+"?action=get_order&id="+encodeURIComponent(id))
-.then(r => r.text())
-.then(texto => {
+    try{
+      res = JSON.parse(texto)
+    }catch(e){
+      throw new Error("Erro ao interpretar resposta: " + texto)
+    }
 
-let res
+    if(!res.ok){
+      throw new Error(res.message || "Erro ao abrir ordem")
+    }
 
-try{
-res = JSON.parse(texto)
+    ordemAtualId = res.order.id
+    ordemAtualMaquina = res.order.maquina
+    ordemAtualSerie = res.order.serie
+    ordemAtualStatus = res.order.status
+
+    producao = (res.items || []).map(item => ({
+      codigo:item.codigo,
+      nome:item.nome,
+      quantidade:Number(item.quantidade || 0),
+      iappTransferido: !!item.iappTransferido
+    }))
+
+    document.getElementById("maquinaProd").value = ordemAtualMaquina || ""
+    document.getElementById("serieProd").value = ordemAtualSerie || ""
+
+    renderProd()
+    atualizarInfoOrdem()
+  })
+  .catch((erro)=>{
+    alert("Erro ao carregar ordem existente:
+" + erro.message)
+  })
+  .finally(()=>{
+    esconderLoading()
+  })
 }catch(e){
 throw new Error("Erro ao interpretar resposta: " + texto)
 }
@@ -1425,9 +1462,46 @@ campo.value=""
 }
 
 function salvarProducao(){
-if(!ordemAtualId){
-alert("Nenhuma ordem aberta")
-return
+  if(!ordemAtualId){
+    alert("Nenhuma ordem aberta")
+    return
+  }
+
+  mostrarLoading("Salvando produção em andamento...")
+
+  fetch(URL_SCRIPT,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"save_order_items",
+      orderId:ordemAtualId,
+      items:producao
+    })
+  })
+  .then(r => r.text())
+  .then(texto => {
+    let res
+
+    try{
+      res = JSON.parse(texto)
+    }catch(e){
+      throw new Error("Erro ao interpretar resposta: " + texto)
+    }
+
+    if(!res.ok){
+      throw new Error(res.message || "Erro ao salvar produção")
+    }
+
+    alert("Produção salva com sucesso")
+    listarOrdensAbertas(false)
+    novaOrdem()
+  })
+  .catch((erro)=>{
+    alert("Erro ao salvar produção:
+" + erro.message)
+  })
+  .finally(()=>{
+    esconderLoading()
+  })
 }
 
 mostrarLoading("Salvando produção em andamento...")
