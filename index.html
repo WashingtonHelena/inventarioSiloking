@@ -1339,20 +1339,30 @@ esconderLoading()
 }
 
 function abrirOrdemExistente(id){
+
 mostrarLoading("Abrindo produção em andamento...")
 
 fetch(URL_SCRIPT+"?action=get_order&id="+encodeURIComponent(id))
-.then(r=>r.json())
-.then(res=>{
+.then(r => r.text())
+.then(texto => {
+
+let res
+
+try{
+res = JSON.parse(texto)
+}catch(e){
+throw new Error("Erro ao interpretar resposta: " + texto)
+}
+
 if(!res.ok){
-alert(res.message || "Erro ao abrir ordem")
-return
+throw new Error(res.message || "Erro ao abrir ordem")
 }
 
 ordemAtualId = res.order.id
 ordemAtualMaquina = res.order.maquina
 ordemAtualSerie = res.order.serie
 ordemAtualStatus = res.order.status
+
 producao = (res.items || []).map(item => ({
 codigo:item.codigo,
 nome:item.nome,
@@ -1365,14 +1375,18 @@ document.getElementById("serieProd").value = ordemAtualSerie
 
 renderProd()
 atualizarInfoOrdem()
-alert("Produção aberta com sucesso")
+
+// 🔥 REMOVE O ERRO FALSO
+// NÃO TEM MAIS alert aqui
+
 })
-.catch(()=>{
-alert("Erro ao carregar ordem existente")
+.catch((erro)=>{
+alert("Erro REAL:\n" + erro.message)
 })
 .finally(()=>{
 esconderLoading()
 })
+
 }
 
 function adicionarCodigoProd(){
