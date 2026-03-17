@@ -1225,11 +1225,6 @@ atualizarResumoProd()
 
 function atualizarInfoOrdem(){
   atualizarCardsProducao()
-}else{
-document.getElementById("ordemAtualTexto").innerText = "Nenhuma ordem aberta"
-document.getElementById("statusAtualTexto").innerText = "-"
-}
-atualizarCardsProducao()
 }
 
 function novaOrdem(){
@@ -1381,49 +1376,11 @@ function abrirOrdemExistente(id){
     atualizarInfoOrdem()
   })
   .catch((erro)=>{
-    alert("Erro ao carregar ordem existente:
-" + erro.message)
+    alert("Erro ao carregar ordem existente: "+ erro.message)
   })
   .finally(()=>{
     esconderLoading()
   })
-}catch(e){
-throw new Error("Erro ao interpretar resposta: " + texto)
-}
-
-if(!res.ok){
-throw new Error(res.message || "Erro ao abrir ordem")
-}
-
-ordemAtualId = res.order.id
-ordemAtualMaquina = res.order.maquina
-ordemAtualSerie = res.order.serie
-ordemAtualStatus = res.order.status
-
-producao = (res.items || []).map(item => ({
-codigo:item.codigo,
-nome:item.nome,
-quantidade:Number(item.quantidade || 0),
-iappTransferido: !!item.iappTransferido
-}))
-
-document.getElementById("maquinaProd").value = ordemAtualMaquina
-document.getElementById("serieProd").value = ordemAtualSerie
-
-renderProd()
-atualizarInfoOrdem()
-
-// 🔥 REMOVE O ERRO FALSO
-// NÃO TEM MAIS alert aqui
-
-})
-.catch((erro)=>{
-alert("Erro REAL:\n" + erro.message)
-})
-.finally(()=>{
-esconderLoading()
-})
-
 }
 
 function adicionarCodigoProd(){
@@ -1496,40 +1453,11 @@ function salvarProducao(){
     novaOrdem()
   })
   .catch((erro)=>{
-    alert("Erro ao salvar produção:
-" + erro.message)
+    alert("Erro ao salvar produção: "+ erro.message)
   })
   .finally(()=>{
     esconderLoading()
   })
-}
-
-mostrarLoading("Salvando produção em andamento...")
-
-fetch(URL_SCRIPT,{
-method:"POST",
-body:JSON.stringify({
-action:"save_order_items",
-orderId:ordemAtualId,
-items:producao
-})
-})
-.then(r=>r.json())
-.then(res=>{
-if(!res.ok){
-alert(res.message || "Erro ao salvar produção")
-return
-}
-alert("Produção salva com sucesso")
-listarOrdensAbertas(false)
-novaOrdem()
-})
-.catch(()=>{
-alert("Erro ao salvar produção")
-})
-.finally(()=>{
-esconderLoading()
-})
 }
 
 function finalizarProducao(){
