@@ -106,7 +106,7 @@ padding:18px;
 }
 
 .container{
-max-width:1100px;
+max-width:1150px;
 margin:auto;
 background:white;
 padding:20px;
@@ -143,16 +143,24 @@ margin-bottom:10px;
 flex-wrap:wrap;
 }
 
-input,select{
+input,select,textarea{
 padding:10px;
 font-size:16px;
 border-radius:5px;
 border:1px solid #ccc;
+font-family:Arial;
+}
+
+textarea{
+resize:vertical;
+min-height:90px;
+width:100%;
 }
 
 #codigo,
 #codigoProd,
-#codigoInv{
+#codigoInv,
+#codigoPedido{
 flex:1;
 font-size:18px;
 }
@@ -238,6 +246,30 @@ font-size:15px;
 width:100%;
 }
 
+.btnLaranja{
+margin-top:10px;
+padding:12px;
+background:#f39c12;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+width:100%;
+}
+
+.btnVermelho{
+margin-top:10px;
+padding:12px;
+background:#c0392b;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+width:100%;
+}
+
 .resumo{
 margin:15px 0;
 padding:10px;
@@ -254,22 +286,51 @@ border:1px solid #d8e7ff;
 border-radius:6px;
 }
 
+.infoGrid{
+display:grid;
+grid-template-columns:repeat(4, 1fr);
+gap:12px;
+margin-bottom:15px;
+}
+
+.infoCard{
+background:#f8fbff;
+border:1px solid #d8e7ff;
+border-radius:10px;
+padding:12px;
+}
+
+.infoCardTitulo{
+font-size:13px;
+color:#64748b;
+margin-bottom:6px;
+font-weight:bold;
+text-transform:uppercase;
+}
+
+.infoCardValor{
+font-size:20px;
+font-weight:bold;
+color:#1e293b;
+}
+
 .ordemItem{
-padding:10px;
+padding:12px;
 background:#f7f9fc;
 border:1px solid #dfe7f1;
-border-radius:6px;
-margin-bottom:8px;
+border-radius:10px;
+margin-bottom:10px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-gap:10px;
+gap:12px;
 flex-wrap:wrap;
 }
 
 .ordemTitulo{
 font-weight:bold;
 color:#2c3e50;
+font-size:15px;
 }
 
 .acoesGrid{
@@ -282,7 +343,7 @@ margin-top:10px;
 .colapsavel{
 margin-top:15px;
 border:1px solid #d8e7ff;
-border-radius:8px;
+border-radius:10px;
 overflow:hidden;
 background:#fff;
 }
@@ -418,9 +479,30 @@ font-weight:bold;
 color:#6b4f00;
 }
 
+.blocoProducao{
+background:#fcfdff;
+border:1px solid #dfe7f1;
+border-radius:12px;
+padding:15px;
+margin-bottom:15px;
+}
+
+.blocoTitulo{
+font-size:16px;
+font-weight:bold;
+color:#1e293b;
+margin-bottom:12px;
+}
+
 @keyframes girar{
 from{ transform:rotate(0deg); }
 to{ transform:rotate(360deg); }
+}
+
+@media(max-width:1100px){
+.infoGrid{
+grid-template-columns:repeat(2, 1fr);
+}
 }
 
 @media(max-width:900px){
@@ -449,6 +531,9 @@ padding:15px;
 
 @media(max-width:700px){
 .acoesGrid{
+grid-template-columns:1fr;
+}
+.infoGrid{
 grid-template-columns:1fr;
 }
 }
@@ -488,6 +573,11 @@ grid-template-columns:1fr;
         <span class="sideIcon">📦</span>
         <span>Inventário</span>
       </button>
+
+      <button class="sideBtn" onclick="trocarAbaLateral('pedido', this)">
+        <span class="sideIcon">📨</span>
+        <span>Enviar Pedido</span>
+      </button>
     </div>
   </aside>
 
@@ -502,7 +592,6 @@ grid-template-columns:1fr;
       <div id="aba-retirada" class="section active">
 
         <div class="inputs">
-
           <select id="mecanico">
             <option>ANTONIO</option>
             <option>RENATO</option>
@@ -521,7 +610,6 @@ grid-template-columns:1fr;
             <input id="codigo" placeholder="Bipar código da peça">
             <button onclick="adicionarCodigo()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
           </div>
-
         </div>
 
         <input id="observacao" placeholder="Máquina / Observação (ex: Vagão 2, Mixer 3)">
@@ -544,82 +632,110 @@ grid-template-columns:1fr;
         </table>
 
         <button class="btn" onclick="gerarPDFRetirada()">GERAR RELATÓRIO PDF</button>
-
       </div>
 
       <!-- ABA PRODUÇÃO -->
       <div id="aba-producao" class="section">
 
-        <div class="inputs">
-          <select id="maquinaProd">
-            <option value="">Selecionar máquina</option>
-            <option>Compact 9</option>
-            <option>Compact 12</option>
-            <option>Duo 14</option>
-            <option>Duo 18</option>
-            <option>Premium 22</option>
-            <option>Premium 26</option>
-            <option>Premium 30</option>
-            <option>1000+ 35</option>
-            <option>1000+ 40</option>
-            <option>1000+ 45</option>
-            <option>Self Premium 19</option>
-            <option>Self 1000+ 32</option>
-          </select>
+        <div class="blocoProducao">
+          <div class="blocoTitulo">Abrir ou continuar ordem</div>
 
-          <input id="serieProd" placeholder="Série da máquina">
-        </div>
+          <div class="inputs">
+            <select id="maquinaProd">
+              <option value="">Selecionar máquina</option>
+              <option>Compact 9</option>
+              <option>Compact 12</option>
+              <option>Duo 14</option>
+              <option>Duo 18</option>
+              <option>Premium 22</option>
+              <option>Premium 26</option>
+              <option>Premium 30</option>
+              <option>1000+ 35</option>
+              <option>1000+ 40</option>
+              <option>1000+ 45</option>
+              <option>Self Premium 19</option>
+              <option>Self 1000+ 32</option>
+            </select>
 
-        <div class="acoesGrid">
-          <button class="btnSec" onclick="abrirOuCriarOrdem()">ABRIR / CONTINUAR PRODUÇÃO</button>
-          <button class="btnCinza" onclick="novaOrdem()">NOVA ORDEM</button>
-        </div>
-
-        <button class="btnRelatorio" onclick="gerarRelatorioAbertosXLSX()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
-
-        <div class="infoBox">
-          <div><strong>Ordem atual:</strong> <span id="ordemAtualTexto">Nenhuma ordem aberta</span></div>
-          <div style="margin-top:6px;"><strong>Status:</strong> <span id="statusAtualTexto">-</span></div>
-        </div>
-
-        <div class="colapsavel" id="boxOrdensAbertas">
-          <div class="colapsavelHeader" onclick="toggleOrdensAbertas()">
-            <span>PRODUÇÕES EM ABERTO</span>
-            <span id="setaOrdensAbertas">+</span>
+            <input id="serieProd" placeholder="Série da máquina">
           </div>
-          <div class="colapsavelBody" id="conteudoOrdensAbertas">
-            <div id="listaOrdensAbertas">Nenhuma produção em aberto.</div>
+
+          <div class="acoesGrid">
+            <button class="btnSec" onclick="abrirOuCriarOrdem()">ABRIR / CONTINUAR PRODUÇÃO</button>
+            <button class="btnCinza" onclick="novaOrdem()">NOVA ORDEM</button>
+          </div>
+
+          <button class="btnRelatorio" onclick="gerarRelatorioAbertosXLSX()">GERAR RELATÓRIO DAS PRODUÇÕES EM ABERTO</button>
+        </div>
+
+        <div class="infoGrid">
+          <div class="infoCard">
+            <div class="infoCardTitulo">Ordem atual</div>
+            <div class="infoCardValor" id="cardOpAtual">-</div>
+          </div>
+
+          <div class="infoCard">
+            <div class="infoCardTitulo">Máquina / Série</div>
+            <div class="infoCardValor" id="cardMaquinaSerie">-</div>
+          </div>
+
+          <div class="infoCard">
+            <div class="infoCardTitulo">Status</div>
+            <div class="infoCardValor" id="cardStatus">-</div>
+          </div>
+
+          <div class="infoCard">
+            <div class="infoCardTitulo">IAPP marcados</div>
+            <div class="infoCardValor" id="cardIapp">0</div>
           </div>
         </div>
 
-        <div class="inputs" style="margin-top:15px;">
-          <div style="display:flex; flex:1; gap:5px;">
-            <input id="codigoProd" placeholder="Bipar código da peça">
-            <button onclick="adicionarCodigoProd()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+        <div class="blocoProducao">
+          <div class="blocoTitulo">Produções em aberto</div>
+
+          <div class="colapsavel" id="boxOrdensAbertas">
+            <div class="colapsavelHeader" onclick="toggleOrdensAbertas()">
+              <span>PRODUÇÕES EM ABERTO</span>
+              <span id="setaOrdensAbertas">+</span>
+            </div>
+            <div class="colapsavelBody" id="conteudoOrdensAbertas">
+              <div id="listaOrdensAbertas">Nenhuma produção em aberto.</div>
+            </div>
           </div>
         </div>
 
-        <div class="resumo">
-          Itens diferentes: <span id="totalItensProd">0</span> |
-          Total de peças: <span id="totalPecasProd">0</span>
-        </div>
+        <div class="blocoProducao">
+          <div class="blocoTitulo">Itens da ordem</div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Produto</th>
-              <th>Quantidade</th>
-              <th>IAPP</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="listaProd"></tbody>
-        </table>
+          <div class="inputs">
+            <div style="display:flex; flex:1; gap:5px;">
+              <input id="codigoProd" placeholder="Bipar código da peça">
+              <button onclick="adicionarCodigoProd()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+            </div>
+          </div>
 
-        <div class="acoesGrid">
-          <button class="btnSec" onclick="salvarProducao()">SALVAR PRODUÇÃO EM ANDAMENTO</button>
-          <button class="btn" onclick="finalizarProducao()">FINALIZAR PRODUÇÃO</button>
+          <div class="resumo">
+            Itens diferentes: <span id="totalItensProd">0</span> |
+            Total de peças: <span id="totalPecasProd">0</span>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>IAPP</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="listaProd"></tbody>
+          </table>
+
+          <div class="acoesGrid">
+            <button class="btnSec" onclick="salvarProducao()">SALVAR PRODUÇÃO EM ANDAMENTO</button>
+            <button class="btn" onclick="finalizarProducao()">FINALIZAR PRODUÇÃO</button>
+          </div>
         </div>
 
       </div>
@@ -682,6 +798,60 @@ grid-template-columns:1fr;
 
       </div>
 
+      <!-- ABA PEDIDO -->
+      <div id="aba-pedido" class="section">
+
+        <div class="blocoProducao">
+          <div class="blocoTitulo">Dados do pedido</div>
+
+          <div class="inputs">
+            <select id="solicitantePedido">
+              <option>ANTONIO</option>
+              <option>RENATO</option>
+              <option>MAURICIO</option>
+              <option>ALAN</option>
+              <option>DANIEL</option>
+              <option>DANILO</option>
+              <option>LUCAS</option>
+              <option>WILLIAM</option>
+              <option>JOSE ROBERTO</option>
+              <option>AGNALDO</option>
+              <option>PRODUÇÃO</option>
+            </select>
+
+            <div style="display:flex; flex:1; gap:5px;">
+              <input id="codigoPedido" placeholder="Bipar ou digitar código do produto">
+              <button onclick="adicionarCodigoPedido()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
+            </div>
+          </div>
+
+          <textarea id="observacaoPedido" placeholder="Observação do pedido (opcional)"></textarea>
+        </div>
+
+        <div class="resumo">
+          Itens diferentes: <span id="pedidoTotalItens">0</span> |
+          Total de peças: <span id="pedidoTotalPecas">0</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="listaPedido"></tbody>
+        </table>
+
+        <div class="acoesGrid">
+          <button class="btnCinza" onclick="limparPedido()">LIMPAR PEDIDO</button>
+          <button class="btnLaranja" onclick="enviarPedidoEstoque()">ENVIAR PEDIDO PARA ESTOQUE</button>
+        </div>
+
+      </div>
+
     </div>
   </main>
 </div>
@@ -691,6 +861,7 @@ grid-template-columns:1fr;
 let produtos=[]
 let retirada=[]
 let producao=[]
+let pedidoEstoque=[]
 
 let ordemAtualId = ""
 let ordemAtualMaquina = ""
@@ -737,6 +908,10 @@ document.getElementById("codigoInv").addEventListener("keypress",function(e){
 if(e.key==="Enter"){ adicionarCodigoInventario() }
 })
 
+document.getElementById("codigoPedido").addEventListener("keypress",function(e){
+if(e.key==="Enter"){ adicionarCodigoPedido() }
+})
+
 listarOrdensAbertas()
 
 /* =========================
@@ -778,7 +953,6 @@ document.getElementById("totalPecas").innerText = total
 }
 
 function adicionarCodigo(){
-
 let campo=document.getElementById("codigo")
 let codigo=campo.value.trim()
 
@@ -808,12 +982,10 @@ campo.value=""
 }
 
 function render(){
-
 let tabela=document.getElementById("lista")
 tabela.innerHTML=""
 
 retirada.forEach((item,index)=>{
-
 tabela.innerHTML+=`
 <tr>
 <td>${item.codigo}</td>
@@ -976,15 +1148,22 @@ function atualizarResumoProd(){
 document.getElementById("totalItensProd").innerText = producao.length
 let total = producao.reduce((soma,item)=> soma + item.quantidade ,0)
 document.getElementById("totalPecasProd").innerText = total
+
+let iappMarcados = producao.filter(i => i.iappTransferido).length
+document.getElementById("cardIapp").innerText = iappMarcados
+}
+
+function atualizarCardsProducao(){
+document.getElementById("cardOpAtual").innerText = ordemAtualId ? "OP-"+String(ordemAtualId).padStart(4,"0") : "-"
+document.getElementById("cardMaquinaSerie").innerText = ordemAtualMaquina ? `${ordemAtualMaquina} / ${ordemAtualSerie}` : "-"
+document.getElementById("cardStatus").innerText = ordemAtualStatus || "-"
 }
 
 function renderProd(){
-
 let tabela=document.getElementById("listaProd")
 tabela.innerHTML=""
 
 producao.forEach((item,index)=>{
-
 tabela.innerHTML+=`
 <tr>
 <td>${item.codigo}</td>
@@ -1007,6 +1186,7 @@ onchange="alterarQtdProd(${index},this.value)">
 })
 
 atualizarResumoProd()
+atualizarCardsProducao()
 }
 
 function alterarQtdProd(i,v){
@@ -1033,6 +1213,7 @@ renderProd()
 
 function alterarIapp(i, valor){
 producao[i].iappTransferido = valor
+atualizarResumoProd()
 }
 
 function atualizarInfoOrdem(){
@@ -1043,6 +1224,7 @@ document.getElementById("statusAtualTexto").innerText = ordemAtualStatus || "EM 
 document.getElementById("ordemAtualTexto").innerText = "Nenhuma ordem aberta"
 document.getElementById("statusAtualTexto").innerText = "-"
 }
+atualizarCardsProducao()
 }
 
 function novaOrdem(){
@@ -1058,7 +1240,6 @@ atualizarInfoOrdem()
 }
 
 function abrirOuCriarOrdem(){
-
 let maquina = document.getElementById("maquinaProd").value
 let serie = document.getElementById("serieProd").value.trim()
 
@@ -1114,7 +1295,6 @@ esconderLoading()
 }
 
 function listarOrdensAbertas(mostrarMensagem=true){
-
 if(mostrarMensagem){
 mostrarLoading("Carregando produções em aberto...")
 }
@@ -1197,7 +1377,6 @@ esconderLoading()
 }
 
 function adicionarCodigoProd(){
-
 if(!ordemAtualId){
 alert("Abra ou crie uma ordem de produção antes de bipar as peças")
 return
@@ -1233,7 +1412,6 @@ campo.value=""
 }
 
 function salvarProducao(){
-
 if(!ordemAtualId){
 alert("Nenhuma ordem aberta")
 return
@@ -1268,7 +1446,6 @@ esconderLoading()
 }
 
 function finalizarProducao(){
-
 if(!ordemAtualId){
 alert("Nenhuma ordem aberta")
 return
@@ -1381,7 +1558,6 @@ esconderLoading()
 }
 
 function gerarRelatorioAbertosXLSX(){
-
 mostrarLoading("Gerando relatório Excel das produções em aberto...")
 
 fetch(URL_SCRIPT+"?action=report_open_orders")
@@ -1419,37 +1595,12 @@ let html = `
 <head>
 <meta charset="UTF-8">
 <style>
-table{
-border-collapse:collapse;
-width:100%;
-font-family:Arial;
-font-size:12pt;
-}
-td, th{
-border:1px solid #bfc7d1;
-padding:6px 8px;
-}
-.titulo{
-background:#2c7be5;
-color:#ffffff;
-font-weight:bold;
-font-size:13pt;
-text-align:left;
-}
-.cabecalho{
-background:#1f4e78;
-color:#ffffff;
-font-weight:bold;
-text-align:center;
-}
-.central{
-text-align:center;
-}
-.vazio{
-border:none;
-height:10px;
-background:#ffffff;
-}
+table{border-collapse:collapse;width:100%;font-family:Arial;font-size:12pt;}
+td, th{border:1px solid #bfc7d1;padding:6px 8px;}
+.titulo{background:#2c7be5;color:#ffffff;font-weight:bold;font-size:13pt;text-align:left;}
+.cabecalho{background:#1f4e78;color:#ffffff;font-weight:bold;text-align:center;}
+.central{text-align:center;}
+.vazio{border:none;height:10px;background:#ffffff;}
 </style>
 </head>
 <body>
@@ -1457,7 +1608,6 @@ background:#ffffff;
 `
 
 Object.keys(agrupado).forEach(chave => {
-
 let itens = agrupado[chave]
 let primeira = itens[0]
 
@@ -1484,21 +1634,12 @@ html += `
 `
 })
 
-html += `
-<tr><td class="vazio" colspan="4"></td></tr>
-`
+html += `<tr><td class="vazio" colspan="4"></td></tr>`
 })
 
-html += `
-</table>
-</body>
-</html>
-`
+html += `</table></body></html>`
 
-let blob = new Blob(
-["\ufeff" + html],
-{ type: "application/vnd.ms-excel" }
-)
+let blob = new Blob(["\ufeff" + html], { type: "application/vnd.ms-excel" })
 
 let url = URL.createObjectURL(blob)
 let a = document.createElement("a")
@@ -1516,7 +1657,6 @@ alert("Erro ao gerar relatório")
 .finally(()=>{
 esconderLoading()
 })
-
 }
 
 /* =========================
@@ -1811,6 +1951,192 @@ URL.revokeObjectURL(url)
 
 esconderLoading()
 }
+
+/* =========================
+   PEDIDO PARA ESTOQUE
+========================= */
+
+function atualizarResumoPedido(){
+document.getElementById("pedidoTotalItens").innerText = pedidoEstoque.length
+let total = pedidoEstoque.reduce((soma,item)=> soma + item.quantidade ,0)
+document.getElementById("pedidoTotalPecas").innerText = total
+}
+
+function renderPedido(){
+let tabela = document.getElementById("listaPedido")
+tabela.innerHTML = ""
+
+pedidoEstoque.forEach((item,index)=>{
+tabela.innerHTML += `
+<tr>
+<td>${item.codigo}</td>
+<td>${item.nome}</td>
+<td>
+<button onclick="diminuirPedido(${index})">-</button>
+<input class="qtdInput" type="number" min="1"
+value="${item.quantidade}"
+onchange="alterarQtdPedido(${index},this.value)">
+<button onclick="aumentarPedido(${index})">+</button>
+</td>
+<td>
+<button style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:5px;" onclick="removerPedido(${index})">X</button>
+</td>
+</tr>
+`
+})
+
+atualizarResumoPedido()
+}
+
+function adicionarCodigoPedido(){
+let campo = document.getElementById("codigoPedido")
+let codigo = campo.value.trim()
+
+if(!codigo) return
+
+let produto = produtos.find(p => String(p.codigo) === String(codigo))
+
+if(!produto){
+alert("Produto não encontrado")
+return
+}
+
+let existente = pedidoEstoque.find(p => String(p.codigo) === String(codigo))
+
+if(existente){
+existente.quantidade++
+}else{
+pedidoEstoque.push({
+codigo:produto.codigo,
+nome:produto.nome,
+quantidade:1
+})
+}
+
+renderPedido()
+campo.value=""
+}
+
+function alterarQtdPedido(i,v){
+pedidoEstoque[i].quantidade = parseInt(v) || 1
+atualizarResumoPedido()
+}
+
+function aumentarPedido(i){
+pedidoEstoque[i].quantidade++
+renderPedido()
+}
+
+function diminuirPedido(i){
+if(pedidoEstoque[i].quantidade > 1){
+pedidoEstoque[i].quantidade--
+renderPedido()
+}
+}
+
+function removerPedido(i){
+pedidoEstoque.splice(i,1)
+renderPedido()
+}
+
+function limparPedido(){
+pedidoEstoque = []
+renderPedido()
+document.getElementById("observacaoPedido").value = ""
+}
+
+function enviarPedidoEstoque(){
+if(pedidoEstoque.length===0){
+alert("Nenhum item adicionado no pedido")
+return
+}
+
+const {jsPDF}=window.jspdf
+let doc = new jsPDF()
+let data = new Date().toLocaleDateString()
+let solicitante = document.getElementById("solicitantePedido").value
+let observacao = document.getElementById("observacaoPedido").value.trim()
+
+doc.setFont("helvetica","bold")
+doc.setFontSize(22)
+
+let titulo="SILOKING DO BRASIL"
+let larguraTexto = doc.getTextWidth(titulo)
+let xCentro = 105
+
+doc.setFillColor(0,0,0)
+doc.rect(xCentro - (larguraTexto/2), 15, larguraTexto, 6, "F")
+doc.setTextColor(0,0,0)
+doc.text(titulo, xCentro, 30, {align:"center"})
+doc.setFillColor(0,0,0)
+doc.rect(xCentro - (larguraTexto/2), 33, larguraTexto, 6, "F")
+
+doc.setFontSize(12)
+doc.text("Pedido para Estoque",105,45,{align:"center"})
+
+doc.setFont("helvetica","normal")
+doc.setFontSize(11)
+doc.text("Solicitante: "+solicitante,14,55)
+doc.text("Data: "+data,14,62)
+
+if(observacao){
+const obsLines = doc.splitTextToSize("Observação: "+observacao, 180)
+doc.text(obsLines,14,69)
+var startY = 69 + (obsLines.length * 6) + 3
+}else{
+doc.text("Observação: -",14,69)
+var startY = 78
+}
+
+let dados = pedidoEstoque.map(i=>[i.codigo,i.nome,i.quantidade])
+
+doc.autoTable({
+startY:startY,
+head:[["Código","Produto","Quantidade"]],
+body:dados,
+theme:"grid",
+styles:{lineWidth:0.6},
+headStyles:{fillColor:[0,0,0],textColor:255}
+})
+
+let nomeArquivo = "pedido_estoque_"+solicitante+"_"+data.replaceAll("/","-")+".pdf"
+let pdfBase64 = doc.output('datauristring').split(',')[1]
+
+mostrarLoading("Enviando pedido para estoque...")
+
+fetch(URL_SCRIPT,{
+method:"POST",
+body:JSON.stringify({
+action:"send_stock_request",
+pdf:pdfBase64,
+nome:nomeArquivo,
+data:data,
+solicitante:solicitante,
+observacao:observacao,
+items:pedidoEstoque
+})
+})
+.then(r=>r.json())
+.then(res=>{
+if(!res.ok){
+alert(res.message || "Erro ao enviar pedido")
+return
+}
+
+alert("Pedido enviado com sucesso para o estoque")
+limparPedido()
+})
+.catch(()=>{
+alert("Erro ao enviar pedido para o estoque")
+})
+.finally(()=>{
+esconderLoading()
+})
+}
+
+/* =========================
+   UTIL
+========================= */
 
 function escaparCSV(valor){
 let texto = String(valor ?? "")
