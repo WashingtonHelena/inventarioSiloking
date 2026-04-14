@@ -494,6 +494,88 @@ color:#1e293b;
 margin-bottom:12px;
 }
 
+.invPainelPosicoes{
+margin:12px 0 15px;
+padding:14px;
+background:#f8fbff;
+border:1px solid #d8e7ff;
+border-radius:10px;
+}
+
+.invPainelTitulo{
+font-size:14px;
+font-weight:bold;
+color:#1e293b;
+margin-bottom:10px;
+text-transform:uppercase;
+}
+
+.invListaPosicoes{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.invPosicaoItem{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+padding:10px 12px;
+border:1px solid #dbe7f7;
+border-radius:10px;
+background:#fff;
+flex-wrap:wrap;
+}
+
+.invPosicaoItem.atual{
+border-color:#2c7be5;
+box-shadow:0 0 0 2px rgba(44,123,229,0.12);
+}
+
+.invPosicaoInfo{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.invPosicaoNome{
+font-weight:bold;
+color:#1e293b;
+}
+
+.invPosicaoMeta{
+font-size:13px;
+color:#64748b;
+}
+
+.invPosicaoAcoes{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.invMiniBtn{
+padding:8px 10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:12px;
+font-weight:bold;
+color:white;
+background:#2c7be5;
+}
+
+.invMiniBtn.sec{
+background:#7f8c8d;
+}
+
+.invPainelVazio{
+font-size:14px;
+color:#64748b;
+padding:6px 0;
+}
+
 @keyframes girar{
 from{ transform:rotate(0deg); }
 to{ transform:rotate(360deg); }
@@ -537,7 +619,6 @@ grid-template-columns:1fr;
 grid-template-columns:1fr;
 }
 }
-
 </style>
 </head>
 
@@ -771,6 +852,13 @@ grid-template-columns:1fr;
           </div>
         </div>
 
+        <div class="invPainelPosicoes">
+          <div class="invPainelTitulo">Posições já bipadas / salvas</div>
+          <div id="listaPosicoesInventario" class="invListaPosicoes">
+            <div class="invPainelVazio">Nenhuma posição iniciada ainda.</div>
+          </div>
+        </div>
+
         <div class="resumo">
           Itens na conferência: <span id="invTotalItens">0</span> |
           Total contado: <span id="invTotalPecas">0</span>
@@ -792,8 +880,8 @@ grid-template-columns:1fr;
         </table>
 
         <div class="acoesGrid">
-          <button class="btnCinza" onclick="limparInventario()">LIMPAR CONTAGEM</button>
-          <button class="btnRelatorio" onclick="finalizarInventarioCSV()">FINALIZAR INVENTÁRIO E GERAR CSV</button>
+          <button class="btnCinza" onclick="limparInventarioAtual()">LIMPAR POSIÇÃO ATUAL</button>
+          <button class="btnRelatorio" onclick="finalizarInventarioExcel()">FINALIZAR INVENTÁRIO E GERAR EXCEL</button>
         </div>
 
       </div>
@@ -872,6 +960,9 @@ let inventario=[]
 let inventarioPosicaoAtual=""
 let inventarioLivre=false
 let ultimoBipadoInventario=""
+let inventarioChaveAtual=""
+
+const LS_KEY_INVENTARIO_POSICOES = "inventario_posicoes_v2"
 
 const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxar2C97w9ne2WCuLlI7cTWKKW-uOjvYLSA9JqlkkirouCwRzHdtAtK22EOLdN4Tz3umA/exec"
 /* =========================
@@ -912,6 +1003,9 @@ if(e.key==="Enter"){ adicionarCodigoPedido() }
 })
 
 listarOrdensAbertas()
+carregarInventarioStorage()
+atualizarPainelPosicoes()
+renderInventario()
 
 /* =========================
    MENU LATERAL
@@ -926,6 +1020,11 @@ botao.classList.add("active")
 
 if(aba==="producao"){
 listarOrdensAbertas()
+}
+
+if(aba==="inventario"){
+renderInventario()
+atualizarPainelPosicoes()
 }
 }
 
@@ -1682,6 +1781,213 @@ function normalizarPosicao(valor){
 return String(valor || "").trim().toUpperCase()
 }
 
+function chaveInventarioPosicao(posicao, livre=false){
+return livre ? "__LIVRE__" : normalizarPosicao(posicao)
+}
+
+function obterInventarioStorage(){
+try{
+return JSON.parse(localStorage.getItem(LS_KEY_INVENTARIO_POSICOES) || "{}")
+}catch(e){
+return {}
+}
+}
+
+function salvarInventarioStorage(dados){
+localStorage.setItem(LS_KEY_INVENTARIO_POSICOES, JSON.stringify(dados))
+}
+
+function carregarInventarioStorage(){
+let dados = obterInventarioStorage()
+let chaves = Object.keys(dados)
+
+if(chaves.length===0){
+inventario = []
+inventarioPosicaoAtual = ""
+inventarioLivre = false
+inventarioChaveAtual = ""
+atualizarUltimoBipado("Nenhum item bipado ainda")
+return
+}
+
+let preferida = chaves.includes("__LIVRE__") ? "__LIVRE__" : chaves[0]
+carregarPosicaoSalva(preferida, false)
+}
+
+function salvarPosicaoAtualNoStorage(){
+if(!inventarioChaveAtual || inventario.length===0) return
+
+let dados = obterInventarioStorage()
+
+dados[inventarioChaveAtual] = {
+chave: inventarioChaveAtual,
+posicao: inventarioLivre ? "LIVRE" : inventarioPosicaoAtual,
+livre: inventarioLivre,
+ultimoBipado: ultimoBipadoInventario,
+atualizadoEm: new Date().toISOString(),
+itens: inventario
+}
+
+salvarInventarioStorage(dados)
+atualizarPainelPosicoes()
+}
+
+function removerPosicaoStorage(chave){
+let dados = obterInventarioStorage()
+delete dados[chave]
+salvarInventarioStorage(dados)
+atualizarPainelPosicoes()
+}
+
+function limparInventarioDaTela(){
+inventario = []
+inventarioPosicaoAtual = ""
+inventarioLivre = false
+inventarioChaveAtual = ""
+document.getElementById("posicaoInv").value = ""
+document.getElementById("codigoInv").value = ""
+atualizarUltimoBipado("Nenhum item bipado ainda")
+renderInventario()
+}
+
+function limparInventarioAtual(){
+if(!inventarioChaveAtual && inventario.length===0){
+alert("Nenhuma posição carregada")
+return
+}
+
+let confirma = confirm("Deseja limpar somente a posição atual?")
+if(!confirma) return
+
+if(inventarioChaveAtual){
+removerPosicaoStorage(inventarioChaveAtual)
+}
+
+limparInventarioDaTela()
+}
+
+function ativarInventarioLivre(){
+salvarPosicaoAtualNoStorage()
+
+inventario = []
+inventarioPosicaoAtual = ""
+inventarioLivre = true
+inventarioChaveAtual = "__LIVRE__"
+document.getElementById("posicaoInv").value = ""
+atualizarUltimoBipado("Inventário livre ativado")
+salvarPosicaoAtualNoStorage()
+renderInventario()
+alert("Inventário livre ativado")
+}
+
+function montarInventarioBaseDaPosicao(posicao){
+let itensPosicao = produtos.filter(p => normalizarPosicao(p.posicao) === posicao)
+
+let agrupados = {}
+
+itensPosicao.forEach(item => {
+let chave = `${item.codigo}|||${item.nome}|||${normalizarPosicao(item.posicao)}`
+if(!agrupados[chave]){
+agrupados[chave] = {
+codigo:item.codigo,
+nome:item.nome,
+posicaoSistema:normalizarPosicao(item.posicao),
+posicaoContada:posicao,
+quantidade:0,
+esperado:true,
+status:"NÃO CONTADO"
+}
+}
+})
+
+return Object.values(agrupados)
+}
+
+function carregarPosicaoSalva(chave, mostrarMensagem=true){
+let dados = obterInventarioStorage()
+let salvo = dados[chave]
+
+if(!salvo){
+alert("Essa posição não foi encontrada no salvamento")
+return
+}
+
+inventario = Array.isArray(salvo.itens) ? salvo.itens : []
+inventarioLivre = !!salvo.livre
+inventarioPosicaoAtual = inventarioLivre ? "" : normalizarPosicao(salvo.posicao)
+inventarioChaveAtual = salvo.chave || chave
+document.getElementById("posicaoInv").value = inventarioLivre ? "" : inventarioPosicaoAtual
+atualizarUltimoBipado(salvo.ultimoBipado || "Nenhum item bipado ainda")
+renderInventario()
+atualizarPainelPosicoes()
+
+if(mostrarMensagem){
+alert(`Posição ${inventarioLivre ? "LIVRE" : inventarioPosicaoAtual} carregada`)
+}
+}
+
+function resumoPosicaoSalva(reg){
+let itens = Array.isArray(reg.itens) ? reg.itens : []
+let esperados = itens.filter(i => i.esperado).length
+let conferidos = itens.filter(i => i.esperado && Number(i.quantidade || 0) > 0).length
+let pendentes = itens.filter(i => i.esperado && Number(i.quantidade || 0) === 0).length
+let totalPecas = itens.reduce((soma,i) => soma + Number(i.quantidade || 0), 0)
+return {esperados, conferidos, pendentes, totalPecas}
+}
+
+function atualizarPainelPosicoes(){
+let box = document.getElementById("listaPosicoesInventario")
+if(!box) return
+
+let dados = obterInventarioStorage()
+let chaves = Object.keys(dados).sort((a,b) => {
+if(a === "__LIVRE__") return 1
+if(b === "__LIVRE__") return -1
+return a.localeCompare(b, 'pt-BR')
+})
+
+if(chaves.length===0){
+box.innerHTML = `<div class="invPainelVazio">Nenhuma posição iniciada ainda.</div>`
+return
+}
+
+box.innerHTML = chaves.map(chave => {
+let reg = dados[chave]
+let resumo = resumoPosicaoSalva(reg)
+let nome = reg.livre ? "LIVRE" : reg.posicao
+let pendenciaTexto = resumo.pendentes > 0 ? `${resumo.conferidos}/${resumo.esperados} conferidos` : `${resumo.conferidos}/${resumo.esperados} conferidos`
+let classeAtual = chave === inventarioChaveAtual ? "atual" : ""
+
+return `
+<div class="invPosicaoItem ${classeAtual}">
+  <div class="invPosicaoInfo">
+    <div class="invPosicaoNome">Posição ${nome}</div>
+    <div class="invPosicaoMeta">Esperados: ${resumo.esperados} | Conferidos: ${resumo.conferidos} | Pendentes: ${resumo.pendentes} | Total bipado: ${resumo.totalPecas}</div>
+  </div>
+  <div class="invPosicaoAcoes">
+    <button class="invMiniBtn" onclick="carregarPosicaoSalva('${chave.replace(/'/g, "\\'")}')">ABRIR</button>
+    <button class="invMiniBtn sec" onclick="excluirPosicaoSalva('${chave.replace(/'/g, "\\'")}')">EXCLUIR</button>
+  </div>
+</div>
+`
+}).join("")
+}
+
+function excluirPosicaoSalva(chave){
+let dados = obterInventarioStorage()
+let reg = dados[chave]
+let nome = reg ? (reg.livre ? "LIVRE" : reg.posicao) : chave
+
+let confirma = confirm(`Deseja excluir a posição ${nome}?`)
+if(!confirma) return
+
+removerPosicaoStorage(chave)
+
+if(chave === inventarioChaveAtual){
+limparInventarioDaTela()
+}
+}
+
 function atualizarUltimoBipado(texto){
 ultimoBipadoInventario = texto || "Nenhum item bipado ainda"
 document.getElementById("ultimoBipadoTexto").innerText = ultimoBipadoInventario
@@ -1774,26 +2080,16 @@ onchange="alterarQtdInventario(${index},this.value)">
 })
 
 atualizarResumoInventario()
+salvarPosicaoAtualNoStorage()
 }
 
 function limparInventario(){
-inventario = []
-inventarioPosicaoAtual = ""
-inventarioLivre = false
-document.getElementById("posicaoInv").value = ""
-document.getElementById("codigoInv").value = ""
-atualizarUltimoBipado("Nenhum item bipado ainda")
-renderInventario()
-}
+let confirma = confirm("Deseja limpar todo o inventário salvo de todas as posições?")
+if(!confirma) return
 
-function ativarInventarioLivre(){
-inventario = []
-inventarioPosicaoAtual = ""
-inventarioLivre = true
-document.getElementById("posicaoInv").value = ""
-atualizarUltimoBipado("Inventário livre ativado")
-renderInventario()
-alert("Inventário livre ativado")
+localStorage.removeItem(LS_KEY_INVENTARIO_POSICOES)
+limparInventarioDaTela()
+atualizarPainelPosicoes()
 }
 
 function buscarPosicaoInventario(){
@@ -1806,33 +2102,24 @@ return
 
 mostrarLoading("Buscando posição no sistema...")
 
+salvarPosicaoAtualNoStorage()
+
 inventarioLivre = false
 inventarioPosicaoAtual = posicao
+inventarioChaveAtual = chaveInventarioPosicao(posicao, false)
 
-let itensPosicao = produtos.filter(p => normalizarPosicao(p.posicao) === posicao)
+let dados = obterInventarioStorage()
 
-let agrupados = {}
-
-itensPosicao.forEach(item => {
-let chave = `${item.codigo}|||${item.nome}|||${normalizarPosicao(item.posicao)}`
-if(!agrupados[chave]){
-agrupados[chave] = {
-codigo:item.codigo,
-nome:item.nome,
-posicaoSistema:normalizarPosicao(item.posicao),
-posicaoContada:posicao,
-quantidade:0,
-esperado:true,
-status:"NÃO CONTADO"
+if(dados[inventarioChaveAtual]){
+let salvo = dados[inventarioChaveAtual]
+inventario = Array.isArray(salvo.itens) ? salvo.itens : []
+atualizarUltimoBipado(salvo.ultimoBipado || ("Posição carregada: " + posicao))
+}else{
+inventario = montarInventarioBaseDaPosicao(posicao)
+atualizarUltimoBipado("Posição carregada: " + posicao)
 }
-}
-})
-
-inventario = Object.values(agrupados)
 
 renderInventario()
-atualizarUltimoBipado("Posição carregada: " + posicao)
-
 esconderLoading()
 
 if(inventario.length===0){
@@ -1878,6 +2165,7 @@ existenteEsperado.quantidade++
 renderInventario()
 campo.value=""
 atualizarUltimoBipado(`${codigo} - ${existenteEsperado.nome} | Posição sistema: ${existenteEsperado.posicaoSistema}`)
+salvarPosicaoAtualNoStorage()
 return
 }
 }
@@ -1906,6 +2194,7 @@ status: inventarioLivre ? "LIVRE" : "FORA DA POSIÇÃO"
 renderInventario()
 campo.value=""
 atualizarUltimoBipado(`${codigo} - ${nomeProduto} | Posição sistema: ${posicaoSistemaTexto || "SEM POSIÇÃO"}`)
+salvarPosicaoAtualNoStorage()
 }
 
 function alterarQtdInventario(i,v){
@@ -1930,41 +2219,127 @@ inventario.splice(i,1)
 renderInventario()
 }
 
-function finalizarInventarioCSV(){
-if(inventario.length===0){
-alert("Nenhum item no inventário")
+function finalizarInventarioExcel(){
+let dados = obterInventarioStorage()
+
+if(inventarioChaveAtual && inventario.length>0){
+salvarPosicaoAtualNoStorage()
+dados = obterInventarioStorage()
+}
+
+let chaves = Object.keys(dados).sort((a,b) => {
+if(a === "__LIVRE__") return 1
+if(b === "__LIVRE__") return -1
+return a.localeCompare(b, 'pt-BR')
+})
+
+if(chaves.length===0){
+alert("Nenhuma posição salva no inventário")
 return
 }
 
-mostrarLoading("Gerando CSV do inventário...")
+mostrarLoading("Gerando Excel do inventário...")
 
-inventario.forEach(item => definirStatusInventario(item))
+let html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<style>
+table{border-collapse:collapse;width:100%;font-family:Arial;font-size:11pt;}
+td, th{border:1px solid #bfc7d1;padding:6px 8px;}
+.titulo{background:#2c7be5;color:#ffffff;font-weight:bold;font-size:13pt;text-align:left;}
+.cabecalho{background:#1f4e78;color:#ffffff;font-weight:bold;text-align:center;}
+.central{text-align:center;}
+.ok{background:#eefaf1;}
+.zero{background:#fdecec;}
+.fora{background:#fff7df;}
+.livre{background:#eef4ff;}
+.vazio{border:none;height:12px;background:#ffffff;}
+</style>
+</head>
+<body>
+<table>
+`
 
-let csv = "\uFEFF"
-csv += "CODIGO;PRODUTO;QTD_CONTADA;POSICAO_CONTADA;POSICAO_SISTEMA;STATUS\n"
+chaves.forEach(chave => {
+let reg = dados[chave]
+let itens = Array.isArray(reg.itens) ? reg.itens : []
+let nomePosicao = reg.livre ? "LIVRE" : reg.posicao
 
-inventario.forEach(item => {
-csv += [
-escaparCSV(item.codigo),
-escaparCSV(item.nome),
-escaparCSV(item.quantidade),
-escaparCSV(item.posicaoContada || ""),
-escaparCSV(item.posicaoSistema || ""),
-escaparCSV(item.status || "")
-].join(";") + "\n"
+html += `
+<tr>
+  <td class="titulo" colspan="6">POSIÇÃO ${nomePosicao}</td>
+</tr>
+<tr>
+  <td class="cabecalho">CODIGO</td>
+  <td class="cabecalho">PRODUTO</td>
+  <td class="cabecalho">QTD_CONTADA</td>
+  <td class="cabecalho">POSICAO_CONTADA</td>
+  <td class="cabecalho">POSICAO_SISTEMA</td>
+  <td class="cabecalho">STATUS</td>
+</tr>
+`
+
+itens.forEach(item => {
+let copia = {...item}
+let livreAtual = inventarioLivre
+let posAtual = inventarioPosicaoAtual
+
+if(reg.livre){
+copia.status = "LIVRE"
+}else{
+let posContada = normalizarPosicao(copia.posicaoContada)
+let posSistema = normalizarPosicao(copia.posicaoSistema)
+if(copia.esperado){
+copia.status = Number(copia.quantidade || 0) === 0 ? "NÃO CONTADO" : "OK"
+}else if(posContada && posSistema && posContada !== posSistema){
+copia.status = "FORA DA POSIÇÃO"
+}else if(Number(copia.quantidade || 0) === 0){
+copia.status = "NÃO CONTADO"
+}else{
+copia.status = "OK"
+}
+}
+
+let classe = "ok"
+if(copia.status === "NÃO CONTADO") classe = "zero"
+if(copia.status === "FORA DA POSIÇÃO") classe = "fora"
+if(copia.status === "LIVRE") classe = "livre"
+
+html += `
+<tr class="${classe}">
+  <td>${String(copia.codigo || "")}</td>
+  <td>${String(copia.nome || "")}</td>
+  <td class="central">${String(copia.quantidade ?? "")}</td>
+  <td>${String(copia.posicaoContada || "")}</td>
+  <td>${String(copia.posicaoSistema || "")}</td>
+  <td>${String(copia.status || "")}</td>
+</tr>
+`
 })
 
-let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+html += `<tr><td class="vazio" colspan="6"></td></tr>`
+})
+
+html += `</table></body></html>`
+
+let blob = new Blob(["\ufeff" + html], { type: "application/vnd.ms-excel" })
 let url = URL.createObjectURL(blob)
 let a = document.createElement("a")
 a.href = url
-a.download = `inventario_${inventarioLivre ? "livre" : inventarioPosicaoAtual}.csv`
+a.download = `inventario_final_${new Date().toISOString().slice(0,10)}.xls`
 document.body.appendChild(a)
 a.click()
 document.body.removeChild(a)
 URL.revokeObjectURL(url)
 
+localStorage.removeItem(LS_KEY_INVENTARIO_POSICOES)
+limparInventarioDaTela()
+atualizarPainelPosicoes()
 esconderLoading()
+alert("Excel gerado e inventário resetado para o próximo dia.")
 }
 
 /* =========================
