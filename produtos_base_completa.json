@@ -9,6 +9,11 @@
     "codigo": "WT9990970NS817063",
     "nome": "WT INDICADOR DG8000 - NS 817063"
   },
+   {
+    "posicao": "",
+    "codigo": "SB000310",
+    "nome": "SBR PNEU 500/45 R22.5 16 LONAS"
+  },
   {
     "posicao": "",
     "codigo": "WT9990970NS811389",
@@ -16,8 +21,13 @@
   },
   {
     "posicao": "",
-    "codigo": "WT9990970NS72438",
-    "nome": "WT INDICADOR DG8000 - 72438"
+    "codigo": "SB000310",
+    "nome": "SBR PNEU 500/45 R22.5 16 LONAS"
+  },
+  {
+    "posicao": "",
+    "codigo": "SB000311",
+    "nome": "SBR RODA 22.5 X 16 8 FUROS OFFSET 50MM"
   },
   {
     "posicao": "",
