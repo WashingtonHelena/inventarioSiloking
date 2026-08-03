@@ -1,7 +1,7 @@
 [
   {
     "posicao": "",
-    "codigo": "743825",
+    "codigo": "",
     "nome": "SK VEDACAO DA ROSCA DO 1000"
   },
    {
@@ -13,6 +13,11 @@
     "posicao": "",
     "codigo": "SB000314",
     "nome": "SBR PNEU 235/75 R17.5"
+  },
+  {
+    "posicao": "A21",
+    "codigo": "743825",
+    "nome": "SK VEDACAO DA ROSCA DO 1000+"
   },
   {
     "posicao": "A33",
