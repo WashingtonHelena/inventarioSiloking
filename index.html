@@ -331,6 +331,7 @@ input,select,textarea{font-size:13px;padding:8px 10px;}
 </div>
 
 <script>
+// ===== VARIÁVEIS GLOBAIS =====
 let produtos=[]
 let retirada=[]
 let producao=[]
@@ -349,86 +350,481 @@ let codigoBipadoPendente=""
 const LS_KEY_INVENTARIO_POSICOES="inventario_posicoes_v2"
 const URL_SCRIPT="https://script.google.com/macros/s/AKfycbxar2C97w9ne2WCuLlI7cTWKKW-uOjvYLSA9JqlkkirouCwRzHdtAtK22EOLdN4Tz3umA/exec"
 
+// ===== LOADING =====
 function mostrarLoading(t){document.getElementById("loadingText").innerText=t;document.getElementById("loadingOverlay").style.display="flex"}
 function esconderLoading(){document.getElementById("loadingOverlay").style.display="none"}
 
+// ===== CARREGAR PRODUTOS =====
 fetch("produtos_base_completa.json").then(r=>r.json()).then(d=>produtos=d)
 
+// ===== EVENTOS DE TECLA =====
 document.getElementById("codigo").addEventListener("keypress",function(e){if(e.key==="Enter"){adicionarCodigo()}})
 document.getElementById("codigoProd").addEventListener("keypress",function(e){if(e.key==="Enter"){adicionarCodigoProd()}})
 document.getElementById("codigoInv").addEventListener("keypress",function(e){if(e.key==="Enter"){biparProdutoInventario()}})
 document.getElementById("codigoPedido").addEventListener("keypress",function(e){if(e.key==="Enter"){adicionarCodigoPedido()}})
 document.getElementById("qtdInventarioInput").addEventListener("keypress",function(e){if(e.key==="Enter"){confirmarQuantidadeInventario()}})
 
+// ===== INICIALIZAÇÃO =====
 listarOrdensAbertas()
 carregarInventarioStorage()
 atualizarPainelPosicoes()
 renderInventario()
 
-function trocarAbaLateral(a,b){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.querySelectorAll(".sideBtn").forEach(btn=>btn.classList.remove("active"));document.getElementById("aba-"+a).classList.add("active");b.classList.add("active");if(a==="producao"){listarOrdensAbertas()}if(a==="inventario"){renderInventario();atualizarPainelPosicoes()}}
-function toggleOrdensAbertas(){let b=document.getElementById("boxOrdensAbertas");let s=document.getElementById("setaOrdensAbertas");b.classList.toggle("open");s.innerText=b.classList.contains("open")?"−":"+"}
-function atualizarResumo(){document.getElementById("totalItens").innerText=retirada.length;let t=retirada.reduce((s,i)=>s+i.quantidade,0);document.getElementById("totalPecas").innerText=t}
-function adicionarCodigo(){let c=document.getElementById("codigo");let cod=c.value.trim();if(!cod)return;let p=produtos.find(x=>String(x.codigo)==String(cod));if(!p){alert("Produto não encontrado");return}let e=retirada.find(x=>String(x.codigo)==String(cod));if(e){e.quantidade++}else{retirada.push({codigo:p.codigo,nome:p.nome,quantidade:1})}render();c.value=""}
-function render(){let t=document.getElementById("lista");t.innerHTML="";retirada.forEach((i,idx)=>{t.innerHTML+=`<tr><td>${i.codigo}</td><td>${i.nome}</td><td><button onclick="diminuir(${idx})">-</button><input class="qtdInput" type="number" min="1" value="${i.quantidade}" onchange="alterarQtd(${idx},this.value)"><button onclick="aumentar(${idx})">+</button></td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="remover(${idx})">✕</button></td></tr>`});atualizarResumo()}
+// ===== MENU LATERAL =====
+function trocarAbaLateral(a,b){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"))
+document.querySelectorAll(".sideBtn").forEach(btn=>btn.classList.remove("active"))
+document.getElementById("aba-"+a).classList.add("active")
+b.classList.add("active")
+if(a==="producao"){listarOrdensAbertas()}
+if(a==="inventario"){renderInventario();atualizarPainelPosicoes()}
+}
+
+function toggleOrdensAbertas(){
+let b=document.getElementById("boxOrdensAbertas")
+let s=document.getElementById("setaOrdensAbertas")
+b.classList.toggle("open")
+s.innerText=b.classList.contains("open")?"−":"+"
+}
+
+// ===== RETIRADA =====
+function atualizarResumo(){
+document.getElementById("totalItens").innerText=retirada.length
+let t=retirada.reduce((s,i)=>s+i.quantidade,0)
+document.getElementById("totalPecas").innerText=t
+}
+
+function adicionarCodigo(){
+let c=document.getElementById("codigo")
+let cod=c.value.trim()
+if(!cod)return
+let p=produtos.find(x=>String(x.codigo)==String(cod))
+if(!p){alert("Produto não encontrado");return}
+let e=retirada.find(x=>String(x.codigo)==String(cod))
+if(e){e.quantidade++}else{retirada.push({codigo:p.codigo,nome:p.nome,quantidade:1})}
+render()
+c.value=""
+}
+
+function render(){
+let t=document.getElementById("lista")
+t.innerHTML=""
+retirada.forEach((i,idx)=>{
+t.innerHTML+=`<tr><td>${i.codigo}</td><td>${i.nome}</td><td><button onclick="diminuir(${idx})">-</button><input class="qtdInput" type="number" min="1" value="${i.quantidade}" onchange="alterarQtd(${idx},this.value)"><button onclick="aumentar(${idx})">+</button></td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="remover(${idx})">✕</button></td></tr>`
+})
+atualizarResumo()
+}
+
 function alterarQtd(i,v){retirada[i].quantidade=parseInt(v)||1;atualizarResumo()}
 function aumentar(i){retirada[i].quantidade++;render()}
 function diminuir(i){if(retirada[i].quantidade>1){retirada[i].quantidade--;render()}}
 function remover(i){retirada.splice(i,1);render()}
-function gerarPDFRetirada(){if(retirada.length===0){alert("Nenhuma peça adicionada");return}const {jsPDF}=window.jspdf;let d=new jsPDF();let m=document.getElementById("mecanico").value;let o=document.getElementById("observacao").value;let data=new Date().toLocaleDateString();d.setFont("helvetica","bold");d.setFontSize(22);let t="SILOKING DO BRASIL";let l=d.getTextWidth(t);let cx=105;d.setFillColor(0,0,0);d.rect(cx-(l/2),15,l,6,"F");d.setTextColor(0,0,0);d.text(t,cx,30,{align:"center"});d.setFillColor(0,0,0);d.rect(cx-(l/2),33,l,6,"F");d.setFontSize(12);d.text("Controle de Retirada de Peças",105,45,{align:"center"});d.setFont("helvetica","normal");d.setFontSize(11);d.text("Mecânico: "+m,14,55);d.text("Data retirada: "+data,14,62);d.text("Máquina / Observação: "+o,14,69);let dados=retirada.map(i=>[i.codigo,i.nome,i.quantidade,""]);d.autoTable({startY:78,head:[["Código","Produto","Qtd retirada","Qtd devolução"]],body:dados,theme:"grid",styles:{lineWidth:0.5,fontSize:9,cellPadding:2},headStyles:{fillColor:[0,0,0],textColor:255,fontSize:9}});let y=d.lastAutoTable.finalY+10;if(y+45>d.internal.pageSize.getHeight()-12){d.addPage();y=20}d.setFont("helvetica","bold");d.text("RETIRADA",14,y);d.text("DEVOLUÇÃO",110,y);d.setFont("helvetica","normal");y+=8;d.text("Data: "+data,14,y);d.text("Data: ____ / ____ / ______",110,y);y+=12;d.text("Assinatura Mecânico:",14,y);d.line(60,y,100,y);d.text("Assinatura Mecânico:",110,y);d.line(156,y,196,y);y+=14;d.text("Responsável Estoque:",14,y);d.line(70,y,100,y);d.text("Responsável Estoque:",110,y);d.line(166,y,196,y);let nome="retirada_"+m+"_"+data.replaceAll("/","-")+".pdf";let pdf64=d.output('datauristring').split(',')[1];mostrarLoading("Gerando relatório...");fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"save_retirada_pdf",pdf:pdf64,nome:nome,data:data,mecanico:m,observacao:o})}).then(()=>{d.save(nome);retirada=[];render();document.getElementById("observacao").value=""}).catch(()=>{alert("Erro ao enviar retirada")}).finally(()=>{esconderLoading()})}
 
-function atualizarResumoProd(){document.getElementById("totalItensProd").innerText=producao.length;let t=producao.reduce((s,i)=>s+i.quantidade,0);document.getElementById("totalPecasProd").innerText=t;let ia=producao.filter(i=>i.iappTransferido).length;document.getElementById("cardIapp").innerText=ia}
-function atualizarCardsProducao(){document.getElementById("cardOpAtual").innerText=ordemAtualId?"OP-"+String(ordemAtualId).padStart(4,"0"):"-";document.getElementById("cardMaquinaSerie").innerText=ordemAtualMaquina?ordemAtualMaquina+" / "+ordemAtualSerie:"-";document.getElementById("cardStatus").innerText=ordemAtualStatus||"-";let ia=producao.filter(i=>i.iappTransferido).length;document.getElementById("cardIapp").innerText=ia}
-function renderProd(){let t=document.getElementById("listaProd");t.innerHTML="";producao.forEach((i,idx)=>{t.innerHTML+=`<tr><td>${i.codigo}</td><td>${i.nome}</td><td><button onclick="diminuirProd(${idx})">-</button><input class="qtdInput" type="number" min="1" value="${i.quantidade}" onchange="alterarQtdProd(${idx},this.value)"><button onclick="aumentarProd(${idx})">+</button></td><td><input type="checkbox" class="iappCheck" ${i.iappTransferido?"checked":""} onchange="alterarIapp(${idx},this.checked)"></td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="removerProd(${idx})">✕</button></td></tr>`});atualizarResumoProd();atualizarCardsProducao()}
+function gerarPDFRetirada(){
+if(retirada.length===0){alert("Nenhuma peça adicionada");return}
+const {jsPDF}=window.jspdf
+let d=new jsPDF()
+let m=document.getElementById("mecanico").value
+let o=document.getElementById("observacao").value
+let data=new Date().toLocaleDateString()
+d.setFont("helvetica","bold")
+d.setFontSize(22)
+let t="SILOKING DO BRASIL"
+let l=d.getTextWidth(t)
+let cx=105
+d.setFillColor(0,0,0)
+d.rect(cx-(l/2),15,l,6,"F")
+d.setTextColor(0,0,0)
+d.text(t,cx,30,{align:"center"})
+d.setFillColor(0,0,0)
+d.rect(cx-(l/2),33,l,6,"F")
+d.setFontSize(12)
+d.text("Controle de Retirada de Peças",105,45,{align:"center"})
+d.setFont("helvetica","normal")
+d.setFontSize(11)
+d.text("Mecânico: "+m,14,55)
+d.text("Data retirada: "+data,14,62)
+d.text("Máquina / Observação: "+o,14,69)
+let dados=retirada.map(i=>[i.codigo,i.nome,i.quantidade,""])
+d.autoTable({startY:78,head:[["Código","Produto","Qtd retirada","Qtd devolução"]],body:dados,theme:"grid",styles:{lineWidth:0.5,fontSize:9,cellPadding:2},headStyles:{fillColor:[0,0,0],textColor:255,fontSize:9}})
+let y=d.lastAutoTable.finalY+10
+if(y+45>d.internal.pageSize.getHeight()-12){d.addPage();y=20}
+d.setFont("helvetica","bold")
+d.text("RETIRADA",14,y)
+d.text("DEVOLUÇÃO",110,y)
+d.setFont("helvetica","normal")
+y+=8
+d.text("Data: "+data,14,y)
+d.text("Data: ____ / ____ / ______",110,y)
+y+=12
+d.text("Assinatura Mecânico:",14,y)
+d.line(60,y,100,y)
+d.text("Assinatura Mecânico:",110,y)
+d.line(156,y,196,y)
+y+=14
+d.text("Responsável Estoque:",14,y)
+d.line(70,y,100,y)
+d.text("Responsável Estoque:",110,y)
+d.line(166,y,196,y)
+let nome="retirada_"+m+"_"+data.replaceAll("/","-")+".pdf"
+let pdf64=d.output('datauristring').split(',')[1]
+mostrarLoading("Gerando relatório...")
+fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"save_retirada_pdf",pdf:pdf64,nome:nome,data:data,mecanico:m,observacao:o})}).then(()=>{d.save(nome);retirada=[];render();document.getElementById("observacao").value=""}).catch(()=>{alert("Erro ao enviar retirada")}).finally(()=>{esconderLoading()})
+}
+
+// ===== PRODUÇÃO =====
+function atualizarResumoProd(){
+document.getElementById("totalItensProd").innerText=producao.length
+let t=producao.reduce((s,i)=>s+i.quantidade,0)
+document.getElementById("totalPecasProd").innerText=t
+let ia=producao.filter(i=>i.iappTransferido).length
+document.getElementById("cardIapp").innerText=ia
+}
+
+function atualizarCardsProducao(){
+document.getElementById("cardOpAtual").innerText=ordemAtualId?"OP-"+String(ordemAtualId).padStart(4,"0"):"-"
+document.getElementById("cardMaquinaSerie").innerText=ordemAtualMaquina?ordemAtualMaquina+" / "+ordemAtualSerie:"-"
+document.getElementById("cardStatus").innerText=ordemAtualStatus||"-"
+let ia=producao.filter(i=>i.iappTransferido).length
+document.getElementById("cardIapp").innerText=ia
+}
+
+function renderProd(){
+let t=document.getElementById("listaProd")
+t.innerHTML=""
+producao.forEach((i,idx)=>{
+t.innerHTML+=`<tr><td>${i.codigo}</td><td>${i.nome}</td><td><button onclick="diminuirProd(${idx})">-</button><input class="qtdInput" type="number" min="1" value="${i.quantidade}" onchange="alterarQtdProd(${idx},this.value)"><button onclick="aumentarProd(${idx})">+</button></td><td><input type="checkbox" class="iappCheck" ${i.iappTransferido?"checked":""} onchange="alterarIapp(${idx},this.checked)"></td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="removerProd(${idx})">✕</button></td></tr>`
+})
+atualizarResumoProd()
+atualizarCardsProducao()
+}
+
 function alterarQtdProd(i,v){producao[i].quantidade=parseInt(v)||1;atualizarResumoProd()}
 function aumentarProd(i){producao[i].quantidade++;renderProd()}
 function diminuirProd(i){if(producao[i].quantidade>1){producao[i].quantidade--;renderProd()}}
 function removerProd(i){producao.splice(i,1);renderProd()}
 function alterarIapp(i,v){producao[i].iappTransferido=v;atualizarResumoProd()}
 function atualizarInfoOrdem(){atualizarCardsProducao()}
-function novaOrdem(){ordemAtualId="";ordemAtualMaquina="";ordemAtualSerie="";ordemAtualStatus="";producao=[];renderProd();document.getElementById("maquinaProd").value="";document.getElementById("serieProd").value="";atualizarInfoOrdem()}
-function abrirOuCriarOrdem(){let m=document.getElementById("maquinaProd").value;let s=document.getElementById("serieProd").value.trim();if(!m){alert("Selecione a máquina");return}if(!s){alert("Preencha a série");return}mostrarLoading("Abrindo ordem...");fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"open_or_create_order",maquina:m,serie:s})}).then(r=>r.json()).then(res=>{if(!res.ok){alert(res.message||"Erro ao abrir ordem");return}ordemAtualId=res.order.id;ordemAtualMaquina=res.order.maquina;ordemAtualSerie=res.order.serie;ordemAtualStatus=res.order.status;producao=(res.items||[]).map(item=>({codigo:item.codigo,nome:item.nome,quantidade:Number(item.quantidade||0),iappTransferido:!!item.iappTransferido}));renderProd();atualizarInfoOrdem();listarOrdensAbertas(false);alert("Ordem carregada com sucesso")}).catch(()=>{alert("Erro ao comunicar")}).finally(()=>{esconderLoading()})}
-function listarOrdensAbertas(mm=true){if(mm)mostrarLoading("Carregando...");fetch(URL_SCRIPT+"?action=list_open_orders").then(r=>r.json()).then(res=>{let b=document.getElementById("listaOrdensAbertas");b.innerHTML="";if(!res.ok){b.innerHTML="Erro ao carregar";return}if(!res.orders||res.orders.length===0){b.innerHTML="Nenhuma produção em aberto.";return}res.orders.forEach(o=>{b.innerHTML+=`<div class="ordemItem"><div><div class="ordemTitulo">OP-${String(o.id).padStart(4,"0")} | ${o.maquina} (${o.serie})</div><div>${o.total_itens} itens diferentes | ${o.total_pecas} peças</div></div><div><button style="padding:8px 14px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:0.2s;" onclick="abrirOrdemExistente('${o.id}')">ABRIR</button></div></div>`})}).catch(()=>{document.getElementById("listaOrdensAbertas").innerHTML="Erro ao carregar"}).finally(()=>{if(mm)esconderLoading()})}
-function abrirOrdemExistente(id){mostrarLoading("Abrindo produção...");fetch(URL_SCRIPT+"?action=get_order&id="+encodeURIComponent(id)).then(r=>r.text()).then(texto=>{let res;try{res=JSON.parse(texto)}catch(e){throw new Error("Erro ao interpretar: "+texto)}if(!res.ok){throw new Error(res.message||"Erro")}ordemAtualId=res.order.id;ordemAtualMaquina=res.order.maquina;ordemAtualSerie=res.order.serie;ordemAtualStatus=res.order.status;producao=(res.items||[]).map(item=>({codigo:item.codigo,nome:item.nome,quantidade:Number(item.quantidade||0),iappTransferido:!!item.iappTransferido}));document.getElementById("maquinaProd").value=ordemAtualMaquina||"";document.getElementById("serieProd").value=ordemAtualSerie||"";renderProd();atualizarInfoOrdem()}).catch(e=>{alert("Erro: "+e.message)}).finally(()=>{esconderLoading()})}
-function adicionarCodigoProd(){if(!ordemAtualId){alert("Abra ou crie uma ordem primeiro");return}let c=document.getElementById("codigoProd");let cod=c.value.trim();if(!cod)return;let p=produtos.find(x=>String(x.codigo)==String(cod));if(!p){alert("Produto não encontrado");return}let e=producao.find(x=>String(x.codigo)==String(cod));if(e){e.quantidade++}else{producao.push({codigo:p.codigo,nome:p.nome,quantidade:1,iappTransferido:false})}renderProd();c.value=""}
-function salvarProducao(){if(!ordemAtualId){alert("Nenhuma ordem aberta");return}mostrarLoading("Salvando...");fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"save_order_items",orderId:ordemAtualId,items:producao})}).then(r=>r.text()).then(texto=>{let res;try{res=JSON.parse(texto)}catch(e){throw new Error("Erro: "+texto)}if(!res.ok){throw new Error(res.message||"Erro")}alert("Produção salva com sucesso");listarOrdensAbertas(false);novaOrdem()}).catch(e=>{alert("Erro: "+e.message)}).finally(()=>{esconderLoading()})}
-function finalizarProducao(){if(!ordemAtualId){alert("Nenhuma ordem aberta");return}if(producao.length===0){alert("Nenhuma peça adicionada");return}const {jsPDF}=window.jspdf;let d=new jsPDF();let data=new Date().toLocaleDateString();d.setFont("helvetica","bold");d.setFontSize(22);let t="SILOKING DO BRASIL";let l=d.getTextWidth(t);let cx=105;d.setFillColor(0,0,0);d.rect(cx-(l/2),15,l,6,"F");d.setTextColor(0,0,0);d.text(t,cx,30,{align:"center"});d.setFillColor(0,0,0);d.rect(cx-(l/2),33,l,6,"F");d.setFontSize(12);d.text("Ordem de Produção",105,45,{align:"center"});d.setFont("helvetica","normal");d.setFontSize(11);d.text("Ordem: OP-"+String(ordemAtualId).padStart(4,"0"),14,55);d.text("Máquina: "+ordemAtualMaquina,14,62);d.text("Série: "+ordemAtualSerie,14,69);d.text("Data finalização: "+data,14,76);let dados=producao.map(i=>[i.codigo,i.nome,i.quantidade,i.iappTransferido?"SIM":"NAO"]);d.autoTable({startY:84,head:[["Código","Produto","Quantidade","IAPP"]],body:dados,theme:"grid",styles:{lineWidth:0.6},headStyles:{fillColor:[0,0,0],textColor:255}});let y=d.lastAutoTable.finalY+15;if(y+30>d.internal.pageSize.getHeight()-15){d.addPage();y=20}d.text("Assinatura Produção:",14,y);d.line(60,y,170,y);y+=15;d.text("Responsável Estoque:",14,y);d.line(70,y,170,y);let nome="ordem_producao_OP-"+String(ordemAtualId).padStart(4,"0")+"_"+ordemAtualMaquina.replaceAll(" ","_")+"_"+ordemAtualSerie+"_"+data.replaceAll("/","-")+".pdf";let pdf64=d.output('datauristring').split(',')[1];mostrarLoading("Finalizando...");fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"finalize_order",orderId:ordemAtualId,maquina:ordemAtualMaquina,serie:ordemAtualSerie,dataFinal:data,nome:nome,pdf:pdf64,items:producao})}).then(r=>r.json()).then(res=>{if(!res.ok){alert(res.message||"Erro ao finalizar");return}d.save(nome);alert("Produção finalizada");novaOrdem();listarOrdensAbertas(false)}).catch(()=>{alert("Erro ao finalizar")}).finally(()=>{esconderLoading()})}
 
-function gerarRelatorioAbertosXLSX(){mostrarLoading("Gerando Excel...");fetch(URL_SCRIPT+"?action=report_open_orders").then(r=>r.json()).then(res=>{if(!res.ok){alert("Erro ao gerar");return}let linhas=res.rows||[];if(linhas.length===0){alert("Nenhuma produção em aberto");return}let agrupado={};linhas.forEach(l=>{let ch=l.maquina+"||"+l.serie+"||"+l.id_ordem;if(!agrupado[ch])agrupado[ch]=[];agrupado[ch].push(l)});let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;width:100%;font-family:Arial;font-size:12pt;}td,th{border:1px solid #bfc7d1;padding:6px 8px;}.titulo{background:#2c7be5;color:#ffffff;font-weight:bold;font-size:13pt;text-align:left;}.cabecalho{background:#1f4e78;color:#ffffff;font-weight:bold;text-align:center;}.central{text-align:center;}.vazio{border:none;height:10px;background:#ffffff;}</style></head><body><table>`;Object.keys(agrupado).forEach(ch=>{let itens=agrupado[ch];let p=itens[0];html+=`<tr><td class="titulo" colspan="4">${p.maquina} | Série ${p.serie} | OP-${String(p.id_ordem).padStart(4,"0")}</td></tr><tr><td class="cabecalho">CODIGO</td><td class="cabecalho">PRODUTO</td><td class="cabecalho">QTD</td><td class="cabecalho">TRANSFERIDO_IAPP</td></tr>`;itens.forEach(item=>{html+=`<tr><td>${item.codigo||""}</td><td>${item.produto||""}</td><td class="central">${item.qtd||""}</td><td class="central">${item.iapp||""}</td></tr>`});html+=`<tr><td class="vazio" colspan="4"></td></tr>`});html+=`</table></body></html>`;let blob=new Blob(["\ufeff"+html],{type:"application/vnd.ms-excel"});let url=URL.createObjectURL(blob);let a=document.createElement("a");a.href=url;a.download="producoes_em_aberto.xls";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}).catch(()=>{alert("Erro ao gerar")}).finally(()=>{esconderLoading()})}
+function novaOrdem(){
+ordemAtualId=""
+ordemAtualMaquina=""
+ordemAtualSerie=""
+ordemAtualStatus=""
+producao=[]
+renderProd()
+document.getElementById("maquinaProd").value=""
+document.getElementById("serieProd").value=""
+atualizarInfoOrdem()
+}
 
+function abrirOuCriarOrdem(){
+let m=document.getElementById("maquinaProd").value
+let s=document.getElementById("serieProd").value.trim()
+if(!m){alert("Selecione a máquina");return}
+if(!s){alert("Preencha a série");return}
+mostrarLoading("Abrindo ordem...")
+fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"open_or_create_order",maquina:m,serie:s})}).then(r=>r.json()).then(res=>{if(!res.ok){alert(res.message||"Erro ao abrir ordem");return}ordemAtualId=res.order.id;ordemAtualMaquina=res.order.maquina;ordemAtualSerie=res.order.serie;ordemAtualStatus=res.order.status;producao=(res.items||[]).map(item=>({codigo:item.codigo,nome:item.nome,quantidade:Number(item.quantidade||0),iappTransferido:!!item.iappTransferido}));renderProd();atualizarInfoOrdem();listarOrdensAbertas(false);alert("Ordem carregada com sucesso")}).catch(()=>{alert("Erro ao comunicar")}).finally(()=>{esconderLoading()})
+}
+
+function listarOrdensAbertas(mm=true){
+if(mm)mostrarLoading("Carregando...")
+fetch(URL_SCRIPT+"?action=list_open_orders").then(r=>r.json()).then(res=>{let b=document.getElementById("listaOrdensAbertas");b.innerHTML="";if(!res.ok){b.innerHTML="Erro ao carregar";return}if(!res.orders||res.orders.length===0){b.innerHTML="Nenhuma produção em aberto.";return}res.orders.forEach(o=>{b.innerHTML+=`<div class="ordemItem"><div><div class="ordemTitulo">OP-${String(o.id).padStart(4,"0")} | ${o.maquina} (${o.serie})</div><div>${o.total_itens} itens diferentes | ${o.total_pecas} peças</div></div><div><button style="padding:8px 14px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:0.2s;" onclick="abrirOrdemExistente('${o.id}')">ABRIR</button></div></div>`})}).catch(()=>{document.getElementById("listaOrdensAbertas").innerHTML="Erro ao carregar"}).finally(()=>{if(mm)esconderLoading()})
+}
+
+function abrirOrdemExistente(id){
+mostrarLoading("Abrindo produção...")
+fetch(URL_SCRIPT+"?action=get_order&id="+encodeURIComponent(id)).then(r=>r.text()).then(texto=>{let res;try{res=JSON.parse(texto)}catch(e){throw new Error("Erro ao interpretar: "+texto)}if(!res.ok){throw new Error(res.message||"Erro")}ordemAtualId=res.order.id;ordemAtualMaquina=res.order.maquina;ordemAtualSerie=res.order.serie;ordemAtualStatus=res.order.status;producao=(res.items||[]).map(item=>({codigo:item.codigo,nome:item.nome,quantidade:Number(item.quantidade||0),iappTransferido:!!item.iappTransferido}));document.getElementById("maquinaProd").value=ordemAtualMaquina||"";document.getElementById("serieProd").value=ordemAtualSerie||"";renderProd();atualizarInfoOrdem()}).catch(e=>{alert("Erro: "+e.message)}).finally(()=>{esconderLoading()})
+}
+
+function adicionarCodigoProd(){
+if(!ordemAtualId){alert("Abra ou crie uma ordem primeiro");return}
+let c=document.getElementById("codigoProd")
+let cod=c.value.trim()
+if(!cod)return
+let p=produtos.find(x=>String(x.codigo)==String(cod))
+if(!p){alert("Produto não encontrado");return}
+let e=producao.find(x=>String(x.codigo)==String(cod))
+if(e){e.quantidade++}else{producao.push({codigo:p.codigo,nome:p.nome,quantidade:1,iappTransferido:false})}
+renderProd()
+c.value=""
+}
+
+function salvarProducao(){
+if(!ordemAtualId){alert("Nenhuma ordem aberta");return}
+mostrarLoading("Salvando...")
+fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"save_order_items",orderId:ordemAtualId,items:producao})}).then(r=>r.text()).then(texto=>{let res;try{res=JSON.parse(texto)}catch(e){throw new Error("Erro: "+texto)}if(!res.ok){throw new Error(res.message||"Erro")}alert("Produção salva com sucesso");listarOrdensAbertas(false);novaOrdem()}).catch(e=>{alert("Erro: "+e.message)}).finally(()=>{esconderLoading()})
+}
+
+function finalizarProducao(){
+if(!ordemAtualId){alert("Nenhuma ordem aberta");return}
+if(producao.length===0){alert("Nenhuma peça adicionada");return}
+const {jsPDF}=window.jspdf
+let d=new jsPDF()
+let data=new Date().toLocaleDateString()
+d.setFont("helvetica","bold")
+d.setFontSize(22)
+let t="SILOKING DO BRASIL"
+let l=d.getTextWidth(t)
+let cx=105
+d.setFillColor(0,0,0)
+d.rect(cx-(l/2),15,l,6,"F")
+d.setTextColor(0,0,0)
+d.text(t,cx,30,{align:"center"})
+d.setFillColor(0,0,0)
+d.rect(cx-(l/2),33,l,6,"F")
+d.setFontSize(12)
+d.text("Ordem de Produção",105,45,{align:"center"})
+d.setFont("helvetica","normal")
+d.setFontSize(11)
+d.text("Ordem: OP-"+String(ordemAtualId).padStart(4,"0"),14,55)
+d.text("Máquina: "+ordemAtualMaquina,14,62)
+d.text("Série: "+ordemAtualSerie,14,69)
+d.text("Data finalização: "+data,14,76)
+let dados=producao.map(i=>[i.codigo,i.nome,i.quantidade,i.iappTransferido?"SIM":"NAO"])
+d.autoTable({startY:84,head:[["Código","Produto","Quantidade","IAPP"]],body:dados,theme:"grid",styles:{lineWidth:0.6},headStyles:{fillColor:[0,0,0],textColor:255}})
+let y=d.lastAutoTable.finalY+15
+if(y+30>d.internal.pageSize.getHeight()-15){d.addPage();y=20}
+d.text("Assinatura Produção:",14,y)
+d.line(60,y,170,y)
+y+=15
+d.text("Responsável Estoque:",14,y)
+d.line(70,y,170,y)
+let nome="ordem_producao_OP-"+String(ordemAtualId).padStart(4,"0")+"_"+ordemAtualMaquina.replaceAll(" ","_")+"_"+ordemAtualSerie+"_"+data.replaceAll("/","-")+".pdf"
+let pdf64=d.output('datauristring').split(',')[1]
+mostrarLoading("Finalizando...")
+fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"finalize_order",orderId:ordemAtualId,maquina:ordemAtualMaquina,serie:ordemAtualSerie,dataFinal:data,nome:nome,pdf:pdf64,items:producao})}).then(r=>r.json()).then(res=>{if(!res.ok){alert(res.message||"Erro ao finalizar");return}d.save(nome);alert("Produção finalizada");novaOrdem();listarOrdensAbertas(false)}).catch(()=>{alert("Erro ao finalizar")}).finally(()=>{esconderLoading()})
+}
+
+// ===== RELATÓRIO PRODUÇÕES =====
+function gerarRelatorioAbertosXLSX(){
+mostrarLoading("Gerando Excel...")
+fetch(URL_SCRIPT+"?action=report_open_orders").then(r=>r.json()).then(res=>{if(!res.ok){alert("Erro ao gerar");return}let linhas=res.rows||[];if(linhas.length===0){alert("Nenhuma produção em aberto");return}let agrupado={};linhas.forEach(l=>{let ch=l.maquina+"||"+l.serie+"||"+l.id_ordem;if(!agrupado[ch])agrupado[ch]=[];agrupado[ch].push(l)});let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;width:100%;font-family:Arial;font-size:12pt;}td,th{border:1px solid #bfc7d1;padding:6px 8px;}.titulo{background:#2c7be5;color:#ffffff;font-weight:bold;font-size:13pt;text-align:left;}.cabecalho{background:#1f4e78;color:#ffffff;font-weight:bold;text-align:center;}.central{text-align:center;}.vazio{border:none;height:10px;background:#ffffff;}</style></head><body><table>`;Object.keys(agrupado).forEach(ch=>{let itens=agrupado[ch];let p=itens[0];html+=`<tr><td class="titulo" colspan="4">${p.maquina} | Série ${p.serie} | OP-${String(p.id_ordem).padStart(4,"0")}</td></tr><tr><td class="cabecalho">CODIGO</td><td class="cabecalho">PRODUTO</td><td class="cabecalho">QTD</td><td class="cabecalho">TRANSFERIDO_IAPP</td></tr>`;itens.forEach(item=>{html+=`<tr><td>${item.codigo||""}</td><td>${item.produto||""}</td><td class="central">${item.qtd||""}</td><td class="central">${item.iapp||""}</td></tr>`});html+=`<tr><td class="vazio" colspan="4"></td></tr>`});html+=`</table></body></html>`;let blob=new Blob(["\ufeff"+html],{type:"application/vnd.ms-excel"});let url=URL.createObjectURL(blob);let a=document.createElement("a");a.href=url;a.download="producoes_em_aberto.xls";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}).catch(()=>{alert("Erro ao gerar")}).finally(()=>{esconderLoading()})
+}
+
+// ===== INVENTÁRIO =====
 function normalizarPosicao(v){return String(v||"").trim().toUpperCase()}
 function chaveInventarioPosicao(p,l){return l?"__LIVRE__":normalizarPosicao(p)}
 function obterInventarioStorage(){try{return JSON.parse(localStorage.getItem(LS_KEY_INVENTARIO_POSICOES)||"{}")}catch(e){return{}}}
 function salvarInventarioStorage(d){localStorage.setItem(LS_KEY_INVENTARIO_POSICOES,JSON.stringify(d))}
-function carregarInventarioStorage(){let d=obterInventarioStorage();let chaves=Object.keys(d);if(chaves.length===0){inventario=[];inventarioPosicaoAtual="";inventarioLivre=false;inventarioChaveAtual="";atualizarUltimoBipado("Nenhum item bipado ainda");return}let pref=chaves.includes("__LIVRE__")?"__LIVRE__":chaves[0];carregarPosicaoSalva(pref,false)}
-function salvarPosicaoAtualNoStorage(){if(!inventarioChaveAtual||inventario.length===0)return;let d=obterInventarioStorage();d[inventarioChaveAtual]={chave:inventarioChaveAtual,posicao:inventarioLivre?"LIVRE":inventarioPosicaoAtual,livre:inventarioLivre,ultimoBipado:ultimoBipadoInventario,atualizadoEm:new Date().toISOString(),itens:inventario};salvarInventarioStorage(d);atualizarPainelPosicoes()}
+
+function carregarInventarioStorage(){
+let d=obterInventarioStorage()
+let chaves=Object.keys(d)
+if(chaves.length===0){inventario=[];inventarioPosicaoAtual="";inventarioLivre=false;inventarioChaveAtual="";atualizarUltimoBipado("Nenhum item bipado ainda");return}
+let pref=chaves.includes("__LIVRE__")?"__LIVRE__":chaves[0]
+carregarPosicaoSalva(pref,false)
+}
+
+function salvarPosicaoAtualNoStorage(){
+if(!inventarioChaveAtual||inventario.length===0)return
+let d=obterInventarioStorage()
+d[inventarioChaveAtual]={chave:inventarioChaveAtual,posicao:inventarioLivre?"LIVRE":inventarioPosicaoAtual,livre:inventarioLivre,ultimoBipado:ultimoBipadoInventario,atualizadoEm:new Date().toISOString(),itens:inventario}
+salvarInventarioStorage(d)
+atualizarPainelPosicoes()
+}
+
 function removerPosicaoStorage(ch){let d=obterInventarioStorage();delete d[ch];salvarInventarioStorage(d);atualizarPainelPosicoes()}
-function limparInventarioDaTela(){inventario=[];inventarioPosicaoAtual="";inventarioLivre=false;inventarioChaveAtual="";document.getElementById("posicaoInv").value="";document.getElementById("codigoInv").value="";atualizarUltimoBipado("Nenhum item bipado ainda");renderInventario();cancelarQuantidadeInventario()}
-function limparInventarioAtual(){if(!inventarioChaveAtual&&inventario.length===0){alert("Nenhuma posição carregada");return}if(!confirm("Deseja limpar somente a posição atual?"))return;if(inventarioChaveAtual)removerPosicaoStorage(inventarioChaveAtual);limparInventarioDaTela()}
-function ativarInventarioLivre(){salvarPosicaoAtualNoStorage();inventario=[];inventarioPosicaoAtual="";inventarioLivre=true;inventarioChaveAtual="__LIVRE__";document.getElementById("posicaoInv").value="";atualizarUltimoBipado("Inventário livre ativado");salvarPosicaoAtualNoStorage();renderInventario();alert("Inventário livre ativado")}
-function montarInventarioBaseDaPosicao(p){let itens=produtos.filter(x=>normalizarPosicao(x.posicao)===p);let agrupados={};itens.forEach(item=>{let ch=item.codigo+"|||"+item.nome+"|||"+normalizarPosicao(item.posicao);if(!agrupados[ch]){agrupados[ch]={codigo:item.codigo,nome:item.nome,posicaoSistema:normalizarPosicao(item.posicao),posicaoContada:p,quantidade:0,esperado:true,status:"NÃO CONTADO"}}});return Object.values(agrupados)}
-function carregarPosicaoSalva(ch,mm=true){let d=obterInventarioStorage();let s=d[ch];if(!s){alert("Posição não encontrada");return}inventario=Array.isArray(s.itens)?s.itens:[];inventarioLivre=!!s.livre;inventarioPosicaoAtual=inventarioLivre?"":normalizarPosicao(s.posicao);inventarioChaveAtual=s.chave||ch;document.getElementById("posicaoInv").value=inventarioLivre?"":inventarioPosicaoAtual;atualizarUltimoBipado(s.ultimoBipado||"Nenhum item bipado ainda");renderInventario();atualizarPainelPosicoes();if(mm)alert("Posição "+(inventarioLivre?"LIVRE":inventarioPosicaoAtual)+" carregada")}
-function resumoPosicaoSalva(reg){let itens=Array.isArray(reg.itens)?reg.itens:[];let esperados=itens.filter(i=>i.esperado).length;let conferidos=itens.filter(i=>i.esperado&&Number(i.quantidade||0)>0).length;let pendentes=itens.filter(i=>i.esperado&&Number(i.quantidade||0)===0).length;let totalPecas=itens.reduce((s,i)=>s+Number(i.quantidade||0),0);return{esperados,conferidos,pendentes,totalPecas}}
-function atualizarPainelPosicoes(){let box=document.getElementById("listaPosicoesInventario");if(!box)return;let d=obterInventarioStorage();let chaves=Object.keys(d).sort((a,b)=>{if(a==="__LIVRE__")return 1;if(b==="__LIVRE__")return -1;return a.localeCompare(b,'pt-BR')});if(chaves.length===0){box.innerHTML='<div class="invPainelVazio">Nenhuma posição iniciada ainda.</div>';return}box.innerHTML=chaves.map(ch=>{let reg=d[ch];let res=resumoPosicaoSalva(reg);let nome=reg.livre?"LIVRE":reg.posicao;let cls=ch===inventarioChaveAtual?"atual":"";return`<div class="invPosicaoItem ${cls}"><div class="invPosicaoInfo"><div class="invPosicaoNome">Posição ${nome}</div><div class="invPosicaoMeta">Esperados: ${res.esperados} | Conferidos: ${res.conferidos} | Pendentes: ${res.pendentes} | Total bipado: ${res.totalPecas}</div></div><div class="invPosicaoAcoes"><button class="invMiniBtn" onclick="carregarPosicaoSalva('${ch.replace(/'/g,"\\'")}')">ABRIR</button><button class="invMiniBtn sec" onclick="excluirPosicaoSalva('${ch.replace(/'/g,"\\'")}')">EXCLUIR</button></div></div>`}).join("")}
+
+function limparInventarioDaTela(){
+inventario=[]
+inventarioPosicaoAtual=""
+inventarioLivre=false
+inventarioChaveAtual=""
+document.getElementById("posicaoInv").value=""
+document.getElementById("codigoInv").value=""
+atualizarUltimoBipado("Nenhum item bipado ainda")
+renderInventario()
+cancelarQuantidadeInventario()
+}
+
+function limparInventarioAtual(){
+if(!inventarioChaveAtual&&inventario.length===0){alert("Nenhuma posição carregada");return}
+if(!confirm("Deseja limpar somente a posição atual?"))return
+if(inventarioChaveAtual)removerPosicaoStorage(inventarioChaveAtual)
+limparInventarioDaTela()
+}
+
+function ativarInventarioLivre(){
+salvarPosicaoAtualNoStorage()
+inventario=[]
+inventarioPosicaoAtual=""
+inventarioLivre=true
+inventarioChaveAtual="__LIVRE__"
+document.getElementById("posicaoInv").value=""
+atualizarUltimoBipado("Inventário livre ativado")
+salvarPosicaoAtualNoStorage()
+renderInventario()
+alert("Inventário livre ativado")
+}
+
+function montarInventarioBaseDaPosicao(p){
+let itens=produtos.filter(x=>normalizarPosicao(x.posicao)===p)
+let agrupados={}
+itens.forEach(item=>{let ch=item.codigo+"|||"+item.nome+"|||"+normalizarPosicao(item.posicao);if(!agrupados[ch]){agrupados[ch]={codigo:item.codigo,nome:item.nome,posicaoSistema:normalizarPosicao(item.posicao),posicaoContada:p,quantidade:0,esperado:true,status:"NÃO CONTADO"}}})
+return Object.values(agrupados)
+}
+
+function carregarPosicaoSalva(ch,mm=true){
+let d=obterInventarioStorage()
+let s=d[ch]
+if(!s){alert("Posição não encontrada");return}
+inventario=Array.isArray(s.itens)?s.itens:[]
+inventarioLivre=!!s.livre
+inventarioPosicaoAtual=inventarioLivre?"":normalizarPosicao(s.posicao)
+inventarioChaveAtual=s.chave||ch
+document.getElementById("posicaoInv").value=inventarioLivre?"":inventarioPosicaoAtual
+atualizarUltimoBipado(s.ultimoBipado||"Nenhum item bipado ainda")
+renderInventario()
+atualizarPainelPosicoes()
+if(mm)alert("Posição "+(inventarioLivre?"LIVRE":inventarioPosicaoAtual)+" carregada")
+}
+
+function resumoPosicaoSalva(reg){
+let itens=Array.isArray(reg.itens)?reg.itens:[]
+let esperados=itens.filter(i=>i.esperado).length
+let conferidos=itens.filter(i=>i.esperado&&Number(i.quantidade||0)>0).length
+let pendentes=itens.filter(i=>i.esperado&&Number(i.quantidade||0)===0).length
+let totalPecas=itens.reduce((s,i)=>s+Number(i.quantidade||0),0)
+return{esperados,conferidos,pendentes,totalPecas}
+}
+
+function atualizarPainelPosicoes(){
+let box=document.getElementById("listaPosicoesInventario")
+if(!box)return
+let d=obterInventarioStorage()
+let chaves=Object.keys(d).sort((a,b)=>{if(a==="__LIVRE__")return 1;if(b==="__LIVRE__")return -1;return a.localeCompare(b,'pt-BR')})
+if(chaves.length===0){box.innerHTML='<div class="invPainelVazio">Nenhuma posição iniciada ainda.</div>';return}
+box.innerHTML=chaves.map(ch=>{let reg=d[ch];let res=resumoPosicaoSalva(reg);let nome=reg.livre?"LIVRE":reg.posicao;let cls=ch===inventarioChaveAtual?"atual":"";return`<div class="invPosicaoItem ${cls}"><div class="invPosicaoInfo"><div class="invPosicaoNome">Posição ${nome}</div><div class="invPosicaoMeta">Esperados: ${res.esperados} | Conferidos: ${res.conferidos} | Pendentes: ${res.pendentes} | Total bipado: ${res.totalPecas}</div></div><div class="invPosicaoAcoes"><button class="invMiniBtn" onclick="carregarPosicaoSalva('${ch.replace(/'/g,"\\'")}')">ABRIR</button><button class="invMiniBtn sec" onclick="excluirPosicaoSalva('${ch.replace(/'/g,"\\'")}')">EXCLUIR</button></div></div>`}).join("")
+}
+
 function excluirPosicaoSalva(ch){let d=obterInventarioStorage();let reg=d[ch];let nome=reg?(reg.livre?"LIVRE":reg.posicao):ch;if(!confirm("Deseja excluir a posição "+nome+"?"))return;removerPosicaoStorage(ch);if(ch===inventarioChaveAtual)limparInventarioDaTela()}
 function atualizarUltimoBipado(t){ultimoBipadoInventario=t||"Nenhum item bipado ainda";document.getElementById("ultimoBipadoTexto").innerText=ultimoBipadoInventario}
-function atualizarResumoInventario(){document.getElementById("inventarioPosicaoAtual").innerText=inventarioLivre?"LIVRE":(inventarioPosicaoAtual||"-");let esperados=inventario.filter(i=>i.esperado).length;let conferidos=inventario.filter(i=>i.esperado&&i.quantidade>0).length;let pendentes=inventario.filter(i=>i.esperado&&i.quantidade===0).length;let totalPecas=inventario.reduce((s,i)=>s+Number(i.quantidade||0),0);document.getElementById("invEsperados").innerText=esperados;document.getElementById("invConferidos").innerText=conferidos;document.getElementById("invPendentes").innerText=pendentes;document.getElementById("invTotalItens").innerText=inventario.length;document.getElementById("invTotalPecas").innerText=totalPecas}
-function definirStatusInventario(item){let pc=normalizarPosicao(item.posicaoContada);let ps=normalizarPosicao(item.posicaoSistema);if(inventarioLivre){item.status="LIVRE";return}if(item.esperado){if(Number(item.quantidade||0)===0){item.status="NÃO CONTADO"}else{item.status="OK"}return}if(pc&&ps&&pc!==ps){item.status="FORA DA POSIÇÃO"}else if(Number(item.quantidade||0)===0){item.status="NÃO CONTADO"}else{item.status="OK"}}
+
+function atualizarResumoInventario(){
+document.getElementById("inventarioPosicaoAtual").innerText=inventarioLivre?"LIVRE":(inventarioPosicaoAtual||"-")
+let esperados=inventario.filter(i=>i.esperado).length
+let conferidos=inventario.filter(i=>i.esperado&&i.quantidade>0).length
+let pendentes=inventario.filter(i=>i.esperado&&i.quantidade===0).length
+let totalPecas=inventario.reduce((s,i)=>s+Number(i.quantidade||0),0)
+document.getElementById("invEsperados").innerText=esperados
+document.getElementById("invConferidos").innerText=conferidos
+document.getElementById("invPendentes").innerText=pendentes
+document.getElementById("invTotalItens").innerText=inventario.length
+document.getElementById("invTotalPecas").innerText=totalPecas
+}
+
+function definirStatusInventario(item){
+let pc=normalizarPosicao(item.posicaoContada)
+let ps=normalizarPosicao(item.posicaoSistema)
+if(inventarioLivre){item.status="LIVRE";return}
+if(item.esperado){if(Number(item.quantidade||0)===0){item.status="NÃO CONTADO"}else{item.status="OK"}return}
+if(pc&&ps&&pc!==ps){item.status="FORA DA POSIÇÃO"}else if(Number(item.quantidade||0)===0){item.status="NÃO CONTADO"}else{item.status="OK"}
+}
+
 function classeLinhaInventario(item,idx){let c=[];if(item.status==="NÃO CONTADO")c.push("inv-zero");if(item.status==="FORA DA POSIÇÃO")c.push("inv-fora");if(item.status==="LIVRE")c.push("inv-livre");if(item.status==="OK")c.push("inv-ok");if(idx===0&&inventario.length>0)c.push("inv-destaque");return c.join(" ")}
 function badgeStatusInventario(item){if(item.status==="NÃO CONTADO")return'<span class="statusBadge status-zero">NÃO CONTADO</span>';if(item.status==="FORA DA POSIÇÃO")return'<span class="statusBadge status-fora">FORA DA POSIÇÃO</span>';if(item.status==="LIVRE")return'<span class="statusBadge status-livre">LIVRE</span>';return'<span class="statusBadge status-ok">OK</span>'}
-function renderInventario(){let t=document.getElementById("listaInventario");t.innerHTML="";inventario.forEach((item,idx)=>{definirStatusInventario(item);t.innerHTML+=`<tr class="${classeLinhaInventario(item,idx)}"><td>${item.codigo}</td><td>${item.nome}</td><td>${item.posicaoSistema||""}</td><td>${item.posicaoContada||""}</td><td><button onclick="diminuirInventario(${idx})">-</button><input class="qtdInput" type="number" min="0" value="${item.quantidade}" onchange="alterarQtdInventario(${idx},this.value)"><button onclick="aumentarInventario(${idx})">+</button></td><td>${badgeStatusInventario(item)}</td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="removerInventario(${idx})">✕</button></td></tr>`});atualizarResumoInventario();salvarPosicaoAtualNoStorage()}
-function limparInventario(){if(!confirm("Deseja limpar todo o inventário salvo?"))return;localStorage.removeItem(LS_KEY_INVENTARIO_POSICOES);limparInventarioDaTela();atualizarPainelPosicoes()}
-function buscarPosicaoInventario(){let p=normalizarPosicao(document.getElementById("posicaoInv").value);if(!p){alert("Digite uma posição");return}mostrarLoading("Buscando...");salvarPosicaoAtualNoStorage();inventarioLivre=false;inventarioPosicaoAtual=p;inventarioChaveAtual=chaveInventarioPosicao(p,false);let d=obterInventarioStorage();if(d[inventarioChaveAtual]){let s=d[inventarioChaveAtual];inventario=Array.isArray(s.itens)?s.itens:[];atualizarUltimoBipado(s.ultimoBipado||("Posição carregada: "+p))}else{inventario=montarInventarioBaseDaPosicao(p);atualizarUltimoBipado("Posição carregada: "+p)}renderInventario();esconderLoading();if(inventario.length===0)alert("Nenhum item encontrado nessa posição.")}
+
+function renderInventario(){
+let t=document.getElementById("listaInventario")
+t.innerHTML=""
+inventario.forEach((item,idx)=>{definirStatusInventario(item);t.innerHTML+=`<tr class="${classeLinhaInventario(item,idx)}"><td>${item.codigo}</td><td>${item.nome}</td><td>${item.posicaoSistema||""}</td><td>${item.posicaoContada||""}</td><td><button onclick="diminuirInventario(${idx})">-</button><input class="qtdInput" type="number" min="0" value="${item.quantidade}" onchange="alterarQtdInventario(${idx},this.value)"><button onclick="aumentarInventario(${idx})">+</button></td><td>${badgeStatusInventario(item)}</td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="removerInventario(${idx})">✕</button></td></tr>`})
+atualizarResumoInventario()
+salvarPosicaoAtualNoStorage()
+}
+
+function buscarPosicaoInventario(){
+let p=normalizarPosicao(document.getElementById("posicaoInv").value)
+if(!p){alert("Digite uma posição");return}
+mostrarLoading("Buscando...")
+salvarPosicaoAtualNoStorage()
+inventarioLivre=false
+inventarioPosicaoAtual=p
+inventarioChaveAtual=chaveInventarioPosicao(p,false)
+let d=obterInventarioStorage()
+if(d[inventarioChaveAtual]){let s=d[inventarioChaveAtual];inventario=Array.isArray(s.itens)?s.itens:[];atualizarUltimoBipado(s.ultimoBipado||("Posição carregada: "+p))}else{inventario=montarInventarioBaseDaPosicao(p);atualizarUltimoBipado("Posição carregada: "+p)}
+renderInventario()
+esconderLoading()
+if(inventario.length===0)alert("Nenhum item encontrado nessa posição.")
+}
+
 function buscarProdutoPorCodigo(c){return produtos.filter(p=>String(p.codigo)===String(c))}
-function biparProdutoInventario(){let campo=document.getElementById("codigoInv");let cod=campo.value.trim();if(!cod)return;if(produtoBipadoPendente)cancelarQuantidadeInventario();let encontrados=buscarProdutoPorCodigo(cod);if(encontrados.length===0){alert("Produto não encontrado");return}if(!inventarioLivre&&!inventarioPosicaoAtual){alert("Busque uma posição ou ative inventário livre");return}let posSistema=[...new Set(encontrados.map(p=>normalizarPosicao(p.posicao)||""))].filter(Boolean);let posSistemaTexto=posSistema.join(" | ");let nome=encontrados[0].nome||"";produtoBipadoPendente={codigo:cod,nome:nome,posicaoSistema:posSistemaTexto||"SEM POSIÇÃO",posicaoContada:inventarioLivre?"LIVRE":inventarioPosicaoAtual,encontrados:encontrados};codigoBipadoPendente=cod;let container=document.getElementById("qtdInventarioContainer");container.style.display="flex";document.getElementById("qtdInventarioInput").value="1";document.getElementById("qtdInventarioInput").focus();campo.value="";atualizarUltimoBipado("⏳ Aguardando quantidade para: "+cod+" - "+nome)}
-function confirmarQuantidadeInventario(){if(!produtoBipadoPendente){cancelarQuantidadeInventario();return}let qtdInput=document.getElementById("qtdInventarioInput");let qtd=parseInt(qtdInput.value)||1;if(qtd<1){alert("A quantidade deve ser maior que zero");return}let cod=produtoBipadoPendente.codigo;let nome=produtoBipadoPendente.nome;let posSistema=produtoBipadoPendente.posicaoSistema;let posContada=produtoBipadoPendente.posicaoContada;let existenteEsperado=null;if(!inventarioLivre){existenteEsperado=inventario.find(i=>String(i.codigo)===String(cod)&&normalizarPosicao(i.posicaoSistema)===inventarioPosicaoAtual&&i.esperado)}if(existenteEsperado){existenteEsperado.quantidade+=qtd;moverItemParaInicioInventario(inventario.indexOf(existenteEsperado));renderInventario();atualizarUltimoBipado(cod+" - "+existenteEsperado.nome+" | +"+qtd+" | Total: "+existenteEsperado.quantidade);salvarPosicaoAtualNoStorage();cancelarQuantidadeInventario();return}let existente=inventario.find(i=>String(i.codigo)===String(cod)&&String(i.posicaoSistema)===String(posSistema)&&String(i.posicaoContada)===String(posContada)&&!i.esperado);if(existente){existente.quantidade+=qtd;moverItemParaInicioInventario(inventario.indexOf(existente))}else{inventario.unshift({codigo:cod,nome:nome,posicaoSistema:posSistema,posicaoContada:posContada,quantidade:qtd,esperado:false,status:inventarioLivre?"LIVRE":"FORA DA POSIÇÃO"})}renderInventario();atualizarUltimoBipado(cod+" - "+nome+" | Quantidade: "+qtd+" | Posição sistema: "+posSistema);salvarPosicaoAtualNoStorage();cancelarQuantidadeInventario()}
+
+// ===== NOVO FLUXO: BIPA PRIMEIRO, DEPOIS QUANTIDADE =====
+function biparProdutoInventario(){
+let campo=document.getElementById("codigoInv")
+let cod=campo.value.trim()
+if(!cod)return
+if(produtoBipadoPendente)cancelarQuantidadeInventario()
+let encontrados=buscarProdutoPorCodigo(cod)
+if(encontrados.length===0){alert("Produto não encontrado");return}
+if(!inventarioLivre&&!inventarioPosicaoAtual){alert("Busque uma posição ou ative inventário livre");return}
+let posSistema=[...new Set(encontrados.map(p=>normalizarPosicao(p.posicao)||""))].filter(Boolean)
+let posSistemaTexto=posSistema.join(" | ")
+let nome=encontrados[0].nome||""
+produtoBipadoPendente={codigo:cod,nome:nome,posicaoSistema:posSistemaTexto||"SEM POSIÇÃO",posicaoContada:inventarioLivre?"LIVRE":inventarioPosicaoAtual,encontrados:encontrados}
+codigoBipadoPendente=cod
+let container=document.getElementById("qtdInventarioContainer")
+container.style.display="flex"
+document.getElementById("qtdInventarioInput").value="1"
+document.getElementById("qtdInventarioInput").focus()
+campo.value=""
+atualizarUltimoBipado("⏳ Aguardando quantidade para: "+cod+" - "+nome)
+}
+
+function confirmarQuantidadeInventario(){
+if(!produtoBipadoPendente){cancelarQuantidadeInventario();return}
+let qtdInput=document.getElementById("qtdInventarioInput")
+let qtd=parseInt(qtdInput.value)||1
+if(qtd<1){alert("A quantidade deve ser maior que zero");return}
+let cod=produtoBipadoPendente.codigo
+let nome=produtoBipadoPendente.nome
+let posSistema=produtoBipadoPendente.posicaoSistema
+let posContada=produtoBipadoPendente.posicaoContada
+let existenteEsperado=null
+if(!inventarioLivre){existenteEsperado=inventario.find(i=>String(i.codigo)===String(cod)&&normalizarPosicao(i.posicaoSistema)===inventarioPosicaoAtual&&i.esperado)}
+if(existenteEsperado){existenteEsperado.quantidade+=qtd;moverItemParaInicioInventario(inventario.indexOf(existenteEsperado));renderInventario();atualizarUltimoBipado(cod+" - "+existenteEsperado.nome+" | +"+qtd+" | Total: "+existenteEsperado.quantidade);salvarPosicaoAtualNoStorage();cancelarQuantidadeInventario();return}
+let existente=inventario.find(i=>String(i.codigo)===String(cod)&&String(i.posicaoSistema)===String(posSistema)&&String(i.posicaoContada)===String(posContada)&&!i.esperado)
+if(existente){existente.quantidade+=qtd;moverItemParaInicioInventario(inventario.indexOf(existente))}else{inventario.unshift({codigo:cod,nome:nome,posicaoSistema:posSistema,posicaoContada:posContada,quantidade:qtd,esperado:false,status:inventarioLivre?"LIVRE":"FORA DA POSIÇÃO"})}
+renderInventario()
+atualizarUltimoBipado(cod+" - "+nome+" | Quantidade: "+qtd+" | Posição sistema: "+posSistema)
+salvarPosicaoAtualNoStorage()
+cancelarQuantidadeInventario()
+}
+
 function cancelarQuantidadeInventario(){produtoBipadoPendente=null;codigoBipadoPendente="";document.getElementById("qtdInventarioContainer").style.display="none";document.getElementById("codigoInv").focus()}
 function moverItemParaInicioInventario(idx){if(idx<=0)return;let item=inventario.splice(idx,1)[0];inventario.unshift(item)}
 function alterarQtdInventario(i,v){inventario[i].quantidade=Math.max(0,parseInt(v)||0);moverItemParaInicioInventario(i);renderInventario()}
 function aumentarInventario(i){inventario[i].quantidade++;moverItemParaInicioInventario(i);renderInventario()}
 function diminuirInventario(i){if(inventario[i].quantidade>0){inventario[i].quantidade--;moverItemParaInicioInventario(i);renderInventario()}}
 function removerInventario(i){inventario.splice(i,1);renderInventario()}
-function finalizarInventarioExcel(){let d=obterInventarioStorage();if(inventarioChaveAtual&&inventario.length>0){salvarPosicaoAtualNoStorage();d=obterInventarioStorage()}let chaves=Object.keys(d).sort((a,b)=>{if(a==="__LIVRE__")return 1;if(b==="__LIVRE__")return -1;return a.localeCompare(b,'pt-BR')});if(chaves.length===0){alert("Nenhuma posição salva");return}mostrarLoading("Gerando Excel...");let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;width:100%;font-family:Arial;font-size:11pt;}td,th{border:1px solid #bfc7d1;padding:6px 8px;}.titulo{background:#2c7be5;color:#ffffff;font-weight:bold;font-size:13pt;text-align:left;}.cabecalho{background:#1f4e78;color:#ffffff;font-weight:bold;text-align:center;}.central{text-align:center;}.ok{background:#eefaf1;}.zero{background:#fdecec;}.fora{background:#fff7df;}.livre{background:#eef4ff;}.vazio{border:none;height:12px;background:#ffffff;}</style></head><body><table>`;chaves.forEach(ch=>{let reg=d[ch];let itens=Array.isArray(reg.itens)?reg.itens:[];let nomePos=reg.livre?"LIVRE":reg.posicao;let ordenados=[...itens].sort((a,b)=>{if(a.esperado&&!b.esperado)return-1;if(!a.esperado&&b.esperado)return 1;return 0});html+=`<tr><td class="titulo" colspan="6">POSIÇÃO ${nomePos}</td></tr><tr><td class="cabecalho">CODIGO</td><td class="cabecalho">PRODUTO</td><td class="cabecalho">QTD_CONTADA</td><td class="cabecalho">POSICAO_CONTADA</td><td class="cabecalho">POSICAO_SISTEMA</td><td class="cabecalho">STATUS</td></tr>`;ordenados.forEach(item=>{let copia={...item};if(reg.livre){copia.status="LIVRE"}else{let pc=normalizarPosicao(copia.posicaoContada);let ps=normalizarPosicao(copia.posicaoSistema);if(copia.esperado){copia.status=Number(copia.quantidade||0)===0?"NÃO CONTADO":"OK"}else if(pc&&ps&&pc!==ps){copia.status="FORA DA POSIÇÃO"}else if(Number(copia.quantidade||0)===0){copia.status="NÃO CONTADO"}else{copia.status="OK"}}let cls="ok";if(copia.status==="NÃO CONTADO")cls="zero";if(copia.status==="FORA DA POSIÇÃO")cls="fora";if(copia.status==="LIVRE")cls="livre";html+=`<tr class="${cls}"><td>${String(copia.codigo||"")}</td><td>${String(copia.nome||"")}</td><td class="central">${String(copia.quantidade??"")}</td><td>${String(copia.posicaoContada||"")}</td><td>${String(copia.posicaoSistema||"")}</td><td>${String(copia.status||"")}</td></tr>`});html+=`<tr><td class="vazio" colspan="6"></td></tr>`});html+=`</table></body></html>`;let blob=new Blob(["\ufeff"+html],{type:"application/vnd.ms-excel"});let url=URL.createObjectURL(blob);let a=document.createElement("a");a.href=url;a.download="inventario_final_"+new Date().toISOString().slice(0,10)+".xls";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);localStorage.removeItem(LS_KEY_INVENTARIO_POSICOES);limparInventarioDaTela();atualizarPainelPosicoes();esconderLoading();alert("Excel gerado e inventário resetado.")}
 
+function finalizarInventarioExcel(){
+let d=obterInventarioStorage()
+if(inventarioChaveAtual&&inventario.length>0){salvarPosicaoAtualNoStorage();d=obterInventarioStorage()}
+let chaves=Object.keys(d).sort((a,b)=>{if(a==="__LIVRE__")return 1;if(b==="__LIVRE__")return -1;return a.localeCompare(b,'pt-BR')})
+if(chaves.length===0){alert("Nenhuma posição salva");return}
+mostrarLoading("Gerando Excel...")
+let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;width:100%;font-family:Arial;font-size:11pt;}td,th{border:1px solid #bfc7d1;padding:6px 8px;}.titulo{background:#2c7be5;color:#ffffff;font-weight:bold;font-size:13pt;text-align:left;}.cabecalho{background:#1f4e78;color:#ffffff;font-weight:bold;text-align:center;}.central{text-align:center;}.ok{background:#eefaf1;}.zero{background:#fdecec;}.fora{background:#fff7df;}.livre{background:#eef4ff;}.vazio{border:none;height:12px;background:#ffffff;}</style></head><body><table>`
+chaves.forEach(ch=>{let reg=d[ch];let itens=Array.isArray(reg.itens)?reg.itens:[];let nomePos=reg.livre?"LIVRE":reg.posicao;let ordenados=[...itens].sort((a,b)=>{if(a.esperado&&!b.esperado)return-1;if(!a.esperado&&b.esperado)return 1;return 0});html+=`<tr><td class="titulo" colspan="6">POSIÇÃO ${nomePos}</td></tr><tr><td class="cabecalho">CODIGO</td><td class="cabecalho">PRODUTO</td><td class="cabecalho">QTD_CONTADA</td><td class="cabecalho">POSICAO_CONTADA</td><td class="cabecalho">POSICAO_SISTEMA</td><td class="cabecalho">STATUS</td></tr>`;ordenados.forEach(item=>{let copia={...item};if(reg.livre){copia.status="LIVRE"}else{let pc=normalizarPosicao(copia.posicaoContada);let ps=normalizarPosicao(copia.posicaoSistema);if(copia.esperado){copia.status=Number(copia.quantidade||0)===0?"NÃO CONTADO":"OK"}else if(pc&&ps&&pc!==ps){copia.status="FORA DA POSIÇÃO"}else if(Number(copia.quantidade||0)===0){copia.status="NÃO CONTADO"}else{copia.status="OK"}}let cls="ok";if(copia.status==="NÃO CONTADO")cls="zero";if(copia.status==="FORA DA POSIÇÃO")cls="fora";if(copia.status==="LIVRE")cls="livre";html+=`<tr class="${cls}"><td>${String(copia.codigo||"")}</td><td>${String(copia.nome||"")}</td><td class="central">${String(copia.quantidade??"")}</td><td>${String(copia.posicaoContada||"")}</td><td>${String(copia.posicaoSistema||"")}</td><td>${String(copia.status||"")}</td></tr>`});html+=`<tr><td class="vazio" colspan="6"></td></tr>`})
+html+=`</table></body></html>`
+let blob=new Blob(["\ufeff"+html],{type:"application/vnd.ms-excel"})
+let url=URL.createObjectURL(blob)
+let a=document.createElement("a")
+a.href=url
+a.download="inventario_final_"+new Date().toISOString().slice(0,10)+".xls"
+document.body.appendChild(a)
+a.click()
+document.body.removeChild(a)
+URL.revokeObjectURL(url)
+localStorage.removeItem(LS_KEY_INVENTARIO_POSICOES)
+limparInventarioDaTela()
+atualizarPainelPosicoes()
+esconderLoading()
+alert("Excel gerado e inventário resetado.")
+}
+
+// ===== PEDIDO =====
 function atualizarResumoPedido(){document.getElementById("pedidoTotalItens").innerText=pedidoEstoque.length;let t=pedidoEstoque.reduce((s,i)=>s+i.quantidade,0);document.getElementById("pedidoTotalPecas").innerText=t}
 function renderPedido(){let t=document.getElementById("listaPedido");t.innerHTML="";pedidoEstoque.forEach((i,idx)=>{t.innerHTML+=`<tr><td>${i.codigo}</td><td>${i.nome}</td><td><button onclick="diminuirPedido(${idx})">-</button><input class="qtdInput" type="number" min="1" value="${i.quantidade}" onchange="alterarQtdPedido(${idx},this.value)"><button onclick="aumentarPedido(${idx})">+</button></td><td><button style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;" onclick="removerPedido(${idx})">✕</button></td></tr>`});atualizarResumoPedido()}
 function adicionarCodigoPedido(){let c=document.getElementById("codigoPedido");let cod=c.value.trim();if(!cod)return;let p=produtos.find(x=>String(x.codigo)==String(cod));if(!p){alert("Produto não encontrado");return}let e=pedidoEstoque.find(x=>String(x.codigo)==String(cod));if(e){e.quantidade++}else{pedidoEstoque.push({codigo:p.codigo,nome:p.nome,quantidade:1})}renderPedido();c.value=""}
@@ -437,8 +833,39 @@ function aumentarPedido(i){pedidoEstoque[i].quantidade++;renderPedido()}
 function diminuirPedido(i){if(pedidoEstoque[i].quantidade>1){pedidoEstoque[i].quantidade--;renderPedido()}}
 function removerPedido(i){pedidoEstoque.splice(i,1);renderPedido()}
 function limparPedido(){pedidoEstoque=[];renderPedido();document.getElementById("observacaoPedido").value=""}
-function enviarPedidoEstoque(){if(pedidoEstoque.length===0){alert("Nenhum item adicionado");return}const {jsPDF}=window.jspdf;let d=new jsPDF();let data=new Date().toLocaleDateString();let sol=document.getElementById("solicitantePedido").value;let obs=document.getElementById("observacaoPedido").value.trim();d.setFont("helvetica","bold");d.setFontSize(22);let t="SILOKING DO BRASIL";let l=d.getTextWidth(t);let cx=105;d.setFillColor(0,0,0);d.rect(cx-(l/2),15,l,6,"F");d.setTextColor(0,0,0);d.text(t,cx,30,{align:"center"});d.setFillColor(0,0,0);d.rect(cx-(l/2),33,l,6,"F");d.setFontSize(12);d.text("Pedido para Estoque",105,45,{align:"center"});d.setFont("helvetica","normal");d.setFontSize(11);d.text("Solicitante: "+sol,14,55);d.text("Data: "+data,14,62);if(obs){let lines=d.splitTextToSize("Observação: "+obs,180);d.text(lines,14,69);var startY=69+(lines.length*6)+3}else{d.text("Observação: -",14,69);var startY=78}let dados=pedidoEstoque.map(i=>[i.codigo,i.nome,i.quantidade]);d.autoTable({startY:startY,head:[["Código","Produto","Quantidade"]],body:dados,theme:"grid",styles:{lineWidth:0.6},headStyles:{fillColor:[0,0,0],textColor:255}});let nome="pedido_estoque_"+sol+"_"+data.replaceAll("/","-")+".pdf";let pdf64=d.output('datauristring').split(',')[1];mostrarLoading("Enviando...");fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"send_stock_request",pdf:pdf64,nome:nome,data:data,solicitante:sol,observacao:obs,items:pedidoEstoque})}).then(r=>r.json()).then(res=>{if(!res.ok){alert(res.message||"Erro ao enviar");return}alert("Pedido enviado com sucesso");limparPedido()}).catch(()=>{alert("Erro ao enviar")}).finally(()=>{esconderLoading()})}
-function escaparCSV(v){let t=String(v??"");if(t.includes(";")||t.includes('"')||t.includes("\n")){t='"'+t.replace(/"/g,'""')+'"'}return t}
+
+function enviarPedidoEstoque(){
+if(pedidoEstoque.length===0){alert("Nenhum item adicionado");return}
+const {jsPDF}=window.jspdf
+let d=new jsPDF()
+let data=new Date().toLocaleDateString()
+let sol=document.getElementById("solicitantePedido").value
+let obs=document.getElementById("observacaoPedido").value.trim()
+d.setFont("helvetica","bold")
+d.setFontSize(22)
+let t="SILOKING DO BRASIL"
+let l=d.getTextWidth(t)
+let cx=105
+d.setFillColor(0,0,0)
+d.rect(cx-(l/2),15,l,6,"F")
+d.setTextColor(0,0,0)
+d.text(t,cx,30,{align:"center"})
+d.setFillColor(0,0,0)
+d.rect(cx-(l/2),33,l,6,"F")
+d.setFontSize(12)
+d.text("Pedido para Estoque",105,45,{align:"center"})
+d.setFont("helvetica","normal")
+d.setFontSize(11)
+d.text("Solicitante: "+sol,14,55)
+d.text("Data: "+data,14,62)
+if(obs){let lines=d.splitTextToSize("Observação: "+obs,180);d.text(lines,14,69);var startY=69+(lines.length*6)+3}else{d.text("Observação: -",14,69);var startY=78}
+let dados=pedidoEstoque.map(i=>[i.codigo,i.nome,i.quantidade])
+d.autoTable({startY:startY,head:[["Código","Produto","Quantidade"]],body:dados,theme:"grid",styles:{lineWidth:0.6},headStyles:{fillColor:[0,0,0],textColor:255}})
+let nome="pedido_estoque_"+sol+"_"+data.replaceAll("/","-")+".pdf"
+let pdf64=d.output('datauristring').split(',')[1]
+mostrarLoading("Enviando...")
+fetch(URL_SCRIPT,{method:"POST",body:JSON.stringify({action:"send_stock_request",pdf:pdf64,nome:nome,data:data,solicitante:sol,observacao:obs,items:pedidoEstoque})}).then(r=>r.json()).then(res=>{if(!res.ok){alert(res.message||"Erro ao enviar");return}alert("Pedido enviado com sucesso");limparPedido()}).catch(()=>{alert("Erro ao enviar")}).finally(()=>{esconderLoading()})
+}
 </script>
 </body>
 </html>
