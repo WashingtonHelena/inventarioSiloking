@@ -165,6 +165,12 @@ flex:1;
 font-size:18px;
 }
 
+#qtdInv{
+width:70px;
+font-size:18px;
+text-align:center;
+}
+
 #observacao{
 width:100%;
 margin-bottom:10px;
@@ -431,6 +437,12 @@ background:#fff7df !important;
 background:#eef4ff !important;
 }
 
+.inv-destaque{
+animation:piscaDestaque 1.5s ease 2;
+border-left:4px solid #2563eb !important;
+background:#f0f7ff !important;
+}
+
 .statusBadge{
 display:inline-block;
 padding:4px 8px;
@@ -576,6 +588,13 @@ color:#64748b;
 padding:6px 0;
 }
 
+/* Animação de destaque */
+@keyframes piscaDestaque {
+0% { background-color: #dbeafe; }
+50% { background-color: #bfdbfe; }
+100% { background-color: #dbeafe; }
+}
+
 @keyframes girar{
 from{ transform:rotate(0deg); }
 to{ transform:rotate(360deg); }
@@ -617,6 +636,10 @@ grid-template-columns:1fr;
 }
 .infoGrid{
 grid-template-columns:1fr;
+}
+#qtdInv{
+width:50px;
+font-size:14px;
 }
 }
 </style>
@@ -842,7 +865,9 @@ grid-template-columns:1fr;
             </div>
           </div>
 
-          <div class="inputs">
+          <div class="inputs" style="align-items:center;">
+            <label style="font-weight:bold; font-size:14px;">Qtd:</label>
+            <input id="qtdInv" type="number" min="1" value="1" style="width:70px; padding:10px; font-size:18px; text-align:center; border-radius:5px; border:1px solid #ccc;">
             <div style="display:flex; flex:1; gap:5px;">
               <input id="codigoInv" placeholder="Bipar código do produto">
               <button onclick="adicionarCodigoInventario()" style="padding:10px 15px;background:#2c7be5;color:white;border:none;border-radius:5px;">OK</button>
@@ -1848,6 +1873,7 @@ inventarioLivre = false
 inventarioChaveAtual = ""
 document.getElementById("posicaoInv").value = ""
 document.getElementById("codigoInv").value = ""
+document.getElementById("qtdInv").value = "1"
 atualizarUltimoBipado("Nenhum item bipado ainda")
 renderInventario()
 }
@@ -1876,6 +1902,7 @@ inventarioPosicaoAtual = ""
 inventarioLivre = true
 inventarioChaveAtual = "__LIVRE__"
 document.getElementById("posicaoInv").value = ""
+document.getElementById("qtdInv").value = "1"
 atualizarUltimoBipado("Inventário livre ativado")
 salvarPosicaoAtualNoStorage()
 renderInventario()
@@ -1919,6 +1946,7 @@ inventarioLivre = !!salvo.livre
 inventarioPosicaoAtual = inventarioLivre ? "" : normalizarPosicao(salvo.posicao)
 inventarioChaveAtual = salvo.chave || chave
 document.getElementById("posicaoInv").value = inventarioLivre ? "" : inventarioPosicaoAtual
+document.getElementById("qtdInv").value = "1"
 atualizarUltimoBipado(salvo.ultimoBipado || "Nenhum item bipado ainda")
 renderInventario()
 atualizarPainelPosicoes()
@@ -2039,11 +2067,14 @@ item.status = "OK"
 }
 }
 
-function classeLinhaInventario(item){
-if(item.status === "NÃO CONTADO") return "inv-zero"
-if(item.status === "FORA DA POSIÇÃO") return "inv-fora"
-if(item.status === "LIVRE") return "inv-livre"
-return "inv-ok"
+function classeLinhaInventario(item, index){
+let classes = []
+if(item.status === "NÃO CONTADO") classes.push("inv-zero")
+if(item.status === "FORA DA POSIÇÃO") classes.push("inv-fora")
+if(item.status === "LIVRE") classes.push("inv-livre")
+if(item.status === "OK") classes.push("inv-ok")
+if(index === 0 && inventario.length > 0) classes.push("inv-destaque")
+return classes.join(" ")
 }
 
 function badgeStatusInventario(item){
@@ -2061,7 +2092,7 @@ inventario.forEach((item,index) => {
 definirStatusInventario(item)
 
 tabela.innerHTML += `
-<tr class="${classeLinhaInventario(item)}">
+<tr class="${classeLinhaInventario(item, index)}">
 <td>${item.codigo}</td>
 <td>${item.nome}</td>
 <td>${item.posicaoSistema || ""}</td>
@@ -2139,6 +2170,15 @@ let codigo = campo.value.trim()
 
 if(!codigo) return
 
+// Pega a quantidade do campo
+let qtdInput = document.getElementById("qtdInv")
+let quantidade = parseInt(qtdInput.value) || 1
+
+if(quantidade < 1){
+alert("A quantidade deve ser maior que zero")
+return
+}
+
 let encontrados = buscarProdutoPorCodigo(codigo)
 
 if(encontrados.length===0){
@@ -2163,10 +2203,12 @@ i.esperado
 )
 
 if(existenteEsperado){
-existenteEsperado.quantidade++
+existenteEsperado.quantidade += quantidade
+moverItemParaInicioInventario(inventario.indexOf(existenteEsperado))
 renderInventario()
 campo.value=""
-atualizarUltimoBipado(`${codigo} - ${existenteEsperado.nome} | Posição sistema: ${existenteEsperado.posicaoSistema}`)
+qtdInput.value = "1"
+atualizarUltimoBipado(`${codigo} - ${existenteEsperado.nome} | +${quantidade} | Total: ${existenteEsperado.quantidade}`)
 salvarPosicaoAtualNoStorage()
 return
 }
@@ -2180,14 +2222,15 @@ String(i.posicaoContada) === String(inventarioLivre ? "LIVRE" : inventarioPosica
 )
 
 if(existente){
-existente.quantidade++
+existente.quantidade += quantidade
+moverItemParaInicioInventario(inventario.indexOf(existente))
 }else{
-inventario.push({
+inventario.unshift({
 codigo:codigo,
 nome:nomeProduto,
 posicaoSistema:posicaoSistemaTexto || "SEM POSIÇÃO",
 posicaoContada: inventarioLivre ? "LIVRE" : inventarioPosicaoAtual,
-quantidade:1,
+quantidade:quantidade,
 esperado:false,
 status: inventarioLivre ? "LIVRE" : "FORA DA POSIÇÃO"
 })
@@ -2195,23 +2238,33 @@ status: inventarioLivre ? "LIVRE" : "FORA DA POSIÇÃO"
 
 renderInventario()
 campo.value=""
-atualizarUltimoBipado(`${codigo} - ${nomeProduto} | Posição sistema: ${posicaoSistemaTexto || "SEM POSIÇÃO"}`)
+qtdInput.value = "1"
+atualizarUltimoBipado(`${codigo} - ${nomeProduto} | Quantidade: ${quantidade} | Posição sistema: ${posicaoSistemaTexto || "SEM POSIÇÃO"}`)
 salvarPosicaoAtualNoStorage()
+}
+
+function moverItemParaInicioInventario(index){
+if(index <= 0) return
+let item = inventario.splice(index, 1)[0]
+inventario.unshift(item)
 }
 
 function alterarQtdInventario(i,v){
 inventario[i].quantidade = Math.max(0, parseInt(v) || 0)
+moverItemParaInicioInventario(i)
 renderInventario()
 }
 
 function aumentarInventario(i){
 inventario[i].quantidade++
+moverItemParaInicioInventario(i)
 renderInventario()
 }
 
 function diminuirInventario(i){
 if(inventario[i].quantidade > 0){
 inventario[i].quantidade--
+moverItemParaInicioInventario(i)
 renderInventario()
 }
 }
@@ -2270,6 +2323,12 @@ let reg = dados[chave]
 let itens = Array.isArray(reg.itens) ? reg.itens : []
 let nomePosicao = reg.livre ? "LIVRE" : reg.posicao
 
+let itensOrdenados = [...itens].sort((a,b) => {
+if(a.esperado && !b.esperado) return -1
+if(!a.esperado && b.esperado) return 1
+return 0
+})
+
 html += `
 <tr>
   <td class="titulo" colspan="6">POSIÇÃO ${nomePosicao}</td>
@@ -2284,10 +2343,8 @@ html += `
 </tr>
 `
 
-itens.forEach(item => {
+itensOrdenados.forEach(item => {
 let copia = {...item}
-let livreAtual = inventarioLivre
-let posAtual = inventarioPosicaoAtual
 
 if(reg.livre){
 copia.status = "LIVRE"
