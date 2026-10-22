@@ -775,7 +775,7 @@
     "nome": "PORTA TRASEIRA ESQUERDA"
   },
   {
-    "posicao": "N/D",
+    "posicao": "E75",
     "codigo": "744211",
     "nome": "SK KIT HIDRAULICO MODELO EST 800"
   },
@@ -1632,7 +1632,7 @@
   {
     "posicao": "B13",
     "codigo": "605770",
-    "nome": "SK BOMBA HIDRAULICA DO VENTILADOR 1000+"
+    "nome": "SK BOMBA HIDRAULICA DO VENTILADOR SFL TODOS"
   },
   {
     "posicao": "B31",
@@ -1660,7 +1660,7 @@
     "nome": "SBR PINO DE CENTRO DO FEIXE DE MOLA SELFLINE 32"
   },
   {
-    "posicao": "N/D",
+    "posicao": "E75",
     "codigo": "744210",
     "nome": "SK ESTEIRA FOLDABLE MODELO 800"
   },
@@ -1850,7 +1850,7 @@
     "nome": "SK MOLA DO PISTAO DO CAMBIO"
   },
   {
-    "posicao": "N/D",
+    "posicao": "F",
     "codigo": "704209",
     "nome": "SK SUPORTE DO SENSOR"
   },
@@ -2080,7 +2080,7 @@
     "nome": "SK PRISIONEIRO DA RODA COMPACT 6 FUROS M18X1,5X62"
   },
   {
-    "posicao": "N/D",
+    "posicao": "F",
     "codigo": "601578",
     "nome": "SK SUPORTE ANTENA (4.0 PREMIUM 2218)"
   },
@@ -2785,7 +2785,7 @@
     "nome": "SK CAIXA PLANETARIA NS57771"
   },
   {
-    "posicao": "C42",
+    "posicao": "A44",
     "codigo": "SB000300",
     "nome": "SBR FILTRO DE COMBUSTIVEL COM SEPARADOR DE AGUA CUMMINS"
   },
@@ -3550,7 +3550,7 @@
     "nome": "SK CABO JUNÇÃO DA CELULA DE CARGA SDATA"
   },
   {
-    "posicao": "SK",
+    "posicao": "PATIO",
     "codigo": "SB000197",
     "nome": "SBR PNEU 445/65R22.5"
   },
@@ -4540,7 +4540,7 @@
     "nome": "SK TL COMPACT 8 CLASSIC TRADE-IN"
   },
   {
-    "posicao": "N/D",
+    "posicao": "PATIO",
     "codigo": "605643",
     "nome": "SK PNEU COMPLETO 445/65R22.5 10 FUROS OFFSET"
   },
@@ -6122,7 +6122,7 @@
   {
     "posicao": "B13",
     "codigo": "604811",
-    "nome": "SK MOTOR DO VENTILADOR DO RADIADOR 1000+"
+    "nome": "SK MOTOR DO VENTILADOR DO RADIADOR SFL TODOS"
   },
   {
     "posicao": "PATIO",
@@ -6452,7 +6452,7 @@
   {
     "posicao": "B24",
     "codigo": "628357",
-    "nome": "SK KIT DE VEDACAO DO MOTOR DA ESTEIRA MF100"
+    "nome": "SK KIT DE VEDACAO DO MOTOR DA ESTEIRA MF80 E MF100"
   },
   {
     "posicao": "A41",
@@ -6722,7 +6722,7 @@
   {
     "posicao": "E33",
     "codigo": "615453",
-    "nome": "SK EIXO TRASEIRO DUO 18-T"
+    "nome": "SK EIXO TRASEIRO DUO 14-"
   },
   {
     "posicao": "PATIO",
@@ -7472,7 +7472,7 @@
   {
     "posicao": "B42",
     "codigo": "604223SBM",
-    "nome": "SBR MANCAL Y 210 R3 V22"
+    "nome": "SBR MANCAL F 210/Y R3 V22"
   },
   {
     "posicao": "B45",
@@ -8772,7 +8772,7 @@
   {
     "posicao": "C12",
     "codigo": "626039",
-    "nome": "SK ELEMENTO DO FITLRO"
+    "nome": "SK FILTRO DO SISTEMA DE RESFRIAMENTO DAS PLANETARIAS"
   },
   {
     "posicao": "N/D",
@@ -9680,7 +9680,7 @@
     "nome": "WT DISPLAY ADICIONAL DG 8000 CABO 10M"
   },
   {
-    "posicao": "N/D",
+    "posicao": "D61",
     "codigo": "739515",
     "nome": "SK TAMPA DE INSPECAO MODELO NOVO 4.0 PARA CONE COM RASPADOR COM PROTECAO DE PARAFUSOS"
   },
@@ -10058,5 +10058,350 @@
     "posicao": "B24",
     "codigo": "604048SB",
     "nome": "SBR PERFIL PROTETOR SLIDER"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD6",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES6"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "603072",
+    "nome": "SK CONE DE PROTECAO DE CARDA LADO CAMBIO DUO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 IMPORTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "VP22450719",
+    "nome": "VP PARAFUSO DE BATENTE"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "731415",
+    "nome": "SK KIT PORCA E ANEL DE CENTRALIZACAO TL 1000+"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD9",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES9"
+  },
+  {
+    "posicao": "B43",
+    "codigo": "625589SB",
+    "nome": "SBR BOBINA GZ-45-4-24V R901370939"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "VP21968079",
+    "nome": "CONECTOR"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "600090SBR",
+    "nome": "SK STATICLINE COMPACT 1408-14"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "DDCBF6F22600712",
+    "nome": "CARTAO DE VISITA"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "742650",
+    "nome": "SK LUZ DE POSICAO DE LED COM PLUG SELFLINE > 818430"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "630235",
+    "nome": "SK ANEL DE VEDACAO DO SUPORTE DO MOTOR DA ESTEIRA DE CARGA SELFLINE TDS 4.0"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "727070",
+    "nome": "SK TANQUE DE COMBUSTÍVEL SELF 1000+"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD8",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES8"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBS",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "728025",
+    "nome": "SK CASA DISPLAY DE PESAGEM"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "607565",
+    "nome": "SK GUIA CORRENTE DA ESTEIRA DE DESCARGA LADO ESQUERDO SELF 1000+ FOLDABLE"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "MP000003",
+    "nome": "CHAPA 410D 3,00  X 1520 X 3000"
+  },
+  {
+    "posicao": "E43",
+    "codigo": "SB000316",
+    "nome": "SBR INOX FAIXA 9,53 X 120 X 1500 MMM"
+  },
+  {
+    "posicao": "E33",
+    "codigo": "602627RB",
+    "nome": "SK PARTE CORRENTE ESTEIRA RB"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "600090DES",
+    "nome": "SK STATICLINE COMPACT 1408-14 DESMONTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "MP000002",
+    "nome": "SBR CHAPA 12,5 X 1200 X 3000 ASTM A36"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "VP21931626",
+    "nome": "UNIDADE DO COMPRESSOR DE  MONOFASI"
+  },
+  {
+    "posicao": "B11",
+    "codigo": "605723NS818304",
+    "nome": "SK MOTOR HIDRAULICO TAMBOR FRESA 1000+ NS818304"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "VP23554594",
+    "nome": "TUBO DE AGUA"
+  },
+  {
+    "posicao": "B13",
+    "codigo": "604811RB",
+    "nome": "SK MOTOR DO VENTILADOR DO RADIADOR 1000+ RB"
+  },
+  {
+    "posicao": "E33",
+    "codigo": "615453SB",
+    "nome": "SBR EIXO TRASEIRO DUO 14"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741627",
+    "nome": "SK BRACO DE FIXACAO DO PAINEL 10 POLEGADAS SELFLINE NOVO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "603155",
+    "nome": "SK CARDA COMPACT 7 - PLANETARIA X EIXO DOS ROLAMENTOS X SEM CAMBIO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "MP000005",
+    "nome": "CHAPA 410D 9,53 X 1520 X 3000"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "604445",
+    "nome": "SK BOMBA DE OLEO SISTEMA DE RESFRIAMENTO DA PLANETARIA SELFLINE"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "607566",
+    "nome": "SK GUIA CORRENTE DA ESTEIRA DE DESCARGA LADO DIREITO SELF 1000+ FOLDABLE"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "603282",
+    "nome": "SK CONE DE PROTECAO DO CARDA DE ENTRADA DO CAMBIO VARIO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "718040",
+    "nome": "SK FILTRO SAIDA PLANETARIA X SISTEMA DE RESFRIAMENTO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "171E51216D9167D",
+    "nome": "RECEITUARIO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD7",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES7"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "724171",
+    "nome": "SK BARRA DE DESLIZAMENTO DA ESTEIRA DE DESCARGA DE CORRENTO SELFLINE 750MM"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566SBR",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "737938",
+    "nome": "SK TRAVA DO ROLAMENTO DO ROLO DA FRESA ESQUERDO DIN 471 55X2"
+  },
+  {
+    "posicao": "SK",
+    "codigo": "704734",
+    "nome": "SK ESTEIRA CROSS 2020MM ESTRUTURA DUO 14"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD3",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES3"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "603720",
+    "nome": "SK CONECTOR DA PONTA DO CABO DO ACELERADOR ARTICULAR SELFLINE"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566DES",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 DESMONTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741579PAR",
+    "nome": "SK SELF SYSTEM 1000+ 3225-32 PARCIALMENTE DESMONTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "728429NS818304",
+    "nome": "SK BOMBA DE PISTAO AXIAL DO ACIONAMENTO DA FRESA 1000+ NS818304"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "AI000094",
+    "nome": "GUINCHO HIDR EM V 1.0TON RD FERR FUND MARCON"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "711175",
+    "nome": "SK SUPORTE DO MOTOR DA ESTEIRA DE CARREGAMENTO SELFLINE PREMIUM"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "MP000001",
+    "nome": "SBR CHAPA 12,5 X 1500 X 3000 ASTM A36"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "600132DES",
+    "nome": "SK TL SYSTEM 1000+ 4535-40 DESMONTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741626",
+    "nome": "SK ESFERA DE FIXACAO DO DISPLAY 10 POLEGADAS SELFLINE"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD4",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES4"
+  },
+  {
+    "posicao": "B13",
+    "codigo": "605770RB",
+    "nome": "SK BOMBA HIDRAULICA DO VENTILADOR 1000+ RB"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "D3766B709D89FB6",
+    "nome": "ROTULO RETANGULAR"
+  },
+  {
+    "posicao": "E33",
+    "codigo": "608420RB",
+    "nome": "SK PARTE DA CORRENTE DA ESTEIRA ESQUERDA RB"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "722954",
+    "nome": "SK VALVULA 24V DE CONTROLE COM BLOQUEIO INTEGRADA"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "711184",
+    "nome": "SK PRATO DE FIXACAO DO ROLO E MOTOR DA ESTEIRA SELFLINE PREMIUM 4.0 TDS"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "600132",
+    "nome": "SK TL SYSTEM 1000+ 4535-40 IMPORTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "MP000004",
+    "nome": "CHAPA 410D 5,00  X 1520 X 3000"
+  },
+  {
+    "posicao": "SK",
+    "codigo": "729453",
+    "nome": "SK ESTEIRA CROSS 2650MM ESTRUTURA SELF 1000+"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RB",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN ENT"
+  },
+  {
+    "posicao": "E33",
+    "codigo": "608430RB",
+    "nome": "SK PARTE DA CORRENTE DA ESTEIRA DIREITA RB"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "615455",
+    "nome": "SK EIXO COMPACT 12"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD2",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES2"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "741566RBD5",
+    "nome": "SK SELF 4.0 PREMIUM 2215-19 TRADE-IN DES5"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "707012",
+    "nome": "SK CABO DE ATUALIZACAO SILOKING DATA (MONITOR)"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "600090",
+    "nome": "SK STATICLINE COMPACT 1408-14 IMPORTADO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "603157",
+    "nome": "SK CARDA COMPACT 7 - TRATOR X EIXO DOS ROLAMENTOS X SEM CAMBIO"
+  },
+  {
+    "posicao": "N/D",
+    "codigo": "522CC36DAB32B5B",
+    "nome": "ADESIVO RETANGULAR"
   }
 ]
