@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Importar produtos do Excel</title><link rel="stylesheet" href="importar.css">
+<script defer src="vendor/xlsx.full.min.js"></script><script defer src="import-core.js"></script><script defer src="importar.js"></script></head>
+<body><main><a href="index.html">← Voltar ao controle de peças</a><h1>Importar produtos do Excel</h1>
+<p>Atualize nomes e endereçamentos e adicione novos produtos. Produtos ausentes da planilha serão mantidos. Posições vazias receberão N/D.</p>
+<p>A planilha é lida neste dispositivo. A prévia e os downloads não alteram o site, as contagens ou as ordens existentes.</p>
+<label for="arquivo">Planilha Excel (.xlsx, até 10 MB)</label><input id="arquivo" type="file" accept=".xlsx">
+<label for="aba">Aba da planilha</label><select id="aba" disabled><option>Selecione um arquivo</option></select>
+<button id="analisar" disabled>Gerar prévia</button><p id="status" role="status" aria-live="polite">Carregando base atual…</p>
+<section id="preview" hidden><h2>Confira as alterações</h2><p id="summary"></p><ul id="warnings"></ul>
+<label for="filtro">Filtrar diferenças por código ou descrição</label><input id="filtro" type="search">
+<p>Em telas menores, deslize a tabela para os lados para comparar todas as colunas.</p>
+<div class="tableWrap"><table><thead><tr><th>Alteração</th><th>Código</th><th>Nome anterior</th><th>Novo nome</th><th>Posição anterior</th><th>Nova posição</th></tr></thead><tbody id="diff"></tbody></table></div>
+<div class="pagination"><button id="anterior">Anterior</button><span id="pagina"></span><button id="proxima">Próxima</button></div>
+<button id="backup">Baixar backup da base atual</button>
+<label class="confirm"><input id="confirmar" type="checkbox"> Conferi as diferenças e confirmo a geração dos arquivos.</label>
+<button id="json" disabled>Baixar JSON atualizado</button><button id="proposta" disabled>Baixar proposta para o GitHub</button>
+<p>Para enviar a proposta ao GitHub, use a ferramenta local descrita no <a href="IMPORTACAO.md">guia de importação</a>. Ela cria uma solicitação de revisão com backup. A publicação depende da aprovação e integração dessa solicitação.</p>
+<button id="cancelar">Cancelar prévia</button></section></main></body></html>
